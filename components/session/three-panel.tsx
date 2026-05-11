@@ -16,6 +16,10 @@ interface ThreePanelProps {
   currentQuestion?: string;
   /** End-session handler routed by the orchestrator. */
   onEndSession?: () => void;
+  /** V1-preview text-input submit handler routed to the voice stage. */
+  onSubmitTurn?: (text: string) => void;
+  /** Error CTA handler (e.g., re-route to onboarding on key-invalid). */
+  onErrorAction?: () => void;
 }
 
 function formatTimer(ms: number): string {
@@ -35,6 +39,8 @@ export function ThreePanel({
   caseTitle,
   currentQuestion,
   onEndSession,
+  onSubmitTurn,
+  onErrorAction,
 }: ThreePanelProps) {
   const [elapsedMs, setElapsedMs] = useState(0);
 
@@ -104,6 +110,8 @@ export function ThreePanel({
           <VoiceStage
             state={session.state.kind}
             currentQuestion={currentQuestion}
+            onSubmitTurn={onSubmitTurn}
+            onErrorAction={onErrorAction}
           />
         </section>
         {!session.scratchpadCollapsed && (

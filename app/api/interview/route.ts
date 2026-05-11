@@ -85,6 +85,8 @@ export async function POST(request: Request): Promise<Response> {
   const stream = new ReadableStream({
     async start(controller) {
       let fullText = "";
+      let inputTokens = 0;
+      let outputTokens = 0;
       try {
         const completion = anthropic.messages.stream({
           model: "claude-sonnet-4-6",
@@ -105,6 +107,11 @@ export async function POST(request: Request): Promise<Response> {
                 `data: ${JSON.stringify({ text: chunk })}\n\n`
               )
             );
+          } else if (event.type === "message_start") {
+            inputTokens = event.message.usage?.input_tokens ?? 0;
+          } else if (event.type === "message_delta") {
+            // Anthropic emits cumulative output_tokens on each message_delta.
+            outputTokens = event.usage?.output_tokens ?? outputTokens;
           }
         }
 
@@ -122,6 +129,20 @@ export async function POST(request: Request): Promise<Response> {
             )
           );
         }
+
+        // Emit token usage so the client cost tracker (U9) can accumulate
+        // real numbers per turn. Headers commit before token counts are
+        // known, so usage rides as a structured SSE event before [DONE].
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              usage: {
+                input_tokens: inputTokens,
+                output_tokens: outputTokens,
+              },
+            })}\n\n`
+          )
+        );
 
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (err) {
