@@ -28,9 +28,16 @@ export default function OnboardingPage() {
     setErrors({});
     setValidating(true);
 
-    // Pre-flight format check
+    // V1 preview state: voice adapters in U2 are stubs, so the voice key is
+    // optional during the scaffold phase. The LLM key is required because
+    // /api/interview is a real Anthropic streaming proxy. When voice
+    // adapters ship full implementations during the V0 bakeoff, this
+    // optional-voice-key branch should tighten back to "required."
+    const voiceKeyProvided = voiceKey.trim().length > 0;
+
+    // Pre-flight format check (LLM always; voice only if user provided one)
     const llmFormat = checkFormat(llm, llmKey);
-    const voiceFormat = checkFormat(voice, voiceKey);
+    const voiceFormat = voiceKeyProvided ? checkFormat(voice, voiceKey) : { ok: true };
     if (!llmFormat.ok || !voiceFormat.ok) {
       setErrors({
         [llm]: !llmFormat.ok ? llmFormat.reason : undefined,
@@ -40,10 +47,12 @@ export default function OnboardingPage() {
       return;
     }
 
-    // Synchronous ping validation per R6a
+    // Synchronous ping validation per R6a (skipped for unprovided voice key)
     const [llmResp, voiceResp] = await Promise.all([
       pingValidate(llm, llmKey),
-      pingValidate(voice, voiceKey),
+      voiceKeyProvided
+        ? pingValidate(voice, voiceKey)
+        : Promise.resolve({ ok: true } as PingResponse),
     ]);
     if (!llmResp.ok || !voiceResp.ok) {
       setErrors({
@@ -56,7 +65,7 @@ export default function OnboardingPage() {
 
     // Persist + navigate
     setKey("llm", llmKey, { remember });
-    setKey(voice, voiceKey, { remember });
+    if (voiceKeyProvided) setKey(voice, voiceKey, { remember });
     router.push(`/onboarding/case-select?llm=${llm}&voice=${voice}`);
   }
 
@@ -71,8 +80,8 @@ export default function OnboardingPage() {
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-mute">
           Mockingbird never holds your keys. They live in your browser. Pick
-          a model + a voice, paste both keys, and we'll verify them before
-          starting your case.
+          a model, paste your LLM key, and we'll verify it before starting
+          your case. The voice provider key is optional during V1 preview.
         </p>
       </header>
 
@@ -108,8 +117,16 @@ export default function OnboardingPage() {
         {/* Voice choice */}
         <fieldset>
           <legend className="mb-2 text-sm font-semibold text-ink">
-            Choose a voice provider
+            Choose a voice provider{" "}
+            <span className="ml-1 rounded bg-cream px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-mute">
+              Optional in V1 preview
+            </span>
           </legend>
+          <p className="mb-3 text-xs leading-relaxed text-mute">
+            Voice adapters are stubs in V1. You can skip this field to test
+            the LLM-only flow with seeded session content; real voice ships
+            after the V0 provider bakeoff.
+          </p>
           <div className="mb-3 flex gap-2">
             {(["cartesia", "sarvam", "elevenlabs"] as VoiceChoice[]).map((p) => (
               <button
@@ -150,7 +167,7 @@ export default function OnboardingPage() {
 
         <button
           type="submit"
-          disabled={validating || !llmKey || !voiceKey}
+          disabled={validating || !llmKey}
           className="rounded-lg bg-ink py-3 text-sm font-semibold text-cream transition-colors hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {validating ? "Validating…" : "Continue to case selection →"}
