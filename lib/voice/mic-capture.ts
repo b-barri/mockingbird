@@ -13,13 +13,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 interface UseMicCaptureOptions {
   /** Fires when recording stops with a non-empty audio blob. */
   onBlob?: (blob: Blob, durationMs: number) => void;
-  /** Fires for permission denials or recorder errors. */
+  /** Fires for permission denials, recorder errors, or too-short recordings. */
   onError?: (kind: MicErrorKind, message: string) => void;
   /** Auto-stop after this many ms. Default 30000. */
   maxDurationMs?: number;
+  /**
+   * Reject recordings shorter than this. Prevents empty WebM containers
+   * (~100 bytes) from reaching Sarvam — they fail with "Failed to read
+   * the file" and the candidate has no idea why.
+   */
+  minDurationMs?: number;
 }
 
-export type MicErrorKind = "permission-denied" | "no-device" | "recorder-error";
+export type MicErrorKind =
+  | "permission-denied"
+  | "no-device"
+  | "recorder-error"
+  | "too-short";
 
 interface UseMicCaptureResult {
   isRecording: boolean;
@@ -131,7 +141,19 @@ export function useMicCapture(
       chunksRef.current = [];
       cleanup();
       setIsRecording(false);
-      if (blob.size > 0) onBlobRef.current?.(blob, durationMs);
+
+      const minMs = opts.minDurationMs ?? 600;
+      if (blob.size === 0 || durationMs < minMs) {
+        const message =
+          durationMs < minMs
+            ? `Recording too short (${durationMs}ms). Hold the mic for at least ${minMs}ms.`
+            : "Recording produced no audio.";
+        setError(message);
+        onErrorRef.current?.("too-short", message);
+        return;
+      }
+
+      onBlobRef.current?.(blob, durationMs);
     };
 
     recorder.start();

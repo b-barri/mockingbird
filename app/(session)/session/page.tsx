@@ -52,7 +52,7 @@ import type { MicErrorKind } from "@/lib/voice/mic-capture";
 // support ships in a follow-up phase with WebSocket streaming for lower
 // latency.
 
-const SUPPORTED_VOICE_PROVIDERS = new Set(["sarvam"]);
+const SUPPORTED_VOICE_PROVIDERS = new Set(["sarvam", "cartesia"]);
 
 function buildOpeningSession(caseTemplate: CaseTemplate): SessionSnapshot {
   let s = sessionReducer(initialSession, {
@@ -104,7 +104,7 @@ function SessionInner() {
   const [llmKey, setLlmKey] = useState<string | null>(null);
   const [voiceKey, setVoiceKey] = useState<string | null>(null);
   const [keyChecked, setKeyChecked] = useState(false);
-  const { isPlaying, playBase64Mp3, stop: stopAudio } = useAudioPlayer();
+  const { isPlaying, playBase64Audio, stop: stopAudio } = useAudioPlayer();
 
   // Load keys from storage on mount; redirect if no LLM key.
   useEffect(() => {
@@ -115,7 +115,7 @@ function SessionInner() {
     }
     setLlmKey(llm);
     if (SUPPORTED_VOICE_PROVIDERS.has(voiceProvider)) {
-      const v = getKey(voiceProvider as "sarvam");
+      const v = getKey(voiceProvider as "sarvam" | "cartesia");
       if (v) setVoiceKey(v);
     }
     setKeyChecked(true);
@@ -407,6 +407,7 @@ function SessionInner() {
 
       // 4. Synthesize
       let audios: string[];
+      let audioContentType = "audio/wav";
       try {
         const resp = await fetch("/api/voice/synthesize", {
           method: "POST",
@@ -428,8 +429,12 @@ function SessionInner() {
           applyStreamError(dispatch, "provider-timeout");
           return;
         }
-        const json = (await resp.json()) as { audios?: string[] };
+        const json = (await resp.json()) as {
+          audios?: string[];
+          contentType?: string;
+        };
         audios = json.audios ?? [];
+        audioContentType = json.contentType ?? "audio/wav";
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
         // eslint-disable-next-line no-console
@@ -452,7 +457,8 @@ function SessionInner() {
         type: "TRANSITION_SPEAKING",
         speechStartAt: Date.now(),
       });
-      await playBase64Mp3(audios, {
+      await playBase64Audio(audios, {
+        contentType: audioContentType,
         onEnded: () => {
           // Rough approximation of TTS output seconds via text length (~20 chars/sec).
           addVoiceSeconds(llmResult.text.length / 20);
@@ -465,7 +471,7 @@ function SessionInner() {
         },
       });
     },
-    [llmKey, voiceKey, voiceProvider, streamLlmResponse, playBase64Mp3]
+    [llmKey, voiceKey, voiceProvider, streamLlmResponse, playBase64Audio]
   );
 
   const handleEndSession = useCallback(() => {
@@ -514,9 +520,14 @@ function SessionInner() {
           kind: "mic-permission-denied",
           at: Date.now(),
         });
-      } else {
-        dispatch({ type: "ERROR", kind: "provider-timeout", at: Date.now() });
+        return;
       }
+      // 'too-short' shows inline via the MicButton's error text. No
+      // state-machine transition needed — candidate can just press the
+      // mic again. 'no-device'/'recorder-error' are exceptional and
+      // worth a hard error UI.
+      if (kind === "too-short") return;
+      dispatch({ type: "ERROR", kind: "provider-timeout", at: Date.now() });
     },
     []
   );

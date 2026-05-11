@@ -142,11 +142,14 @@ export function VoiceStage({
     <div
       data-testid="voice-stage"
       data-state={state}
-      className="flex h-full flex-col items-center justify-between gap-6 p-8"
+      className="flex h-full flex-col gap-4 overflow-hidden p-6"
     >
-      <div className="flex w-full flex-col items-center gap-6">
+      {/* Top section scrolls when the AI's current question is long. The
+          mic/text input below stays anchored — the candidate should never
+          have to scroll to find the input affordance. */}
+      <div className="flex flex-1 flex-col items-center gap-5 overflow-y-auto">
         {currentQuestion && (
-          <div className="w-full rounded-xl border border-ink/[0.07] bg-cream/60 p-4">
+          <div className="w-full shrink-0 rounded-xl border border-ink/[0.07] bg-cream/60 p-4">
             <div className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-mute">
               <span className="h-1.5 w-1.5 rounded-full bg-coral" />
               Currently asking
@@ -156,8 +159,10 @@ export function VoiceStage({
             </p>
           </div>
         )}
-        <Orb state={state} />
-        <div className="text-center">
+        <div className="shrink-0">
+          <Orb state={state} />
+        </div>
+        <div className="shrink-0 text-center">
           <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-mute">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500 shadow-[0_0_0_3px_rgba(76,175,80,0.2)]" />
             {copy.label}
@@ -170,11 +175,15 @@ export function VoiceStage({
         </div>
       </div>
 
-      {voiceModeActive && onVoiceBlob && (
-        <MicButton onBlob={onVoiceBlob} onMicError={onMicError} />
-      )}
-      {textModeActive && onSubmitTurn && (
-        <TurnInput onSubmit={onSubmitTurn} />
+      {(voiceModeActive || textModeActive) && (
+        <div className="shrink-0">
+          {voiceModeActive && onVoiceBlob && (
+            <MicButton onBlob={onVoiceBlob} onMicError={onMicError} />
+          )}
+          {textModeActive && onSubmitTurn && (
+            <TurnInput onSubmit={onSubmitTurn} />
+          )}
+        </div>
       )}
     </div>
   );
