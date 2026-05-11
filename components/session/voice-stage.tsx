@@ -67,6 +67,11 @@ interface VoiceStageProps {
   /** Recovery CTA handler when the state has one. */
   onErrorAction?: () => void;
   /**
+   * Idle-state CTA. Click triggers the LLM-generated opening turn. Also
+   * provides the user gesture browsers require before audio.play() works.
+   */
+  onStartInterview?: () => void;
+  /**
    * Text-mode submit (V1 preview when voice key isn't configured). Renders
    * a textarea + Send button while state === 'listening'.
    */
@@ -84,11 +89,46 @@ export function VoiceStage({
   state,
   currentQuestion,
   onErrorAction,
+  onStartInterview,
   onSubmitTurn,
   onVoiceBlob,
   onMicError,
 }: VoiceStageProps) {
   const isError = state in ERROR_COPY;
+
+  if (state === "idle" && onStartInterview) {
+    return (
+      <div
+        data-testid="voice-stage-idle"
+        data-state="idle"
+        className="flex h-full flex-col items-center justify-center gap-7 p-8 text-center"
+      >
+        <Orb state="idle" />
+        <div>
+          <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-mute">
+            <span className="h-1.5 w-1.5 rounded-full bg-mute" />
+            Ready when you are
+          </div>
+          <h2 className="font-display text-2xl tracking-tight text-ink">
+            Alex is waiting to begin.
+          </h2>
+          <p className="mt-2 max-w-sm text-sm text-mute">
+            Once you press start, Alex will greet you and read your case.
+            Then it's your turn — ask a clarifying question or start your
+            answer.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onStartInterview}
+          data-testid="start-interview"
+          className="rounded-lg bg-ink px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-ink/85"
+        >
+          Start interview →
+        </button>
+      </div>
+    );
+  }
 
   if (isError) {
     const copy = ERROR_COPY[state];

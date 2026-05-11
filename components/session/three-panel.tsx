@@ -17,6 +17,8 @@ interface ThreePanelProps {
   currentQuestion?: string;
   /** End-session handler routed by the orchestrator. */
   onEndSession?: () => void;
+  /** Start-interview handler routed by the orchestrator (idle → opening). */
+  onStartInterview?: () => void;
   /** V1-preview text-input submit handler routed to the voice stage. */
   onSubmitTurn?: (text: string) => void;
   /** Voice-mode submit (mic blob from push-to-talk recording). */
@@ -44,6 +46,7 @@ export function ThreePanel({
   caseTitle,
   currentQuestion,
   onEndSession,
+  onStartInterview,
   onSubmitTurn,
   onVoiceBlob,
   onMicError,
@@ -117,6 +120,7 @@ export function ThreePanel({
           <VoiceStage
             state={session.state.kind}
             currentQuestion={currentQuestion}
+            onStartInterview={onStartInterview}
             onSubmitTurn={onSubmitTurn}
             onVoiceBlob={onVoiceBlob}
             onMicError={onMicError}

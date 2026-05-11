@@ -54,22 +54,6 @@ import type { MicErrorKind } from "@/lib/voice/mic-capture";
 
 const SUPPORTED_VOICE_PROVIDERS = new Set(["sarvam", "cartesia"]);
 
-function buildOpeningSession(caseTemplate: CaseTemplate): SessionSnapshot {
-  let s = sessionReducer(initialSession, {
-    type: "START_SESSION",
-    at: Date.now(),
-  });
-  s = sessionReducer(s, {
-    type: "TRANSCRIPT_FINAL",
-    id: "ai-opening",
-    speaker: "ai",
-    text: caseTemplate.prompt,
-    at: Date.now(),
-  });
-  s = sessionReducer(s, { type: "TRANSITION_LISTENING" });
-  return s;
-}
-
 function SessionInner() {
   const router = useRouter();
   const params = useSearchParams();
@@ -89,11 +73,14 @@ function SessionInner() {
     return pickRandomCase();
   }, [caseId]);
 
-  const [session, dispatch] = useReducer(
-    sessionReducer,
-    caseTemplate,
-    buildOpeningSession
-  );
+  // Start the session in `idle` — no AI opening, no transcript turns. The
+  // candidate clicks the "Start interview" button to trigger the LLM-
+  // generated opening (greeting + case statement). This pattern (a) lets
+  // the persona's "no probe in opening" instruction actually run rather
+  // than skipping the LLM with a pre-seeded turn, and (b) satisfies the
+  // browser autoplay gate by collecting a fresh user gesture on the
+  // session page before audio plays.
+  const [session, dispatch] = useReducer(sessionReducer, initialSession);
 
   const sessionRef = useRef(session);
   useEffect(() => {
@@ -137,13 +124,16 @@ function SessionInner() {
 
   const voiceModeActive = Boolean(voiceKey) && SUPPORTED_VOICE_PROVIDERS.has(voiceProvider);
 
-  const currentQuestion = useMemo(() => {
+  // currentQuestion = latest non-stricken AI turn. Updates live as the LLM
+  // stream fills the turn via TRANSCRIPT_PARTIAL. Undefined while idle so
+  // the case prompt doesn't leak before Alex actually delivers it.
+  const currentQuestion = useMemo<string | undefined>(() => {
     for (let i = session.turns.length - 1; i >= 0; i--) {
       const t = session.turns[i];
       if (t.speaker === "ai" && !t.stricken) return t.text;
     }
-    return caseTemplate.prompt;
-  }, [session.turns, caseTemplate.prompt]);
+    return undefined;
+  }, [session.turns]);
 
   /**
    * Run /api/interview as a streaming SSE call. Returns the full accumulated
@@ -262,6 +252,129 @@ function SessionInner() {
     },
     [llmKey, caseTemplate.id]
   );
+
+  /** Synthesize `text` via /api/voice/synthesize and play it back. Dispatches
+   *  TRANSITION_SPEAKING when audio starts, TRANSITION_LISTENING when audio
+   *  ends. Returns the playback start status; the listening transition fires
+   *  asynchronously via onEnded. Used by both the opening and per-turn flows. */
+  const synthesizeAndPlay = useCallback(
+    async (text: string, signal: AbortSignal): Promise<{ ok: true } | { ok: false; reason: ErrorKind; message: string }> => {
+      if (!voiceKey) {
+        return { ok: false, reason: "key-invalid", message: "No voice key" };
+      }
+      let audios: string[];
+      let audioContentType = "audio/wav";
+      try {
+        const resp = await fetch("/api/voice/synthesize", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-voice-key": voiceKey,
+            "x-voice-provider": voiceProvider,
+          },
+          body: JSON.stringify({ text }),
+          signal,
+        });
+        if (resp.status === 401) {
+          return { ok: false, reason: "key-invalid", message: `TTS ${resp.status}` };
+        }
+        if (!resp.ok) {
+          const body = await resp.text().catch(() => "");
+          // eslint-disable-next-line no-console
+          console.error("Voice TTS failed:", resp.status, body);
+          return { ok: false, reason: "provider-timeout", message: `TTS ${resp.status}` };
+        }
+        const json = (await resp.json()) as {
+          audios?: string[];
+          contentType?: string;
+        };
+        audios = json.audios ?? [];
+        audioContentType = json.contentType ?? "audio/wav";
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return { ok: false, reason: "aborted", message: "aborted" };
+        }
+        // eslint-disable-next-line no-console
+        console.error("Voice TTS fetch failed:", err);
+        return { ok: false, reason: "network-drop", message: "fetch failed" };
+      }
+
+      if (audios.length === 0) {
+        // Empty audio array — go straight back to listening rather than hang.
+        dispatch({ type: "TRANSITION_LISTENING" });
+        return { ok: true };
+      }
+
+      dispatch({ type: "TRANSITION_SPEAKING", speechStartAt: Date.now() });
+      await playBase64Audio(audios, {
+        contentType: audioContentType,
+        onEnded: () => {
+          // Rough approximation of TTS output seconds via text length (~20 chars/sec).
+          addVoiceSeconds(text.length / 20);
+          dispatch({ type: "TRANSITION_LISTENING" });
+        },
+        onError: (msg) => {
+          // eslint-disable-next-line no-console
+          console.error("Audio playback failed:", msg);
+          dispatch({ type: "TRANSITION_LISTENING" });
+        },
+      });
+      return { ok: true };
+    },
+    [voiceKey, voiceProvider, playBase64Audio]
+  );
+
+  /** Start the session: greet, deliver case, stop. The candidate clicks the
+   *  Start button which lands here. In voice mode this is also where the
+   *  browser autoplay gate is satisfied — the click is the user gesture. */
+  const handleStartInterview = useCallback(async () => {
+    if (!llmKey) return;
+    if (session.state.kind !== "idle") return; // already started
+
+    const now = Date.now();
+    dispatch({ type: "START_SESSION", at: now });
+    dispatch({ type: "TRANSITION_THINKING", listenEndAt: now });
+
+    const aiId = newTurnId("ai");
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    // Empty turns array — the LLM generates the opening from system prompt
+    // alone (greeting + case statement, no probe per the persona rules).
+    const llmResult = await streamLlmResponse({
+      turnsForAPI: [],
+      aiTurnId: aiId,
+      // Text mode: first chunk lights speaking. Voice mode: defer to audio
+      // playback start so the candidate doesn't see "speaking" while text
+      // streams but no sound plays.
+      fireSpeakingOnFirstChunk: !voiceModeActive,
+      signal: controller.signal,
+    });
+
+    if (abortRef.current === controller) abortRef.current = null;
+    if (!llmResult.ok) {
+      applyStreamError(dispatch, llmResult.reason);
+      return;
+    }
+
+    if (voiceModeActive && llmResult.text) {
+      const ttsController = new AbortController();
+      abortRef.current = ttsController;
+      const ttsResult = await synthesizeAndPlay(
+        llmResult.text,
+        ttsController.signal
+      );
+      if (abortRef.current === ttsController) abortRef.current = null;
+      if (!ttsResult.ok) {
+        applyStreamError(dispatch, ttsResult.reason);
+      }
+      return;
+    }
+
+    // Text mode: streamLlmResponse already fired TRANSITION_SPEAKING on
+    // the first chunk; close the loop.
+    dispatch({ type: "TRANSITION_LISTENING" });
+  }, [llmKey, session.state.kind, voiceModeActive, streamLlmResponse, synthesizeAndPlay]);
 
   /** Text mode: TRANSCRIPT_FINAL the user turn, run LLM, listening. */
   const handleSubmitTurn = useCallback(
@@ -405,73 +518,16 @@ function SessionInner() {
         return;
       }
 
-      // 4. Synthesize
-      let audios: string[];
-      let audioContentType = "audio/wav";
-      try {
-        const resp = await fetch("/api/voice/synthesize", {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-voice-key": voiceKey,
-            "x-voice-provider": voiceProvider,
-          },
-          body: JSON.stringify({ text: llmResult.text }),
-          signal: controller.signal,
-        });
-        if (!resp.ok) {
-          const text = await resp.text().catch(() => "");
-          // eslint-disable-next-line no-console
-          console.error("Sarvam TTS failed:", resp.status, text);
-          // Fall back to text mode for this turn — the AI text is already in
-          // the transcript; we just couldn't speak it. Surface as a
-          // recoverable provider-timeout so the candidate can retry.
-          applyStreamError(dispatch, "provider-timeout");
-          return;
-        }
-        const json = (await resp.json()) as {
-          audios?: string[];
-          contentType?: string;
-        };
-        audios = json.audios ?? [];
-        audioContentType = json.contentType ?? "audio/wav";
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        // eslint-disable-next-line no-console
-        console.error("Sarvam TTS fetch failed:", err);
-        applyStreamError(dispatch, "network-drop");
-        return;
-      } finally {
-        if (abortRef.current === controller) abortRef.current = null;
-      }
-
-      if (audios.length === 0) {
-        // No audio came back — go straight back to listening rather than
-        // hang on speaking forever.
-        dispatch({ type: "TRANSITION_LISTENING" });
+      // 4 + 5. Synthesize + play. synthesizeAndPlay owns the
+      // TRANSITION_SPEAKING / TRANSITION_LISTENING dispatches.
+      const ttsResult = await synthesizeAndPlay(llmResult.text, controller.signal);
+      if (abortRef.current === controller) abortRef.current = null;
+      if (!ttsResult.ok) {
+        applyStreamError(dispatch, ttsResult.reason);
         return;
       }
-
-      // 5. Play audio. Speaking state turns on at play start, listening at end.
-      dispatch({
-        type: "TRANSITION_SPEAKING",
-        speechStartAt: Date.now(),
-      });
-      await playBase64Audio(audios, {
-        contentType: audioContentType,
-        onEnded: () => {
-          // Rough approximation of TTS output seconds via text length (~20 chars/sec).
-          addVoiceSeconds(llmResult.text.length / 20);
-          dispatch({ type: "TRANSITION_LISTENING" });
-        },
-        onError: (msg) => {
-          // eslint-disable-next-line no-console
-          console.error("Audio playback failed:", msg);
-          dispatch({ type: "TRANSITION_LISTENING" });
-        },
-      });
     },
-    [llmKey, voiceKey, voiceProvider, streamLlmResponse, playBase64Audio]
+    [llmKey, voiceKey, voiceProvider, streamLlmResponse, synthesizeAndPlay]
   );
 
   const handleEndSession = useCallback(() => {
@@ -553,6 +609,7 @@ function SessionInner() {
       caseTitle={caseTemplate.title}
       currentQuestion={currentQuestion}
       onEndSession={handleEndSession}
+      onStartInterview={handleStartInterview}
       onSubmitTurn={voiceModeActive ? undefined : handleSubmitTurn}
       onVoiceBlob={voiceModeActive ? handleVoiceBlob : undefined}
       onMicError={voiceModeActive ? handleMicError : undefined}
