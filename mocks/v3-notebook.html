@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockingbird — V3: Notebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #F7F4ED;
+    color: #1A1612;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "ss02", "cv11";
+  }
+  .app { display: flex; flex-direction: column; height: 100vh; position: relative; }
+
+  /* top strip — minimal */
+  .topstrip {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+    background: #F7F4ED;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px; letter-spacing: -0.02em;
+  }
+  .brand-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #E85D3B; box-shadow: 0 0 10px rgba(232,93,59,0.4);
+  }
+  .top-actions { display: flex; align-items: center; gap: 10px; }
+  .timer {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600; font-size: 14px;
+    padding: 6px 12px;
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.08);
+    border-radius: 8px;
+  }
+  .btn {
+    padding: 7px 14px; font-size: 12.5px; font-weight: 500;
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.12);
+    border-radius: 8px; cursor: pointer; color: #1A1612;
+    font-family: inherit;
+  }
+  .btn-danger { color: #B83D1A; border-color: rgba(184,61,26,0.22); }
+
+  /* case banner */
+  .case-banner {
+    margin: 8px 28px 0;
+    padding: 22px 28px;
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.08);
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px;
+  }
+  .case-banner-left { display: flex; flex-direction: column; gap: 6px; }
+  .case-banner .label {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.16em; font-weight: 700;
+    color: #E85D3B;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .case-banner .label::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: #E85D3B;
+  }
+  .case-banner .prompt {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px; line-height: 1.2; letter-spacing: -0.02em;
+    color: #1A1612;
+  }
+  .case-banner .meta {
+    display: flex; gap: 16px; font-size: 12px; color: #6B5F50;
+    margin-top: 6px;
+  }
+  .case-banner .meta .pill {
+    padding: 3px 9px; background: #F7F4ED;
+    border-radius: 100px; font-weight: 500;
+  }
+
+  /* main canvas */
+  .main {
+    flex: 1; margin: 0 28px 28px;
+    display: grid; grid-template-columns: 1.4fr 1fr;
+    gap: 16px;
+    overflow: hidden;
+  }
+  .scratch-card, .transcript-card {
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.08);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .scratch-card { border-radius: 0 0 0 16px; border-top: none; }
+  .transcript-card { border-radius: 0 0 16px 16px; }
+
+  /* scratchpad (primary surface) */
+  .scratch-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 28px;
+    border-bottom: 1px solid rgba(26,22,18,0.06);
+  }
+  .scratch-tool-group { display: flex; gap: 4px; }
+  .scratch-tool {
+    width: 30px; height: 30px; display: inline-flex;
+    align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #6B5F50;
+    background: transparent; border: none; cursor: pointer;
+    border-radius: 6px;
+  }
+  .scratch-tool:hover { background: #F7F4ED; color: #1A1612; }
+  .scratch-tool.active { background: #F7F4ED; color: #1A1612; }
+  .scratch-frameworks {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: #6B5F50;
+  }
+  .scratch-frameworks .active-fw {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; background: #FBF8F3;
+    border: 1px solid rgba(232,93,59,0.2); border-radius: 100px;
+    color: #1A1612; font-weight: 500;
+  }
+  .scratch-frameworks .active-fw::before {
+    content: '✦'; color: #E85D3B;
+  }
+  .scratch-body {
+    flex: 1; overflow-y: auto;
+    padding: 28px 36px 80px;
+    font-size: 15px; line-height: 1.75;
+    color: #1A1612;
+  }
+  .scratch-body h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 24px; letter-spacing: -0.01em;
+    margin: 24px 0 8px;
+    color: #1A1612;
+  }
+  .scratch-body h2:first-child { margin-top: 0; }
+  .scratch-body h3 {
+    font-size: 14px; font-weight: 600;
+    margin: 14px 0 4px;
+    color: #E85D3B;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .scratch-body ul {
+    list-style: none; padding-left: 0;
+  }
+  .scratch-body li {
+    padding: 3px 0; position: relative; padding-left: 22px;
+  }
+  .scratch-body li::before {
+    content: '○'; position: absolute; left: 4px;
+    color: rgba(26,22,18,0.35); font-size: 13px;
+  }
+  .scratch-body li.done::before { content: '●'; color: #E85D3B; }
+  .scratch-body p { margin: 4px 0; }
+  .scratch-body .placeholder { color: rgba(26,22,18,0.35); font-style: italic; }
+  .scratch-body .cursor {
+    display: inline-block; width: 2px; height: 18px;
+    background: #1A1612; vertical-align: middle;
+    animation: caret 1s steps(2) infinite;
+  }
+  @keyframes caret { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+
+  .ai-hint {
+    margin: 18px 0; padding: 12px 16px;
+    background: #FBF8F3;
+    border-left: 2px solid #E85D3B;
+    border-radius: 0 8px 8px 0;
+    font-size: 13.5px; color: #4A3F33; line-height: 1.55;
+    font-style: italic;
+  }
+  .ai-hint::before {
+    content: 'Mockingbird notes ·';
+    font-style: normal; font-weight: 600;
+    color: #E85D3B; margin-right: 6px;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* transcript card */
+  .transcript-header {
+    padding: 12px 22px; border-bottom: 1px solid rgba(26,22,18,0.06);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .transcript-header .label {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.14em; font-weight: 700;
+    color: #6B5F50;
+  }
+  .transcript-header .copy {
+    font-size: 12px; color: #6B5F50;
+    background: none; border: none; cursor: pointer; font-family: inherit;
+  }
+  .transcript-body { flex: 1; overflow-y: auto; padding: 16px 22px 80px; }
+  .turn { padding: 10px 0; }
+  .turn-meta {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-bottom: 3px;
+  }
+  .turn-speaker {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.14em; font-weight: 700;
+    color: #6B5F50;
+  }
+  .turn-speaker.you { color: #E85D3B; }
+  .turn-time {
+    font-size: 10px; color: rgba(26,22,18,0.3);
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .turn-text { font-size: 13.5px; line-height: 1.6; color: #1A1612; }
+  .turn-text strong { font-weight: 600; }
+
+  /* floating voice control */
+  .voice-fab {
+    position: fixed; bottom: 28px; right: 28px;
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 18px 12px 14px;
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.1);
+    border-radius: 100px;
+    box-shadow: 0 20px 50px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.04);
+    z-index: 100;
+  }
+  .fab-orb {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: radial-gradient(circle at 32% 30%, #FF8A5E, #F26A3E 40%, #C84415 90%);
+    box-shadow:
+      0 8px 20px rgba(232,93,59,0.35),
+      0 0 0 1px rgba(255,255,255,0.5) inset;
+    position: relative;
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .fab-ring {
+    position: absolute; inset: -4px; border-radius: 50%;
+    border: 1.5px solid rgba(232,93,59,0.25);
+    animation: ringExpand 2.4s ease-out infinite;
+  }
+  @keyframes ringExpand {
+    0% { transform: scale(0.88); opacity: 0.8; }
+    100% { transform: scale(1.4); opacity: 0; }
+  }
+  .fab-status {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .fab-label {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.14em; font-weight: 700;
+    color: #6B5F50;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .fab-label::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: #4CAF50; box-shadow: 0 0 0 2.5px rgba(76,175,80,0.2);
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .fab-text {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-size: 14px; color: #1A1612;
+  }
+  .fab-divider {
+    width: 1px; height: 28px; background: rgba(26,22,18,0.1);
+  }
+  .fab-mic {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #F7F4ED; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .fab-mic:hover { background: #ECE6D9; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topstrip">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      Mockingbird
+    </div>
+    <div class="top-actions">
+      <div class="timer">22:14</div>
+      <button class="btn">⏸</button>
+      <button class="btn btn-danger">End</button>
+    </div>
+  </div>
+
+  <div class="case-banner">
+    <div class="case-banner-left">
+      <span class="label">Today's case · Product Design</span>
+      <div class="prompt">Design a meditation app for elderly users.</div>
+      <div class="meta">
+        <span class="pill">Google PM persona</span>
+        <span class="pill">~30 min</span>
+        <span class="pill">CIRCLES framework active</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- SCRATCHPAD (primary) -->
+    <div class="scratch-card">
+      <div class="scratch-toolbar">
+        <div class="scratch-tool-group">
+          <button class="scratch-tool active">¶</button>
+          <button class="scratch-tool">H</button>
+          <button class="scratch-tool">•</button>
+          <button class="scratch-tool">→</button>
+          <button class="scratch-tool">⌘</button>
+        </div>
+        <div class="scratch-frameworks">
+          <span class="active-fw">Your CIRCLES</span>
+        </div>
+      </div>
+      <div class="scratch-body">
+        <h2>Clarifying questions</h2>
+        <ul>
+          <li class="done">Meditation-curious or non-meditators? → curious</li>
+          <li class="done">Why now? (sleep, anxiety triggers) → both</li>
+          <li>Geography / device assumption?</li>
+        </ul>
+
+        <h3>Customer</h3>
+        <ul>
+          <li>65+, smartphone-comfortable, not power-users</li>
+          <li>aware meditation helps; intimidated by existing apps</li>
+          <li>pain: cluttered UI, decision fatigue, small type</li>
+        </ul>
+
+        <h3>Insight</h3>
+        <p>Existing apps treat elderly like any other user. The real ceiling isn't <em>more content</em> — it's <em>fewer choices</em>.</p>
+
+        <div class="ai-hint">You're moving fast to solution. Step <code>R</code> (Report needs) isn't on the page yet — want to articulate the top 3 needs before jumping to features?</div>
+
+        <h3>Solution sketch</h3>
+        <ul>
+          <li>one-tap "today's session" on home — zero choices</li>
+          <li>voice-guided onboarding (not text walls)</li>
+          <li>large type, high contrast, single CTA<span class="cursor"></span></li>
+        </ul>
+
+        <p class="placeholder">type to continue…</p>
+      </div>
+    </div>
+
+    <!-- TRANSCRIPT (secondary) -->
+    <div class="transcript-card">
+      <div class="transcript-header">
+        <div class="label">Conversation</div>
+        <button class="copy">Copy ↗</button>
+      </div>
+      <div class="transcript-body">
+        <div class="turn">
+          <div class="turn-meta">
+            <span class="turn-speaker">Interviewer</span>
+            <span class="turn-time">00:42</span>
+          </div>
+          <div class="turn-text">Let's start with who exactly we're designing for, and what's the core problem they have today?</div>
+        </div>
+        <div class="turn">
+          <div class="turn-meta">
+            <span class="turn-speaker you">You</span>
+            <span class="turn-time">01:08</span>
+          </div>
+          <div class="turn-text">I'd like to clarify first — are we targeting elderly who are meditation-curious, or trying to convert non-meditators?</div>
+        </div>
+        <div class="turn">
+          <div class="turn-meta">
+            <span class="turn-speaker">Interviewer</span>
+            <span class="turn-time">01:24</span>
+          </div>
+          <div class="turn-text">Good distinction. Let's say already curious — they've heard meditation helps with sleep and anxiety, but find existing apps overwhelming.</div>
+        </div>
+        <div class="turn">
+          <div class="turn-meta">
+            <span class="turn-speaker you">You</span>
+            <span class="turn-time">02:11</span>
+          </div>
+          <div class="turn-text">Got it. We're designing for 65+ adults who know meditation can help but find apps like Calm or Headspace cluttered. Core problem I'd prioritize is <strong>decision fatigue</strong>.</div>
+        </div>
+        <div class="turn">
+          <div class="turn-meta">
+            <span class="turn-speaker">Interviewer</span>
+            <span class="turn-time">02:38</span>
+          </div>
+          <div class="turn-text">Hmm. Why decision fatigue specifically — not something about the audio content or accessibility?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- floating voice control -->
+  <div class="voice-fab">
+    <div style="position: relative;">
+      <div class="fab-ring"></div>
+      <div class="fab-orb"></div>
+    </div>
+    <div class="fab-status">
+      <span class="fab-label">Listening</span>
+      <span class="fab-text">"Take your time…"</span>
+    </div>
+    <div class="fab-divider"></div>
+    <button class="fab-mic">🎙️</button>
+  </div>
+</div>
+</body>
+</html>

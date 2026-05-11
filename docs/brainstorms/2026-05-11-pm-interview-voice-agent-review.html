@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PM Interview Voice Agent — Document Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #F7F4ED;
+    color: #1A1612;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "ss02", "cv11";
+    line-height: 1.5;
+  }
+
+  .container { max-width: 1080px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* HEADER */
+  .header { margin-bottom: 40px; }
+  .breadcrumb {
+    font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.16em; font-weight: 600;
+    color: #E85D3B; margin-bottom: 14px;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .breadcrumb::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: #E85D3B; box-shadow: 0 0 10px rgba(232,93,59,0.4);
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 44px; line-height: 1.1; letter-spacing: -0.02em;
+    font-weight: 400; color: #1A1612;
+    margin-bottom: 12px;
+  }
+  .subtitle {
+    font-size: 16px; color: #6B5F50; max-width: 720px;
+    line-height: 1.55;
+  }
+  .meta {
+    margin-top: 18px; display: flex; gap: 16px; flex-wrap: wrap;
+    font-size: 13px; color: #6B5F50;
+  }
+  .meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .meta strong { color: #1A1612; font-weight: 600; }
+
+  /* STATS CARDS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .stat-card {
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.08);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .stat-num {
+    font-family: 'Instrument Serif', serif;
+    font-size: 36px; line-height: 1; letter-spacing: -0.02em;
+    color: #1A1612; margin-bottom: 4px;
+  }
+  .stat-num.p0 { color: #B83D1A; }
+  .stat-num.p1 { color: #E85D3B; }
+  .stat-num.fyi { color: #6B5F50; }
+  .stat-label {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.12em; font-weight: 600;
+    color: #6B5F50;
+  }
+
+  /* INSIGHT BLOCK */
+  .insight {
+    background: #FBF8F3;
+    border: 1px solid rgba(26,22,18,0.07);
+    border-left: 3px solid #E85D3B;
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    margin-bottom: 36px;
+  }
+  .insight-label {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.14em; font-weight: 700;
+    color: #E85D3B; margin-bottom: 10px;
+  }
+  .insight h3 {
+    font-size: 15px; font-weight: 600; margin: 12px 0 4px;
+  }
+  .insight h3:first-of-type { margin-top: 0; }
+  .insight p {
+    font-size: 14px; color: #2A211A; line-height: 1.65;
+  }
+
+  /* FILTERS */
+  .filters {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 24px; align-items: center;
+    position: sticky; top: 0; z-index: 10;
+    padding: 16px 0;
+    background: linear-gradient(180deg, #F7F4ED 75%, rgba(247,244,237,0));
+  }
+  .filter-label {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.12em; font-weight: 600;
+    color: #6B5F50; margin-right: 6px;
+  }
+  .chip {
+    padding: 6px 12px; font-size: 12.5px; font-weight: 500;
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.1);
+    border-radius: 100px; cursor: pointer;
+    color: #1A1612; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .chip:hover { border-color: rgba(26,22,18,0.22); }
+  .chip.active { background: #1A1612; color: #FBF8F3; border-color: #1A1612; }
+  .chip-count {
+    font-size: 11px; color: #6B5F50;
+    padding: 0 6px; border-radius: 100px;
+    background: #F7F4ED;
+  }
+  .chip.active .chip-count { background: rgba(255,255,255,0.15); color: rgba(251,248,243,0.9); }
+  .chip-clear {
+    background: transparent; border-color: rgba(232,93,59,0.3); color: #E85D3B;
+  }
+
+  /* SECTION HEADERS */
+  .severity-section { margin-bottom: 32px; }
+  .severity-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(26,22,18,0.1);
+  }
+  .severity-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 26px; letter-spacing: -0.01em;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  .severity-title-meta {
+    font-size: 13px; color: #6B5F50;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* FINDING CARD */
+  .finding {
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.08);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 10px;
+    transition: border-color 0.15s ease;
+  }
+  .finding:hover { border-color: rgba(26,22,18,0.18); }
+  .finding.hidden { display: none; }
+
+  .finding-head {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.1em; font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+  }
+  .badge.sev-P0 { background: #B83D1A; color: #FBF8F3; }
+  .badge.sev-P1 { background: #E85D3B; color: #FBF8F3; }
+  .badge.sev-P2 { background: rgba(232,93,59,0.12); color: #B83D1A; }
+  .badge.sev-FYI { background: #F0EAD6; color: #6B5F50; }
+  .badge.action-Apply { background: rgba(76,175,80,0.12); color: #2A6A2D; }
+  .badge.action-Defer { background: rgba(220,160,40,0.15); color: #8B5A0B; }
+  .badge.action-Skip { background: rgba(26,22,18,0.08); color: #6B5F50; }
+  .badge.reviewer {
+    background: #F7F4ED; color: #6B5F50;
+    border: 1px solid rgba(26,22,18,0.08);
+  }
+  .badge.type-error { background: rgba(184,61,26,0.08); color: #B83D1A; }
+  .badge.type-omission { background: rgba(75,110,140,0.1); color: #4B6E8C; }
+
+  .finding-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    color: rgba(26,22,18,0.4);
+  }
+  .finding-title {
+    font-size: 17px; font-weight: 600; line-height: 1.35;
+    color: #1A1612; flex: 1; min-width: 100%;
+    margin-top: 4px;
+  }
+  .finding-section {
+    font-size: 12px; color: #6B5F50;
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .finding-section::before { content: '§ '; color: rgba(26,22,18,0.3); }
+
+  .finding-body { font-size: 14px; line-height: 1.65; color: #2A211A; }
+  .finding-body .label {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.14em; font-weight: 700;
+    color: #6B5F50; margin: 12px 0 4px;
+    display: block;
+  }
+  .finding-body .label:first-child { margin-top: 0; }
+  .finding-body p { margin: 0; }
+  .finding-body strong { font-weight: 600; }
+  .finding-body em { font-style: italic; color: #4A3F33; }
+  .finding-body code {
+    background: #F7F4ED; padding: 1px 6px;
+    border-radius: 4px; font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px; color: #1A1612;
+  }
+
+  .conflict-note {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: rgba(220,160,40,0.08);
+    border-left: 2px solid #C9952F;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: #6B4E0B;
+    font-style: italic;
+  }
+  .conflict-note::before {
+    content: '⚠ Conflict — '; font-style: normal; font-weight: 600;
+    color: #8B5A0B;
+  }
+
+  /* FYI SECTION */
+  .fyi-list {
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.08);
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+  .fyi-item {
+    padding: 10px 0;
+    border-bottom: 1px dashed rgba(26,22,18,0.08);
+    font-size: 14px;
+  }
+  .fyi-item:last-child { border-bottom: none; }
+  .fyi-item strong { color: #1A1612; font-weight: 600; }
+  .fyi-item .src {
+    font-size: 11px; color: #6B5F50;
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: 6px;
+  }
+
+  /* COVERAGE TABLE */
+  .coverage {
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 32px;
+  }
+  .coverage h2 {
+    padding: 18px 24px 14px;
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px; font-weight: 400;
+    border-bottom: 1px solid rgba(26,22,18,0.08);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    text-align: left; padding: 10px 24px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(26,22,18,0.06);
+  }
+  th {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.12em; color: #6B5F50;
+    background: #FBF8F3; font-weight: 700;
+  }
+  td.num { font-variant-numeric: tabular-nums; font-weight: 500; }
+  tr:last-child td { border-bottom: none; }
+  tr.total td { font-weight: 600; background: #FBF8F3; }
+  .footnote {
+    padding: 14px 24px;
+    background: #FBF8F3;
+    font-size: 12.5px;
+    color: #6B5F50;
+    border-top: 1px solid rgba(26,22,18,0.06);
+  }
+  .footnote-item { display: block; margin: 2px 0; }
+  .footnote-item code {
+    background: #FFFFFF; padding: 1px 6px; border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+
+  /* RESIDUAL + DEFERRED */
+  .residuals {
+    margin-top: 32px;
+    display: grid; gap: 16px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .res-card {
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.08);
+    border-radius: 12px;
+    padding: 18px 22px;
+  }
+  .res-card h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 18px; font-weight: 400;
+    margin-bottom: 10px;
+  }
+  .res-card ul {
+    list-style: none; padding-left: 0;
+    font-size: 13.5px; line-height: 1.6;
+  }
+  .res-card li {
+    padding: 4px 0; padding-left: 14px;
+    position: relative;
+    color: #2A211A;
+  }
+  .res-card li::before {
+    content: '·'; position: absolute; left: 0;
+    color: rgba(26,22,18,0.35);
+    font-weight: 700;
+  }
+
+  /* FOOTER ACTIONS */
+  .footer-actions {
+    margin-top: 48px;
+    padding: 24px 28px;
+    background: #FFFFFF;
+    border: 1px solid rgba(26,22,18,0.08);
+    border-radius: 12px;
+  }
+  .footer-actions h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px; font-weight: 400; margin-bottom: 6px;
+  }
+  .footer-actions p {
+    font-size: 14px; color: #6B5F50; margin-bottom: 16px;
+  }
+  .action-list {
+    display: grid; gap: 10px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .action-option {
+    padding: 14px 16px;
+    background: #FBF8F3;
+    border: 1px solid rgba(26,22,18,0.07);
+    border-radius: 10px;
+  }
+  .action-option strong {
+    display: block;
+    font-size: 14px; font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .action-option span { font-size: 12.5px; color: #6B5F50; line-height: 1.5; }
+  .action-option.rec { border-color: rgba(232,93,59,0.35); background: #FFF8F4; }
+  .action-option.rec strong::after {
+    content: ' · recommended';
+    font-size: 10px; color: #E85D3B;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+
+  @media (max-width: 720px) {
+    .residuals, .action-list { grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <div class="breadcrumb">Document Review — Round 1</div>
+  <h1>PM Interview Voice Agent</h1>
+  <p class="subtitle">Independent multi-persona review of <code style="font-family:'JetBrains Mono',monospace;font-size:13px;background:#F7F4ED;padding:1px 6px;border-radius:4px;">2026-05-11-pm-interview-voice-agent-requirements.md</code> by 7 reviewer agents (coherence, feasibility, product, design, security, scope, adversarial). 37 actionable findings + 6 FYI observations.</p>
+  <div class="meta">
+    <span><strong>Reviewed:</strong> 2026-05-11</span>
+    <span><strong>Tier:</strong> Deep — product</span>
+    <span><strong>Round:</strong> 1</span>
+    <span><strong>Coherence:</strong> 0 issues (doc internally consistent)</span>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat-card"><div class="stat-num p0">2</div><div class="stat-label">P0 critical</div></div>
+  <div class="stat-card"><div class="stat-num p1">17</div><div class="stat-label">P1 important</div></div>
+  <div class="stat-card"><div class="stat-num">18</div><div class="stat-label">P2 surfacing</div></div>
+  <div class="stat-card"><div class="stat-num fyi">6</div><div class="stat-label">FYI observations</div></div>
+  <div class="stat-card"><div class="stat-num">16</div><div class="stat-label">Apply-ready</div></div>
+  <div class="stat-card"><div class="stat-num">21</div><div class="stat-label">Judgment calls</div></div>
+</div>
+
+<div class="insight">
+  <div class="insight-label">★ The three big premise concerns</div>
+  <p>Three premise-level concerns surfaced from independent personas converging — these are likely worth resolving before planning:</p>
+  <h3>1. Audience-fit across three different employers</h3>
+  <p>Sarvam = Bharat/Indic voice; ElevenLabs = audio quality/creator-tool; Wispr Flow = input-method ergonomics. A Google-Meta-persona English PM simulator is closest to ElevenLabs, neutral-to-weak for Sarvam, tangential for Wispr Flow. Product-lens raised this 4 different ways.</p>
+  <h3>2. BYO-key adoption tax vs ~100-user target</h3>
+  <p>PM candidates are not the developer audience — most don't have provider keys. Against free ChatGPT voice mode, the BYO friction is a real adoption tax. Product, design, adversarial, and security personas all touch this.</p>
+  <h3>3. V1 scope ambition vs stated "deep, not broad" discipline</h3>
+  <p>Homepage richness (R2-R4), provider abstraction (R16), and the V0 bakeoff publication (R18) are all bigger than "one case, deep" suggests. Scope-guardian + product-lens converge here.</p>
+  <p style="margin-top:14px;font-size:13px;color:#6B5F50;"><em>Most other P0/P1 findings are <strong>gated_auto</strong> with concrete fixes — the doc is missing things rather than wrong about things, which is a good sign for a brainstorm-tier artifact.</em></p>
+</div>
+
+<div class="filters">
+  <span class="filter-label">Filter:</span>
+  <button class="chip active" data-filter-severity="all">All <span class="chip-count" id="count-all">43</span></button>
+  <button class="chip" data-filter-severity="P0">P0 <span class="chip-count">2</span></button>
+  <button class="chip" data-filter-severity="P1">P1 <span class="chip-count">17</span></button>
+  <button class="chip" data-filter-severity="P2">P2 <span class="chip-count">18</span></button>
+  <button class="chip" data-filter-severity="FYI">FYI <span class="chip-count">6</span></button>
+  <span style="margin-left:14px"></span>
+  <span class="filter-label">Reviewer:</span>
+  <button class="chip" data-filter-reviewer="product-lens">Product</button>
+  <button class="chip" data-filter-reviewer="design-lens">Design</button>
+  <button class="chip" data-filter-reviewer="security-lens">Security</button>
+  <button class="chip" data-filter-reviewer="scope-guardian">Scope</button>
+  <button class="chip" data-filter-reviewer="adversarial">Adversarial</button>
+  <button class="chip" data-filter-reviewer="feasibility">Feasibility</button>
+</div>
+
+<!-- =================== P0 =================== -->
+<div class="severity-section" data-sev-section="P0">
+  <div class="severity-header">
+    <div class="severity-title">P0 <span class="severity-title-meta">— critical, fully rendered</span></div>
+    <div class="severity-title-meta">2 omissions · both Apply-ready</div>
+  </div>
+
+  <div class="finding" data-severity="P0" data-reviewer="design-lens">
+    <div class="finding-head">
+      <span class="finding-id">P0.1</span>
+      <span class="badge sev-P0">P0</span>
+      <span class="badge reviewer">design-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">Voice error states entirely absent from requirements</div>
+    </div>
+    <div class="finding-section">Session UI (three-panel layout)</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>R9 specifies only three agent states (listening, thinking, speaking). Implementers will inevitably hit mic-permission-denied, network drop mid-session, ASR returning no result, API key invalid/expired, and provider timeout — without specified states for each, every implementer will invent different error UX. A candidate mid-session who sees no feedback has their session ruined with no recovery path, undermining the product's core value.</p>
+      <span class="label">Proposed fix</span>
+      <p>Add a requirement enumerating 5 error states with orb animation behavior, status dot color, status text copy, and recovery action each: (1) mic-permission-denied with grant-permission affordance, (2) network-drop with reconnecting status, (3) ASR-no-result with prompt to repeat, (4) API-key-invalid with full-panel error pointing back to onboarding, (5) provider-timeout with retry affordance.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P0" data-reviewer="design-lens">
+    <div class="finding-head">
+      <span class="finding-id">P0.2</span>
+      <span class="badge sev-P0">P0</span>
+      <span class="badge reviewer">design-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">Onboarding step has no error or validation states</div>
+    </div>
+    <div class="finding-section">Onboarding & access (V1)</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>R6 describes key entry and persistence but says nothing about what happens when a key is wrong, malformed, or rejected by the provider on first use. An invalid Anthropic key isn't caught until the first LLM call fires after case selection — leaving the candidate inside the session screen with a broken AI and no specified recovery path. Implementers will silently swallow the failure differently.</p>
+      <span class="label">Proposed fix</span>
+      <p>Validate keys synchronously at end of onboarding via lightweight test call to each provider before the session screen renders. Show inline field validation for format (e.g., <code>sk-</code> prefix check), provider-specific error copy ("Invalid Anthropic key — check at console.anthropic.com"), and a clear re-entry path. Gate session start on successful ping response.</p>
+    </div>
+  </div>
+</div>
+
+<!-- =================== P1 =================== -->
+<div class="severity-section" data-sev-section="P1">
+  <div class="severity-header">
+    <div class="severity-title">P1 <span class="severity-title-meta">— important</span></div>
+    <div class="severity-title-meta">17 findings · 7 errors / 10 omissions</div>
+  </div>
+
+  <!-- P1 ERRORS -->
+  <div class="finding" data-severity="P1" data-reviewer="design-lens scope-guardian">
+    <div class="finding-head">
+      <span class="finding-id">P1.1</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">design + scope</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Defer">recommended: Defer</span>
+      <div class="finding-title">Homepage scope: design wants more spec, scope wants less</div>
+    </div>
+    <div class="finding-section">Homepage & marketing surface</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>Design-lens says R2-R4 needs MORE specification (reading order, copy direction for the 3-4 feature blocks, content hierarchy, concrete Gumroad pattern reference). Scope-guardian says R2-R4 is OVERBUILT for V1 and should reduce to hero + CTA, deferring feature blocks and the video embed to post-V1 polish pass. The doc commits to a "Gumroad-grade" homepage AND a "one case type, deep — quality bar over breadth" V1 thesis — these pull in opposite directions.</p>
+      <span class="label">Proposed direction</span>
+      <p>This is a real tradeoff between launch-time portfolio signal (homepage matters because it doubles as application artifact) and V1 scope discipline (a static landing page satisfies F1 with near-zero overhead, freeing build time for simulator quality).</p>
+      <div class="conflict-note">design-lens recommends Apply (expand specs); scope-guardian recommends Apply (cut scope). Agent's recommendation: Defer to your judgment — this is a portfolio-vs-discipline call only you can make.</div>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="product-lens">
+    <div class="finding-head">
+      <span class="finding-id">P1.2</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">product-lens</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">Differentiation from ChatGPT voice mode under-argued</div>
+    </div>
+    <div class="finding-section">Problem Frame</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>Doc dismisses ChatGPT voice mode in one clause ("lack simulation discipline"). But a candidate can prompt ChatGPT voice mode with "you are a Google PM interviewer, do not break character, ask framework-aware probes" and get 80% of the experience for $0 with no BYO key friction. Framework-aware probes are the only real moat — and the doc never demonstrates ChatGPT voice mode cannot do this. If the differentiation collapses, ~100-user target is at risk and the portfolio-artifact value drops to "thin LLM wrapper."</p>
+      <span class="label">Proposed fix</span>
+      <p>Either document specific behaviors ChatGPT voice mode demonstrably fails at when system-prompted to be a PM interviewer (with evidence from operator having tried it), OR reframe the value-prop around what's genuinely defensible — the empirical voice-provider testbed angle, the operator's specific framework library, or the post-session feedback quality — rather than "simulation discipline."</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="product-lens">
+    <div class="finding-head">
+      <span class="finding-id">P1.3</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">product-lens</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">BYO-key friction undermines ~100-candidate adoption goal</div>
+    </div>
+    <div class="finding-section">Success Criteria / Onboarding</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>V1 requires anonymous candidates to obtain and paste their own LLM key and voice-provider key before they hear the first interviewer question. PM-prep candidates are not the developer audience — most don't have Anthropic/OpenAI/Cartesia/Sarvam keys, let alone all simultaneously. Acquiring requires signup, billing, copy-paste. Against free zero-friction ChatGPT voice mode, this is real adoption tax. The ~100-unique-candidates-in-30-days target plausibly collides with this gate.</p>
+      <span class="label">Proposed fix</span>
+      <p>Either lower the ~100 target to reflect BYO-key conversion realism, or add an explicit assumption that ~100 is achievable only if operator's X audience skews technical, or revisit whether V1 "try-once with operator-funded key" is worth pulling forward from V2.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="scope-guardian">
+    <div class="finding-head">
+      <span class="finding-id">P1.4</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">scope-guardian</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">R18 bakeoff is pre-V1 work disguised as V1 requirement</div>
+    </div>
+    <div class="finding-section">Voice integration & provider abstraction</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>R18 requires publishing a public comparison artifact at V1 launch. F3 explicitly labels this as "initial V0 bakeoff for V1 launch." This is operator research and content work that completes BEFORE V1 ships, not a product requirement V1 implements. Framing it as R18 creates a false dependency: the product cannot launch until the bakeoff post publishes, even though no user-facing feature gates on it. If Sarvam API access delays, V1 ship blocks.</p>
+      <span class="label">Proposed fix</span>
+      <p>Move R18 to a pre-V1 operator task list (or V0 deliverables section). The product requirement should only be: "V1 default provider is selected empirically before launch." Remove the publication obligation from the requirements doc — the X post is content strategy, not a product requirement.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="scope-guardian">
+    <div class="finding-head">
+      <span class="finding-id">P1.5</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">scope-guardian</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">Provider abstraction over-specified for one-provider V1</div>
+    </div>
+    <div class="finding-section">Voice integration & provider abstraction</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>R17 explicitly states V1 ships with one provider. Building a provider abstraction before a second provider is wired means the interface design is speculative — the actual contract can only be validated once a second provider is integrated. The "smallest common interface" is itself listed as a deferred planning question, so V1 ships with an abstraction whose shape is not yet known. Shipping one provider behind an unvalidated interface is strictly more work than shipping one provider directly and extracting the interface when the second arrives.</p>
+      <span class="label">Proposed fix</span>
+      <p>Wire V1's chosen provider directly. Extract the provider abstraction immediately before integrating the second provider in V1.1, at which point the interface can be shaped by two real implementations rather than one speculative one. Remove R16 from V1 requirements; note the intention in the V1.1 scope boundary instead.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="adversarial">
+    <div class="finding-head">
+      <span class="finding-id">P1.6</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">adversarial</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">V2 panel UI choice committed without falsification path</div>
+    </div>
+    <div class="finding-section">Key Decisions</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>The doc hard-commits to V2 (Three-Panel) on the grounds that anonymous candidates "need real-time visibility into voice status and ASR accuracy to trust the simulation." This is asserted, not validated. The competing hypothesis — that realism-seeking users actually prefer V1 (Immersive) and find the always-visible transcript distracting — has no test. The Key Decisions section forecloses learning a load-bearing UI decision was wrong.</p>
+      <span class="label">Proposed fix</span>
+      <p>Either add an Outstanding Question accepting that the V2 choice is provisional and list the signal that would trigger a revisit ("candidates report the transcript pulled them out of the simulation"), or ship V1 with a toggle to hide the transcript so the immersive mode is testable.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="adversarial">
+    <div class="finding-head">
+      <span class="finding-id">P1.7</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">adversarial</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">ASR mishearing has no recovery for accented speech</div>
+    </div>
+    <div class="finding-section">Session UI + Acceptance Examples</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>R11 explicitly excludes inline edit; AE4 prescribes re-speaking. For a candidate (including the operator) speaking accented English, 15-30% ASR error rates on PM-jargon-heavy speech ("user research," "north-star metric," "CIRCLES") are realistic. Re-speak compounds: each correction adds another listen-think-speak cycle, the mis-captured line still stands (R11), and the interviewer LLM reads the wrong transcript as context — so the AI's next probe may be answering the mis-captured version. Degrades framework-aware probe quality (R13) silently.</p>
+      <span class="label">Proposed fix</span>
+      <p>Instrument per-session ASR confidence/re-speak rate so "demand for edit" is measurable, not felt. Alternatively, soften R11: V1 supports striking through a mis-captured line so the LLM context excludes it, even without full inline edit. Add an AE covering accented-speech ASR consistently below a threshold.</p>
+    </div>
+  </div>
+
+  <!-- P1 OMISSIONS -->
+  <div class="finding" data-severity="P1" data-reviewer="product-lens">
+    <div class="finding-head">
+      <span class="finding-id">P1.8</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">product-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">One artifact straddles three different hiring audiences</div>
+    </div>
+    <div class="finding-section">Problem Frame / Success Criteria</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>The doc claims this artifact serves PM hiring loops at Sarvam, ElevenLabs, and Wispr Flow — but those three companies index on different things. Sarvam cares about Indian-language voice and Bharat user empathy; ElevenLabs cares about audio quality and creator-tool sensibility; Wispr Flow cares about input-method ergonomics. A Google/Meta-persona English PM simulator is closest to ElevenLabs, neutral-to-weak for Sarvam, tangential for Wispr Flow. Without explicit positioning per audience, the artifact risks reading as "generic voice toy" to all three.</p>
+      <span class="label">Proposed fix</span>
+      <p>Either explicitly name the primary target employer this artifact is optimized for and treat the other two as secondary, or add a Key Decision documenting why the same artifact is fit-for-purpose across all three (e.g., "shared signal = builder who ships voice-AI under latency constraints").</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="product-lens">
+    <div class="finding-head">
+      <span class="finding-id">P1.9</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">product-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">Yojana Saathi displacement unexamined against stated goal</div>
+    </div>
+    <div class="finding-section">Scope Boundaries / Outside this product's identity</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>Yojana Saathi (voice-first govt scheme discovery for non-literate Bharat users) is the closer thematic fit for a Sarvam PM application — Sarvam's positioning is explicitly Bharat-language voice for non-elite users. This doc retires YS to portfolio history and replaces with a Google/Meta-persona English PM interview tool. The doc does not justify why the replacement is a better Sarvam signal than the one being replaced.</p>
+      <span class="label">Proposed fix</span>
+      <p>Add a Key Decision explicitly comparing YS vs PM Interview Buddy as Sarvam-application artifacts on the dimensions Sarvam actually selects on (Bharat user empathy, Indian-language voice, multilingual ASR), and explain why this tool wins despite being English / Google-Meta-persona.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="design-lens">
+    <div class="finding-head">
+      <span class="finding-id">P1.10</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">design-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">Session-start sequence has undefined decision points</div>
+    </div>
+    <div class="finding-section">Key Flows — F1</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>F1 collapses "keys entry → case selection → first AI turn" into a single onboarding step followed immediately by case start. No case-selection step is specified. Unclear whether the user picks from a list, is assigned randomly, or sees only "Product Design" as a category. If picking, no empty state, no case count, no back path defined.</p>
+      <span class="label">Proposed fix</span>
+      <p>Expand F1 to show distinct steps: (a) key entry screen with field per provider, (b) case-selection screen listing available Product Design cases with a count ("6 cases available") and a "random" option, (c) brief pre-session confirmation ("Ready? The interviewer will greet you in character"). Specify empty-state behavior and back-path from case-selection to key entry.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="design-lens">
+    <div class="finding-head">
+      <span class="finding-id">P1.11</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">design-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">Post-session summary shape too vague to implement</div>
+    </div>
+    <div class="finding-section">Interview AI behavior</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>R15 says "brief prose post-session summary covering structure, strongest moment, and one or two specific framework gaps." This tells implementers what topics to cover but not how the summary surface looks, where it appears, or what surrounds it. Does it appear on a new route? In a modal over the session screen? Is there a "Start new session" CTA? Implementer cannot build this screen without inventing all of these decisions.</p>
+      <span class="label">Proposed fix</span>
+      <p>Specify the post-session screen: (a) route/surface (new full-page view vs overlay), (b) elements — summary paragraph, copy-to-clipboard action, session duration, link back to transcript, (c) primary exit CTA, (d) loading state while summary generates (3-8s), (e) error state if generation fails ("Summary unavailable — your transcript is still saved below").</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="design-lens">
+    <div class="finding-head">
+      <span class="finding-id">P1.12</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">design-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">Mobile deferral has no specified degraded experience</div>
+    </div>
+    <div class="finding-section">Scope Boundaries — Deferred for later</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>The doc defers mobile-responsive web entirely but does not specify what a mobile visitor sees. A three-panel layout at 375px viewport will either render as a broken overlapping mess or fall below minimum readable font sizes. With ~50% of link traffic arriving on mobile (especially from X posts where the launch bakeoff content will be shared), a broken page is a first impression that cannot be recovered.</p>
+      <span class="label">Proposed fix</span>
+      <p>At viewport widths below a defined breakpoint (e.g., 1024px), show a full-screen interstitial — not a broken layout — with copy such as "Mockingbird is built for desktop voice sessions. Open this link on a laptop or desktop to begin." Include the URL as a copyable link. This is a single-screen implementation that prevents a broken impression without building full mobile-responsive UX.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="security-lens">
+    <div class="finding-head">
+      <span class="finding-id">P1.13</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">security-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">BYO keys in browser with no XSS mitigation</div>
+    </div>
+    <div class="finding-section">Onboarding & access (V1) / AE3</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>API keys persisted in localStorage (the natural implementation of AE3's "still available locally after reload") are trivially exfiltrated by any XSS vector — a malicious third-party script, an injected ad, or a supply-chain attack on a dependency. The candidate's LLM and voice provider keys would be stolen silently. Single-page voice app likely pulls several npm packages and potentially an embedded video — non-trivial attack surface. Doc defers the cryptographic posture entirely to planning.</p>
+      <span class="label">Proposed fix</span>
+      <p>Resolve storage now: (1) prefer sessionStorage over localStorage to limit persistence to tab lifetime; (2) if cross-reload is required (R6), document threat-accepted decision and add CSP header blocking inline scripts + restricting script-src to a known allowlist; (3) client-side encryption offers marginal benefit if the key is also in JS — the real mitigation is CSP + subresource integrity on dependencies.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="security-lens">
+    <div class="finding-head">
+      <span class="finding-id">P1.14</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">security-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">Private operator frameworks: no access control defined</div>
+    </div>
+    <div class="finding-section">Framework awareness (V1) / F4</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>R20 says private frameworks load via "non-public mechanism" but specifies no concrete access control. The deferred question lists env-var, hidden route, and local-only build flag — none of which enforce authentication. A hidden route is security-through-obscurity: URL enumeration, client bundle analysis, or a public source repo would expose it. An env-var works only if never bundled into client-side JS. Implementer will likely pick whichever is easiest, which may be client-accessible.</p>
+      <span class="label">Proposed fix</span>
+      <p>Specify the mechanism must enforce server-side access control, not rely on obscurity alone. Acceptable patterns: (a) private frameworks live in server-side env-var injected only at server-render time and never in client JS bundle; (b) a route requiring pre-shared secret as a header (not URL parameter), with the secret never committed to source control.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="adversarial">
+    <div class="finding-head">
+      <span class="finding-id">P1.15</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">adversarial</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">Bakeoff commits to publish with no losing-result contingency</div>
+    </div>
+    <div class="finding-section">Voice integration & provider abstraction</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>R18 commits to publishing bakeoff results publicly at V1 launch, and the doc's stated secondary purpose is reaching voice-AI hiring loops at Sarvam. If Sarvam loses meaningfully to Cartesia on English/American interview prep, the operator faces a choice the doc never names: publish honestly (burns Sarvam relationship) or soften/delay (compromises empirical-testbed premise). Either path damages a load-bearing premise.</p>
+      <span class="label">Proposed fix</span>
+      <p>Add a Key Decision: "If Sarvam loses the V1 bakeoff on English interview prep, the writeup will explicitly frame the workload (American-accent English, 30-min PM case, single voice) so the result is not read as a general Sarvam-quality judgment. The result is published regardless of winner; the bakeoff's professional credibility depends on this."</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="adversarial">
+    <div class="finding-head">
+      <span class="finding-id">P1.16</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">adversarial</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">recommended: Apply</span>
+      <div class="finding-title">No end-to-end voice latency budget for simulation realism</div>
+    </div>
+    <div class="finding-section">Session UI + Voice integration</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>R9 requires three distinct voice states visible at all times and AE1 says the candidate must tell "at a glance" the AI is thinking. This only holds if listen-end-to-speech-start is fast enough that "thinking" is a distinguishable state rather than baseline silence. With no stated latency budget, a 2-3s end-to-end loop (plausible for LLM + TTS pipelines today) makes the orb-status distinction meaningless and breaks the simulation realism the Key Decisions name as the headline.</p>
+      <span class="label">Proposed fix</span>
+      <p>Add a requirement or AE with concrete end-to-end latency target as a V1-ship criterion: p50 listen-end to speech-start under 1.5s; p95 under 2.5s. Make the F3 bakeoff latency a gating threshold, not just a comparison metric.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P1" data-reviewer="adversarial">
+    <div class="finding-head">
+      <span class="finding-id">P1.17</span>
+      <span class="badge sev-P1">P1</span>
+      <span class="badge reviewer">adversarial</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Skip">recommended: Skip if P0.2 applied</span>
+      <div class="finding-title">Malformed API key has no failure UX (overlaps P0.2)</div>
+    </div>
+    <div class="finding-section">Onboarding & access (V1)</div>
+    <div class="finding-body">
+      <span class="label">What's wrong</span>
+      <p>R5 + R6 say a session starts as soon as the candidate provides keys, with no account or validation step. If the candidate pastes a typo'd or revoked key, the failure surfaces inside a voice-first context where they may already be mid-question, with no visual focus on an error toast. F1 step 4 jumps from "BYO API keys" directly to "Case starts — the AI greets," which is exactly where this fails silently.</p>
+      <span class="label">Proposed direction</span>
+      <p>This finding overlaps with P0.2 (onboarding error states). Apply P0.2's fix and this is resolved — Skip this one to avoid duplication.</p>
+    </div>
+  </div>
+</div>
+
+<!-- =================== P2 =================== -->
+<div class="severity-section" data-sev-section="P2">
+  <div class="severity-header">
+    <div class="severity-title">P2 <span class="severity-title-meta">— worth surfacing</span></div>
+    <div class="severity-title-meta">18 findings · all Apply-recommended unless noted</div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="product-lens">
+    <div class="finding-head">
+      <span class="finding-id">P2.1</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">product-lens</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">Provider-pluggable V1 trades scope for unclear leverage</div>
+    </div>
+    <div class="finding-section">Key Decisions / Voice integration</div>
+    <div class="finding-body">
+      <p>Abstraction tax unpaid if V1.1 slips. Add a sunset check: if V1.1 second-provider switch doesn't ship within a defined window post-V1, treat abstraction as overscoped. <em>Convergent with P1.5 scope-guardian finding.</em></p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="product-lens">
+    <div class="finding-head">
+      <span class="finding-id">P2.2</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">product-lens</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">Operator-dogfood goal misaligned with R20 priority</div>
+    </div>
+    <div class="finding-section">Success Criteria</div>
+    <div class="finding-body">
+      <p>"Operator uses tool weekly" success criterion gated on lowest-priority feature (R20 private framework loading). Either elevate R20 priority, or weaken the criterion to use public hardcoded frameworks for the first N weeks.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="product-lens">
+    <div class="finding-head">
+      <span class="finding-id">P2.3</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">product-lens</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">Sarvam V1 bakeoff is positioning-conflicted</div>
+    </div>
+    <div class="finding-section">Actors / Voice integration</div>
+    <div class="finding-body">
+      <p>English bakeoff plays away from Sarvam's strengths weeks before applying for a Sarvam PM role. Either reshape bakeoff to include English + Hindi/multilingual tracks where Sarvam plays to its strength, or decide in advance how a "Sarvam loses on English latency" result is handled in the application narrative.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="scope-guardian">
+    <div class="finding-head">
+      <span class="finding-id">P2.4</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">scope-guardian</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">F3 and F4 are operator workflows, not product flows</div>
+    </div>
+    <div class="finding-section">Key Flows</div>
+    <div class="finding-body">
+      <p>F3 has no candidate-facing surface; F4 is a constrained variant of F2. Elevating them to first-class Key Flows inflates apparent V1 surface and may mislead implementers into building operator-facing tooling. Remove F3 from Key Flows entirely; collapse F4 into an "Operator variant" note under F2.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="scope-guardian">
+    <div class="finding-head">
+      <span class="finding-id">P2.5</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">scope-guardian</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">V2 paid tier composition specified prematurely</div>
+    </div>
+    <div class="finding-section">Key Decisions</div>
+    <div class="finding-body">
+      <p>Specifying V2 features now creates implicit V1 infra pressure (implementers will lay groundwork for cross-session memory etc. to avoid blocking V2). Remove V2 paid-tier composition from Key Decisions; retain only "V2 mechanic is try-once-then-paywall." List V2 features in Deferred as candidates, not as decided composition.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="adversarial">
+    <div class="finding-head">
+      <span class="finding-id">P2.18</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">adversarial</span>
+      <span class="badge type-error">error</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">BYO direct-to-provider vs proxy affects V1 economic premise</div>
+    </div>
+    <div class="finding-section">Outstanding Questions / Deferred to Planning</div>
+    <div class="finding-body">
+      <p>Direct-to-provider from browser requires provider CORS support (Anthropic, OpenAI default-deny browser-origin). Ephemeral proxy means operator's server briefly sees every candidate's key (contradicts R6 ownership framing + adds operator infra cost contradicting "zero operator inference cost"). Promote from planning detail to Key Decision; verify each V1 provider's browser-key policy before R6 is treated as feasible.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="feasibility">
+    <div class="finding-head">
+      <span class="finding-id">P2.6</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">feasibility</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">AE3 mid-session reload conflates key persistence with session continuity</div>
+    </div>
+    <div class="finding-section">Acceptance Examples</div>
+    <div class="finding-body">
+      <p>"Session can continue without re-entry" can mean (a) only keys persist and case restarts, or (b) the in-flight voice session resumes mid-case. The second requires server-side state, audio-stream reconnection, LLM conversation-state restore — none specified. Reword AE3 to specify V1 behavior explicitly: "keys persist; candidate restarts the case from the beginning."</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="feasibility">
+    <div class="finding-head">
+      <span class="finding-id">P2.7</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">feasibility</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">Provider abstraction spans component vs end-to-end agents</div>
+    </div>
+    <div class="finding-section">Voice integration & provider abstraction</div>
+    <div class="finding-body">
+      <p>Cartesia is primarily TTS/STT component vendor; Sarvam exposes both components + higher-level agent; ElevenLabs Conversational AI is end-to-end agent owning the LLM turn loop. R16 wants one abstraction; F3 wants apples-to-apples bakeoff metrics across them. May force bypassing each provider's agent layer (discarding the feature evaluated) OR capability-tiered abstraction the deferred question doesn't frame. Expand the deferred provider-abstraction question to explicitly name the component-vs-agent split.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="product-lens">
+    <div class="finding-head">
+      <span class="finding-id">P2.8</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">product-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">Try-once-then-paywall vs free ChatGPT voice unaddressed</div>
+    </div>
+    <div class="finding-section">Key Decisions (V2 monetization)</div>
+    <div class="finding-body">
+      <p>V2 paywall faces a free substitute (ChatGPT voice mode). Binding constraint isn't funnel shape — it's willingness-to-pay against free alternative. Add to Dependencies: "V2 try-once-then-paywall assumes framework-aware probe quality, post-session summary depth, and voice realism are differentiated enough vs free ChatGPT voice mode to justify subscription." Flag as the key V2 risk to validate during V1.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="design-lens">
+    <div class="finding-head">
+      <span class="finding-id">P2.9</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">design-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">"Gumroad-grade" is ungrounded without a reference</div>
+    </div>
+    <div class="finding-section">Homepage & marketing surface</div>
+    <div class="finding-body">
+      <p>Token system specified but "Gumroad-grade" implies specific density, whitespace, copy tone, section rhythm that vary between implementers' mental models. Replace with either (a) direct URL to a Gumroad product page the operator considers exemplary + 2-3 explicit layout/copy decisions being borrowed; or (b) short constraint list: "single-column homepage, hero with one-sentence value prop + one CTA only, no testimonials section, no pricing section, body copy under 60 words per block, 80px section gap."</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="design-lens">
+    <div class="finding-head">
+      <span class="finding-id">P2.10</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">design-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">Scratchpad collapse: expanded layout proportions unspecified</div>
+    </div>
+    <div class="finding-section">Session UI (three-panel layout)</div>
+    <div class="finding-body">
+      <p>R8 says "transcript and voice stage expand into freed space" but doesn't specify proportions. Implementers will produce different results. Add to R8: specify collapsed-state column ratios (e.g., "2:3 transcript-to-voice-stage") and whether the collapse is animated or instant.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="security-lens">
+    <div class="finding-head">
+      <span class="finding-id">P2.11</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">security-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">Direct-to-provider calls expose keys in browser network tab</div>
+    </div>
+    <div class="finding-section">Onboarding & access (V1)</div>
+    <div class="finding-body">
+      <p>If architecture is pure client-side direct-to-provider, every key is visible in browser's network panel + interceptable by any browser extension. A candidate on a shared or monitored machine would have credentials exposed. Add a note in R6: if direct calls chosen, plan must explicitly accept the risk and document threat model. If proxy chosen, proxy introduces new secrets needing rotation/access control. Either choice needs a documented decision.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="security-lens">
+    <div class="finding-head">
+      <span class="finding-id">P2.12</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">security-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">F3 bakeoff implies operator access to candidate transcripts</div>
+    </div>
+    <div class="finding-section">Key Flows — F3</div>
+    <div class="finding-body">
+      <p>F3 describes operator running "the same case + same LLM transcript through provider candidates." If reused from a real anonymous candidate's session, operator is consuming spoken responses without disclosed consent. R5 collects no email or account — no ToS, no privacy notice, no consent flow. Clarify F3 transcript source: (a) operator's own session, (b) synthetic/pre-scripted, or (c) any session (which requires consent flow). For V1, best resolved by restricting bakeoff to operator's own sessions only.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="security-lens">
+    <div class="finding-head">
+      <span class="finding-id">P2.13</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">security-lens</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">V2 managed-key storage promise is undefined and carries forward risk</div>
+    </div>
+    <div class="finding-section">Summary / Scope Boundaries — Deferred</div>
+    <div class="finding-body">
+      <p>"Managed keys behind the paywall" referenced without constraint on storage, rotation, scoping. Add one line to V2 deferral: "Managed-key infrastructure must define credential storage (encrypted at rest, separated from app DB), per-user key scoping, rotation policy, and audit logging before V2 planning begins."</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="adversarial">
+    <div class="finding-head">
+      <span class="finding-id">P2.14</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">adversarial</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">Operator weekly-use success criterion is self-judging</div>
+    </div>
+    <div class="finding-section">Success Criteria</div>
+    <div class="finding-body">
+      <p>Builder evaluating own dogfooding behavior — confirmation bias is structural. Operator may use the tool weekly because they should, not because it's working. Either tighten to quality-signal (e.g., "operator chooses tool over available friend-mock when both options"), or decouple V1 launch from this criterion explicitly. Name what operator stopping weekly use in week 2 implies for V1 ship decision.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="adversarial">
+    <div class="finding-head">
+      <span class="finding-id">P2.15</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">adversarial</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">BYO key cost-shock failure mode unaddressed</div>
+    </div>
+    <div class="finding-section">Onboarding & access + Key Decisions</div>
+    <div class="finding-body">
+      <p>V1 shifts cost to candidate. A 30-min session at scale = $5-15 LLM + voice bill. Candidate's likely reaction to surprise bill: associate cost with the tool, not their provider — generating wrong word-of-mouth signal for the ~100-user growth criterion. Add a requirement: onboarding surfaces estimated per-session cost range based on selected providers (drawn from bakeoff data) + one-line explainer that the bill goes to candidate's provider accounts. Optionally end-of-session names approximate spend.</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="adversarial">
+    <div class="finding-head">
+      <span class="finding-id">P2.16</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">adversarial</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">Interviewer LLM character-break has no recovery requirement</div>
+    </div>
+    <div class="finding-section">Interview AI behavior</div>
+    <div class="finding-body">
+      <p>R12/R14 forbid breaking character but treat it as reliable behavior, not a failure mode to design around. Real LLMs break character — especially under adversarial prompts, jailbreak-shaped questions, genuine confusion. A first-session break ("I'm an AI assistant...") destroys the simulation premise. Doc names no recovery. Add an Outstanding Question or requirement covering character-break recovery: system prompt hardening, automatic in-character redirect, or graceful session-pause. At minimum name expected failure rate as a quality bar ("fewer than 1 break per 10 sessions in eval").</p>
+    </div>
+  </div>
+
+  <div class="finding" data-severity="P2" data-reviewer="adversarial">
+    <div class="finding-head">
+      <span class="finding-id">P2.17</span>
+      <span class="badge sev-P2">P2</span>
+      <span class="badge reviewer">adversarial</span>
+      <span class="badge type-omission">omission</span>
+      <span class="badge action-Apply">Apply</span>
+      <div class="finding-title">Organic-X reach assumption gates 100-user success criterion</div>
+    </div>
+    <div class="finding-section">Dependencies + Success Criteria</div>
+    <div class="finding-body">
+      <p>~100 candidates in 30 days depends on single-channel growth bet with no fallback. If X reach for launch post is under 5k impressions, 100 unique sessions is 2% conversion of impressions to 5-min API-key-entry friction — unrealistic. Either soften criterion (e.g., "~30 users in 30 days, ~100 over V1 lifetime") or name a fallback distribution path (HN Show, ProductHunt, PM-prep Discord communities) in scope if X reach underdelivers.</p>
+    </div>
+  </div>
+</div>
+
+<!-- =================== FYI =================== -->
+<div class="severity-section" data-sev-section="FYI">
+  <div class="severity-header">
+    <div class="severity-title">FYI <span class="severity-title-meta">— observations, no decision required</span></div>
+    <div class="severity-title-meta">6 advisory notes</div>
+  </div>
+  <div class="fyi-list">
+    <div class="fyi-item"><strong>Non-graceful session-end paths unspecified</strong> — what if LLM 5xx mid-summary, network drops, browser closes mid-session? R15 covers happy path only. <span class="src">feasibility</span></div>
+    <div class="fyi-item"><strong>Voice orb is the most generic AI-voice pattern</strong> — used identically in ChatGPT Voice, Siri, dozens of indie voice tools. For a product whose audience is voice-AI company PMs, arriving with the most generic visualization is a credibility risk. <span class="src">design-lens</span></div>
+    <div class="fyi-item"><strong>Homepage video CSP tension</strong> — YouTube embeds load third-party JS that undermines the strict CSP that would protect localStorage keys (P1.13). Separate CSP for homepage vs session pages, or self-host video. <span class="src">security-lens</span></div>
+    <div class="fyi-item"><strong>Gumroad aesthetic is an identity statement</strong> — signals indie-creator/maker, closest to ElevenLabs brand, furthest from Sarvam's Bharat-product surface. Document as a deliberate positioning bet. <span class="src">product-lens</span></div>
+    <div class="fyi-item"><strong>R2 and R3 serve operator portfolio, not candidate</strong> — homepage feature blocks + demo video are traceable primarily to the secondary portfolio goal. Tag them with "(serves operator portfolio goal)" so implementers can trade-off correctly if time is short. <span class="src">scope-guardian</span></div>
+    <div class="fyi-item"><strong>Framework-aware probes risk destabilizing realism</strong> — real interviewers don't probe against a hardcoded ground truth library. R13 firing on every framework miss could generate a pattern of nudge-probes no real Google/Meta PM would ask. <span class="src">adversarial</span></div>
+  </div>
+</div>
+
+<!-- =================== RESIDUAL + DEFERRED =================== -->
+<div class="residuals">
+  <div class="res-card">
+    <h3>Residual concerns (10)</h3>
+    <ul>
+      <li>WebSocket idle / max-duration limits on 30-min sessions (per-provider)</li>
+      <li>Outreach craft post-launch — getting recipients at Sarvam/ElevenLabs/Wispr to actually try it</li>
+      <li>Framework-aware probe quality depends entirely on LLM prompting craft (deferred)</li>
+      <li>Framework-hint UI component visible in V2 mock not in requirements</li>
+      <li>"Ask again" button + transcript "Copy" action in V2 mock unspecified</li>
+      <li>Case library contents entirely unspecified — how many cases, what they are</li>
+      <li>System prompt leakage via prompt injection from candidate speech</li>
+      <li>No V1 rate-limiting / abuse-prevention concept</li>
+      <li>Success criterion timing tied to hiring-cycle windows outside operator's control</li>
+      <li>Hardcoded framework library token budget unvalidated</li>
+    </ul>
+  </div>
+  <div class="res-card">
+    <h3>Deferred to planning (7)</h3>
+    <ul>
+      <li>Scratchpad editing model — textarea vs markdown vs structured template</li>
+      <li>"Settings" button scope in V2 mock — in or out?</li>
+      <li>Transcript persistence after session ends</li>
+      <li>If R16 abstraction removed, does V0 bakeoff still gate V1 ship?</li>
+      <li>Does F4 need any product-facing UI surface?</li>
+      <li>Eval methodology for R12/R13/R14 persona-holding consistency</li>
+      <li>Per-provider browser-origin API support (gates BYO-key architecture)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- =================== COVERAGE =================== -->
+<div class="coverage">
+  <h2>Coverage by reviewer</h2>
+  <table>
+    <thead>
+      <tr><th>Reviewer</th><th class="num">Findings</th><th class="num">Apply</th><th class="num">Decisions</th><th class="num">FYI</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>coherence</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td>doc internally consistent</td></tr>
+      <tr><td>feasibility</td><td class="num">3</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td>—</td></tr>
+      <tr><td>product-lens</td><td class="num">9</td><td class="num">0</td><td class="num">8</td><td class="num">1</td><td>strongest premise-level pushback</td></tr>
+      <tr><td>design-lens</td><td class="num">9</td><td class="num">4</td><td class="num">4</td><td class="num">1</td><td>mobile-gate auto-promoted</td></tr>
+      <tr><td>security-lens</td><td class="num">6</td><td class="num">3</td><td class="num">2</td><td class="num">1</td><td>—</td></tr>
+      <tr><td>scope-guardian</td><td class="num">6</td><td class="num">2</td><td class="num">3</td><td class="num">1</td><td>homepage merged with design (contradiction)</td></tr>
+      <tr><td>adversarial</td><td class="num">11</td><td class="num">6</td><td class="num">4</td><td class="num">1</td><td>—</td></tr>
+      <tr class="total"><td>Total (after merge)</td><td class="num">43</td><td class="num">16</td><td class="num">21</td><td class="num">6</td><td>37 actionable + 6 FYI</td></tr>
+    </tbody>
+  </table>
+  <div class="footnote">
+    <span class="footnote-item"><code>Dropped: 0</code> — no anchor 0/25 findings (all reviewers stayed above the suppression threshold)</span>
+    <span class="footnote-item"><code>Chains: 0</code> — no premise-dependency chains formed (concerns are mostly orthogonal)</span>
+    <span class="footnote-item"><code>Restated: 14</code> — residual/deferred items suppressed as duplicates of actionable findings</span>
+  </div>
+</div>
+
+<!-- =================== ACTIONS =================== -->
+<div class="footer-actions">
+  <h3>What to do next</h3>
+  <p>Once you've scanned the findings above, come back to the chat and tell me how to handle them. Options:</p>
+  <div class="action-list">
+    <div class="action-option rec">
+      <strong>Auto-resolve, surface contested</strong>
+      <span>I apply the gated_auto fixes (concrete fixes for missing requirements — error states, latency budget, security stances, etc.). Premise-level decisions (P1.2 ChatGPT diff, P1.3 BYO friction, P1.8 audience-fit, P1.9 YS displacement, P1.1 homepage contradiction) get surfaced for your judgment in a smaller batch (~12 items).</span>
+    </div>
+    <div class="action-option">
+      <strong>Walk findings one by one</strong>
+      <span>Full per-finding decision loop. Highest signal but slowest — 30-45 min. Best when you want to learn from each persona's reasoning and exercise judgment per item.</span>
+    </div>
+    <div class="action-option">
+      <strong>Append all to Open Questions</strong>
+      <span>No fixes applied. All 37 findings appended to a new "## Open Questions from Review" section in the doc for resolution during ce-plan. Doc stays as-is otherwise.</span>
+    </div>
+    <div class="action-option">
+      <strong>Report only</strong>
+      <span>You've read the review. No edits, no append. Integrate by hand if/when you want. Best when you want to think about the premise-level concerns first.</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+  // Filter logic
+  const sevChips = document.querySelectorAll('[data-filter-severity]');
+  const revChips = document.querySelectorAll('[data-filter-reviewer]');
+  let activeSev = 'all';
+  let activeRev = null;
+
+  function applyFilters() {
+    const findings = document.querySelectorAll('.finding');
+    const fyiItems = document.querySelectorAll('.fyi-item');
+    const sections = document.querySelectorAll('[data-sev-section]');
+
+    findings.forEach(f => {
+      const sev = f.getAttribute('data-severity');
+      const revs = (f.getAttribute('data-reviewer') || '').split(' ');
+      const sevMatch = activeSev === 'all' || activeSev === sev;
+      const revMatch = !activeRev || revs.includes(activeRev);
+      f.classList.toggle('hidden', !(sevMatch && revMatch));
+    });
+
+    // FYI items don't have a data-reviewer attribute on the section, so filter conservatively
+    const fyiSection = document.querySelector('[data-sev-section="FYI"]');
+    if (fyiSection) {
+      if (activeSev === 'FYI' || activeSev === 'all') {
+        fyiSection.style.display = '';
+      } else {
+        fyiSection.style.display = 'none';
+      }
+    }
+
+    // Hide severity sections with no visible findings
+    sections.forEach(s => {
+      const sev = s.getAttribute('data-sev-section');
+      if (sev === 'FYI') return;
+      const anyVisible = s.querySelectorAll('.finding:not(.hidden)').length > 0;
+      s.style.display = anyVisible ? '' : 'none';
+    });
+  }
+
+  sevChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      sevChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeSev = chip.getAttribute('data-filter-severity');
+      applyFilters();
+    });
+  });
+
+  revChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const rev = chip.getAttribute('data-filter-reviewer');
+      if (activeRev === rev) {
+        activeRev = null;
+        chip.classList.remove('active');
+      } else {
+        revChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeRev = rev;
+      }
+      applyFilters();
+    });
+  });
+</script>
+
+</body>
+</html>
