@@ -4,9 +4,17 @@ import type { NextConfig } from "next";
 // stored in localStorage (when the user opts into cross-reload persistence).
 // frame-src is intentionally permissive to allow the homepage demo video embed
 // (R3); session pages may need a stricter CSP at deploy time.
+//
+// Dev mode needs 'unsafe-eval' for Next.js React Refresh (hot reload).
+// Production strips it so the strict R6b posture holds in deployed builds.
+const isDev = process.env.NODE_ENV !== "production";
+const scriptSrc = isDev
+  ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
+  : "script-src 'self'";
+
 const cspDirectives = [
   "default-src 'self'",
-  "script-src 'self'",
+  scriptSrc,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: https:",
