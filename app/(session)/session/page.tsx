@@ -19,9 +19,11 @@ import {
 } from "@/lib/llm/prompts/case-templates";
 import {
   addLlmTokens,
+  addVoiceSeconds,
   getCostSnapshot,
   resetCostTracker,
 } from "@/lib/telemetry/cost-tracker";
+import { useAudioPlayer } from "@/lib/voice/audio-player";
 import { saveCompletedSession } from "@/lib/voice/session-store";
 import {
   initialSession,
@@ -31,15 +33,26 @@ import {
   type SessionSnapshot,
   type Turn,
 } from "@/lib/voice/state-machine";
+import type { MicErrorKind } from "@/lib/voice/mic-capture";
 
-// V1 preview session route. Reads ?case=<id> from URL, looks up the case
-// template, and seeds the session with the case prompt as the interviewer's
-// opening turn. Listens for candidate text input, streams responses from
-// /api/interview, and routes End Session to the summary page.
+// V1.1 session route. Two modes branch off whether the candidate brought a
+// voice provider key:
 //
-// Voice adapters ship after the V0 bakeoff (V1.1). Until then this route
-// exercises every wire except the actual voice round-trip: LLM streaming,
-// state-machine transitions, cost tracking, summary hand-off.
+//   text mode  — textarea + Send button. Existing flow: dispatch turn →
+//                /api/interview SSE → first chunk fires TRANSITION_SPEAKING →
+//                partials → finalize → TRANSITION_LISTENING.
+//
+//   voice mode — push-to-talk mic. Blob → /api/voice/transcribe → user turn
+//                → /api/interview SSE (stays in 'thinking' while text streams)
+//                → on done, /api/voice/synthesize → play audio (now 'speaking')
+//                → audio end fires TRANSITION_LISTENING.
+//
+// Voice mode is gated on the candidate having (a) chosen Sarvam as their
+// voice provider in onboarding and (b) entered a valid Sarvam key. Cartesia
+// support ships in a follow-up phase with WebSocket streaming for lower
+// latency.
+
+const SUPPORTED_VOICE_PROVIDERS = new Set(["sarvam"]);
 
 function buildOpeningSession(caseTemplate: CaseTemplate): SessionSnapshot {
   let s = sessionReducer(initialSession, {
@@ -82,8 +95,6 @@ function SessionInner() {
     buildOpeningSession
   );
 
-  // Ref mirror — async callbacks need the latest turns/state without waiting
-  // for the next render cycle. useReducer dispatches are queued, not sync.
   const sessionRef = useRef(session);
   useEffect(() => {
     sessionRef.current = session;
@@ -91,33 +102,41 @@ function SessionInner() {
 
   const abortRef = useRef<AbortController | null>(null);
   const [llmKey, setLlmKey] = useState<string | null>(null);
+  const [voiceKey, setVoiceKey] = useState<string | null>(null);
   const [keyChecked, setKeyChecked] = useState(false);
+  const { isPlaying, playBase64Mp3, stop: stopAudio } = useAudioPlayer();
 
-  // Load LLM key from storage on mount; redirect if absent.
+  // Load keys from storage on mount; redirect if no LLM key.
   useEffect(() => {
-    const stored = getKey("llm");
-    if (!stored) {
+    const llm = getKey("llm");
+    if (!llm) {
       router.replace("/onboarding");
       return;
     }
-    setLlmKey(stored);
+    setLlmKey(llm);
+    if (SUPPORTED_VOICE_PROVIDERS.has(voiceProvider)) {
+      const v = getKey(voiceProvider as "sarvam");
+      if (v) setVoiceKey(v);
+    }
     setKeyChecked(true);
-  }, [router]);
+  }, [router, voiceProvider]);
 
   // Reset cost tracker per-session (R6c).
   useEffect(() => {
     resetCostTracker({ llmProvider, voiceProvider });
-    // Per-session: deliberately mount-only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Abort any in-flight stream on unmount so we don't leak fetches.
+  // Abort any in-flight stream + cancel any audio playback on unmount.
   useEffect(() => {
-    return () => abortRef.current?.abort();
-  }, []);
+    return () => {
+      abortRef.current?.abort();
+      stopAudio();
+    };
+  }, [stopAudio]);
 
-  // currentQuestion = the latest non-stricken AI turn. Updates live as the
-  // stream fills the turn via TRANSCRIPT_PARTIAL.
+  const voiceModeActive = Boolean(voiceKey) && SUPPORTED_VOICE_PROVIDERS.has(voiceProvider);
+
   const currentQuestion = useMemo(() => {
     for (let i = session.turns.length - 1; i >= 0; i--) {
       const t = session.turns[i];
@@ -126,38 +145,23 @@ function SessionInner() {
     return caseTemplate.prompt;
   }, [session.turns, caseTemplate.prompt]);
 
-  const handleSubmitTurn = useCallback(
-    async (text: string) => {
-      if (!llmKey) return;
-      const userId = newTurnId("user");
-      const aiId = newTurnId("ai");
-      const now = Date.now();
+  /**
+   * Run /api/interview as a streaming SSE call. Returns the full accumulated
+   * AI text. Dispatches TRANSCRIPT_PARTIAL chunks during the stream and a
+   * TRANSCRIPT_FINAL at the end. Optionally fires TRANSITION_SPEAKING on the
+   * first chunk (text mode); voice mode defers that to audio playback start.
+   */
+  const streamLlmResponse = useCallback(
+    async (opts: {
+      turnsForAPI: Turn[];
+      aiTurnId: string;
+      fireSpeakingOnFirstChunk: boolean;
+      signal: AbortSignal;
+    }): Promise<{ ok: true; text: string } | { ok: false; reason: ErrorKind; message: string }> => {
+      if (!llmKey) {
+        return { ok: false, reason: "key-invalid", message: "No LLM key" };
+      }
 
-      dispatch({
-        type: "TRANSCRIPT_FINAL",
-        id: userId,
-        speaker: "user",
-        text,
-        at: now,
-      });
-      dispatch({ type: "TRANSITION_THINKING", listenEndAt: now });
-
-      // The dispatched user turn hasn't reached sessionRef yet — append it
-      // manually so the API sees the full conversation including this turn.
-      const turnsForAPI: Turn[] = [
-        ...turnsForContext(sessionRef.current),
-        {
-          id: userId,
-          speaker: "user",
-          text,
-          partial: false,
-          stricken: false,
-          timestamp: now,
-        },
-      ];
-
-      const controller = new AbortController();
-      abortRef.current = controller;
       let firstChunk = true;
       let accumulated = "";
 
@@ -170,22 +174,16 @@ function SessionInner() {
           },
           body: JSON.stringify({
             caseId: caseTemplate.id,
-            turns: turnsForAPI,
+            turns: opts.turnsForAPI,
           }),
-          signal: controller.signal,
+          signal: opts.signal,
         });
 
         if (response.status === 401) {
-          dispatch({ type: "ERROR", kind: "key-invalid", at: Date.now() });
-          return;
+          return { ok: false, reason: "key-invalid", message: "Anthropic rejected the key" };
         }
         if (!response.ok || !response.body) {
-          dispatch({
-            type: "ERROR",
-            kind: "provider-timeout",
-            at: Date.now(),
-          });
-          return;
+          return { ok: false, reason: "provider-timeout", message: `LLM ${response.status}` };
         }
 
         const reader = response.body.getReader();
@@ -217,16 +215,18 @@ function SessionInner() {
             }
             if (parsed.text) {
               if (firstChunk) {
-                dispatch({
-                  type: "TRANSITION_SPEAKING",
-                  speechStartAt: Date.now(),
-                });
+                if (opts.fireSpeakingOnFirstChunk) {
+                  dispatch({
+                    type: "TRANSITION_SPEAKING",
+                    speechStartAt: Date.now(),
+                  });
+                }
                 firstChunk = false;
               }
               accumulated += parsed.text;
               dispatch({
                 type: "TRANSCRIPT_PARTIAL",
-                id: aiId,
+                id: opts.aiTurnId,
                 speaker: "ai",
                 text: accumulated,
                 at: Date.now(),
@@ -238,39 +238,240 @@ function SessionInner() {
         if (accumulated) {
           dispatch({
             type: "TRANSCRIPT_FINAL",
-            id: aiId,
+            id: opts.aiTurnId,
             speaker: "ai",
             text: accumulated,
             at: Date.now(),
           });
         }
-        dispatch({ type: "TRANSITION_LISTENING" });
+        return { ok: true, text: accumulated };
       } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        const message = err instanceof Error ? err.message : "Unknown error";
-        // eslint-disable-next-line no-console
-        console.error("Interview stream failed:", message);
-        if (/401|unauthor|invalid.*key/i.test(message)) {
-          dispatch({ type: "ERROR", kind: "key-invalid", at: Date.now() });
-        } else if (/network|fetch|connection|offline/i.test(message)) {
-          dispatch({ type: "ERROR", kind: "network-drop", at: Date.now() });
-        } else {
-          dispatch({
-            type: "ERROR",
-            kind: "provider-timeout",
-            at: Date.now(),
-          });
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return { ok: false, reason: "aborted", message: "aborted" };
         }
-      } finally {
-        if (abortRef.current === controller) abortRef.current = null;
+        const message = err instanceof Error ? err.message : "Unknown LLM error";
+        // eslint-disable-next-line no-console
+        console.error("LLM stream failed:", message);
+        const reason: ErrorKind = /401|unauthor|invalid.*key/i.test(message)
+          ? "key-invalid"
+          : /network|fetch|connection|offline/i.test(message)
+            ? "network-drop"
+            : "provider-timeout";
+        return { ok: false, reason, message };
       }
     },
     [llmKey, caseTemplate.id]
   );
 
+  /** Text mode: TRANSCRIPT_FINAL the user turn, run LLM, listening. */
+  const handleSubmitTurn = useCallback(
+    async (text: string) => {
+      if (!llmKey) return;
+      const userId = newTurnId("user");
+      const aiId = newTurnId("ai");
+      const now = Date.now();
+
+      dispatch({
+        type: "TRANSCRIPT_FINAL",
+        id: userId,
+        speaker: "user",
+        text,
+        at: now,
+      });
+      dispatch({ type: "TRANSITION_THINKING", listenEndAt: now });
+
+      const turnsForAPI: Turn[] = [
+        ...turnsForContext(sessionRef.current),
+        {
+          id: userId,
+          speaker: "user",
+          text,
+          partial: false,
+          stricken: false,
+          timestamp: now,
+        },
+      ];
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      const result = await streamLlmResponse({
+        turnsForAPI,
+        aiTurnId: aiId,
+        fireSpeakingOnFirstChunk: true,
+        signal: controller.signal,
+      });
+
+      if (abortRef.current === controller) abortRef.current = null;
+      if (!result.ok) {
+        applyStreamError(dispatch, result.reason);
+        return;
+      }
+      dispatch({ type: "TRANSITION_LISTENING" });
+    },
+    [llmKey, streamLlmResponse]
+  );
+
+  /** Voice mode: blob → transcribe → user turn → LLM → synthesize → play → listening. */
+  const handleVoiceBlob = useCallback(
+    async (blob: Blob, durationMs: number) => {
+      if (!llmKey || !voiceKey) return;
+
+      // Treat the entire transcribe+LLM+TTS window as "thinking" — the orb
+      // shows a single contemplative state instead of flipping between
+      // labels candidates would have to interpret.
+      dispatch({ type: "TRANSITION_THINKING", listenEndAt: Date.now() });
+      addVoiceSeconds(durationMs / 1000);
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      // 1. Transcribe
+      let transcript: string;
+      try {
+        const transcribeForm = new FormData();
+        transcribeForm.append("audio", blob, "audio.webm");
+        const resp = await fetch("/api/voice/transcribe", {
+          method: "POST",
+          headers: {
+            "x-voice-key": voiceKey,
+            "x-voice-provider": voiceProvider,
+          },
+          body: transcribeForm,
+          signal: controller.signal,
+        });
+        if (resp.status === 401) {
+          applyStreamError(dispatch, "key-invalid");
+          return;
+        }
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => "");
+          // eslint-disable-next-line no-console
+          console.error("Sarvam STT failed:", resp.status, text);
+          applyStreamError(dispatch, "provider-timeout");
+          return;
+        }
+        const json = (await resp.json()) as { transcript?: string };
+        transcript = (json.transcript ?? "").trim();
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        // eslint-disable-next-line no-console
+        console.error("Sarvam STT fetch failed:", err);
+        applyStreamError(dispatch, "network-drop");
+        return;
+      }
+
+      if (!transcript) {
+        // ASR returned empty — give the candidate a chance to retry.
+        applyStreamError(dispatch, "asr-no-result");
+        return;
+      }
+
+      // 2. Dispatch user turn with the transcription
+      const userId = newTurnId("user");
+      const userTurnAt = Date.now();
+      dispatch({
+        type: "TRANSCRIPT_FINAL",
+        id: userId,
+        speaker: "user",
+        text: transcript,
+        at: userTurnAt,
+      });
+
+      // 3. LLM stream (stay in 'thinking' — voice mode fires speaking on audio play)
+      const aiId = newTurnId("ai");
+      const turnsForAPI: Turn[] = [
+        ...turnsForContext(sessionRef.current),
+        {
+          id: userId,
+          speaker: "user",
+          text: transcript,
+          partial: false,
+          stricken: false,
+          timestamp: userTurnAt,
+        },
+      ];
+
+      const llmResult = await streamLlmResponse({
+        turnsForAPI,
+        aiTurnId: aiId,
+        fireSpeakingOnFirstChunk: false,
+        signal: controller.signal,
+      });
+
+      if (!llmResult.ok) {
+        if (abortRef.current === controller) abortRef.current = null;
+        applyStreamError(dispatch, llmResult.reason);
+        return;
+      }
+
+      // 4. Synthesize
+      let audios: string[];
+      try {
+        const resp = await fetch("/api/voice/synthesize", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-voice-key": voiceKey,
+            "x-voice-provider": voiceProvider,
+          },
+          body: JSON.stringify({ text: llmResult.text }),
+          signal: controller.signal,
+        });
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => "");
+          // eslint-disable-next-line no-console
+          console.error("Sarvam TTS failed:", resp.status, text);
+          // Fall back to text mode for this turn — the AI text is already in
+          // the transcript; we just couldn't speak it. Surface as a
+          // recoverable provider-timeout so the candidate can retry.
+          applyStreamError(dispatch, "provider-timeout");
+          return;
+        }
+        const json = (await resp.json()) as { audios?: string[] };
+        audios = json.audios ?? [];
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        // eslint-disable-next-line no-console
+        console.error("Sarvam TTS fetch failed:", err);
+        applyStreamError(dispatch, "network-drop");
+        return;
+      } finally {
+        if (abortRef.current === controller) abortRef.current = null;
+      }
+
+      if (audios.length === 0) {
+        // No audio came back — go straight back to listening rather than
+        // hang on speaking forever.
+        dispatch({ type: "TRANSITION_LISTENING" });
+        return;
+      }
+
+      // 5. Play audio. Speaking state turns on at play start, listening at end.
+      dispatch({
+        type: "TRANSITION_SPEAKING",
+        speechStartAt: Date.now(),
+      });
+      await playBase64Mp3(audios, {
+        onEnded: () => {
+          // Rough approximation of TTS output seconds via text length (~20 chars/sec).
+          addVoiceSeconds(llmResult.text.length / 20);
+          dispatch({ type: "TRANSITION_LISTENING" });
+        },
+        onError: (msg) => {
+          // eslint-disable-next-line no-console
+          console.error("Audio playback failed:", msg);
+          dispatch({ type: "TRANSITION_LISTENING" });
+        },
+      });
+    },
+    [llmKey, voiceKey, voiceProvider, streamLlmResponse, playBase64Mp3]
+  );
+
   const handleEndSession = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+    stopAudio();
 
     const endedAt = Date.now();
     dispatch({ type: "END_SESSION", at: endedAt });
@@ -287,7 +488,7 @@ function SessionInner() {
     });
 
     router.push(`/summary/${id}`);
-  }, [caseTemplate.id, router]);
+  }, [caseTemplate.id, router, stopAudio]);
 
   const handleErrorAction = useCallback(() => {
     if (session.state.kind === "key-invalid") {
@@ -297,11 +498,28 @@ function SessionInner() {
     if (
       session.state.kind === "provider-timeout" ||
       session.state.kind === "network-drop" ||
-      session.state.kind === "asr-no-result"
+      session.state.kind === "asr-no-result" ||
+      session.state.kind === "mic-permission-denied"
     ) {
       dispatch({ type: "TRANSITION_LISTENING" });
     }
   }, [session.state.kind, router]);
+
+  const handleMicError = useCallback(
+    (kind: MicErrorKind, _message: string) => {
+      void _message;
+      if (kind === "permission-denied") {
+        dispatch({
+          type: "ERROR",
+          kind: "mic-permission-denied",
+          at: Date.now(),
+        });
+      } else {
+        dispatch({ type: "ERROR", kind: "provider-timeout", at: Date.now() });
+      }
+    },
+    []
+  );
 
   if (!keyChecked) {
     return (
@@ -311,6 +529,12 @@ function SessionInner() {
     );
   }
 
+  // While audio is playing back, suppress the mic affordance so the candidate
+  // can't talk over the interviewer. The state machine already says 'speaking'
+  // during playback so the textInputVisible / voiceModeActive checks gate
+  // automatically; nothing extra to do here.
+  void isPlaying;
+
   return (
     <ThreePanel
       session={session}
@@ -318,10 +542,22 @@ function SessionInner() {
       caseTitle={caseTemplate.title}
       currentQuestion={currentQuestion}
       onEndSession={handleEndSession}
-      onSubmitTurn={handleSubmitTurn}
+      onSubmitTurn={voiceModeActive ? undefined : handleSubmitTurn}
+      onVoiceBlob={voiceModeActive ? handleVoiceBlob : undefined}
+      onMicError={voiceModeActive ? handleMicError : undefined}
       onErrorAction={handleErrorAction}
     />
   );
+}
+
+type ErrorKind = "key-invalid" | "network-drop" | "provider-timeout" | "asr-no-result" | "aborted";
+
+function applyStreamError(
+  dispatch: (action: SessionAction) => void,
+  reason: ErrorKind
+): void {
+  if (reason === "aborted") return; // intentional teardown — leave state alone
+  dispatch({ type: "ERROR", kind: reason, at: Date.now() });
 }
 
 interface StreamEvent {

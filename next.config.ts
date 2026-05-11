@@ -18,8 +18,12 @@ const cspDirectives = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: https:",
+  // Sarvam Bulbul TTS audio is fetched server-side via /api/voice/synthesize
+  // and replayed via blob: URLs in the browser, so media-src needs blob:.
+  "media-src 'self' blob:",
   "frame-src 'self' https://www.youtube.com https://stream.mux.com",
-  // connect-src is extended per active voice/LLM provider in their adapters
+  // connect-src 'self' covers /api/voice/* proxies; provider hosts are
+  // contacted server-side from the Edge runtime, not the browser.
   "connect-src 'self' https://api.anthropic.com https://api.openai.com",
   "base-uri 'self'",
   "form-action 'self'",

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ScratchpadPanel } from "./scratchpad-panel";
 import { TranscriptPanel } from "./transcript-panel";
 import { VoiceStage } from "./voice-stage";
+import type { MicErrorKind } from "@/lib/voice/mic-capture";
 import type { SessionAction, SessionSnapshot } from "@/lib/voice/state-machine";
 
 interface ThreePanelProps {
@@ -18,6 +19,10 @@ interface ThreePanelProps {
   onEndSession?: () => void;
   /** V1-preview text-input submit handler routed to the voice stage. */
   onSubmitTurn?: (text: string) => void;
+  /** Voice-mode submit (mic blob from push-to-talk recording). */
+  onVoiceBlob?: (blob: Blob, durationMs: number) => void;
+  /** Forwarded to VoiceStage for getUserMedia error reporting. */
+  onMicError?: (kind: MicErrorKind, message: string) => void;
   /** Error CTA handler (e.g., re-route to onboarding on key-invalid). */
   onErrorAction?: () => void;
 }
@@ -40,6 +45,8 @@ export function ThreePanel({
   currentQuestion,
   onEndSession,
   onSubmitTurn,
+  onVoiceBlob,
+  onMicError,
   onErrorAction,
 }: ThreePanelProps) {
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -111,6 +118,8 @@ export function ThreePanel({
             state={session.state.kind}
             currentQuestion={currentQuestion}
             onSubmitTurn={onSubmitTurn}
+            onVoiceBlob={onVoiceBlob}
+            onMicError={onMicError}
             onErrorAction={onErrorAction}
           />
         </section>

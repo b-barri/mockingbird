@@ -3,6 +3,7 @@
 import { clsx } from "clsx";
 import { useEffect, useRef, useState } from "react";
 import { Orb } from "./orb";
+import { useMicCapture, type MicErrorKind } from "@/lib/voice/mic-capture";
 import type { VoiceStateKind } from "@/lib/voice/types";
 
 // Five R9a error states each get explicit copy + recovery affordance.
@@ -25,6 +26,7 @@ const ERROR_COPY: Record<
   "asr-no-result": {
     label: "Didn't catch that",
     text: "Could you repeat what you just said?",
+    cta: "Try again",
     dotColor: "bg-amber-500",
   },
   "key-invalid": {
@@ -65,11 +67,17 @@ interface VoiceStageProps {
   /** Recovery CTA handler when the state has one. */
   onErrorAction?: () => void;
   /**
-   * V1 preview affordance: when provided, candidate types their turn instead
-   * of speaking. Renders only when state === 'listening'. The voice adapters
-   * (U2) ship in V1.1; until then this is how a candidate "talks back."
+   * Text-mode submit (V1 preview when voice key isn't configured). Renders
+   * a textarea + Send button while state === 'listening'.
    */
   onSubmitTurn?: (text: string) => void;
+  /**
+   * Voice-mode submit. Renders a push-to-talk mic button while state ===
+   * 'listening'. Takes precedence over onSubmitTurn when provided.
+   */
+  onVoiceBlob?: (blob: Blob, durationMs: number) => void;
+  /** Forwarded to useMicCapture so the session page can surface mic errors. */
+  onMicError?: (kind: MicErrorKind, message: string) => void;
 }
 
 export function VoiceStage({
@@ -77,6 +85,8 @@ export function VoiceStage({
   currentQuestion,
   onErrorAction,
   onSubmitTurn,
+  onVoiceBlob,
+  onMicError,
 }: VoiceStageProps) {
   const isError = state in ERROR_COPY;
 
@@ -124,7 +134,9 @@ export function VoiceStage({
       >
     ];
 
-  const textInputVisible = state === "listening" && Boolean(onSubmitTurn);
+  const voiceModeActive = state === "listening" && Boolean(onVoiceBlob);
+  const textModeActive =
+    state === "listening" && !onVoiceBlob && Boolean(onSubmitTurn);
 
   return (
     <div
@@ -150,7 +162,7 @@ export function VoiceStage({
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500 shadow-[0_0_0_3px_rgba(76,175,80,0.2)]" />
             {copy.label}
           </div>
-          {copy.text && !textInputVisible && (
+          {copy.text && !voiceModeActive && !textModeActive && (
             <div className="font-display text-lg italic text-ink/80">
               “{copy.text}”
             </div>
@@ -158,10 +170,99 @@ export function VoiceStage({
         </div>
       </div>
 
-      {textInputVisible && onSubmitTurn && (
+      {voiceModeActive && onVoiceBlob && (
+        <MicButton onBlob={onVoiceBlob} onMicError={onMicError} />
+      )}
+      {textModeActive && onSubmitTurn && (
         <TurnInput onSubmit={onSubmitTurn} />
       )}
     </div>
+  );
+}
+
+function MicButton({
+  onBlob,
+  onMicError,
+}: {
+  onBlob: (blob: Blob, durationMs: number) => void;
+  onMicError?: (kind: MicErrorKind, message: string) => void;
+}) {
+  const { isRecording, start, stop, error } = useMicCapture({
+    onBlob,
+    onError: onMicError,
+  });
+
+  function toggle() {
+    if (isRecording) {
+      stop();
+    } else {
+      void start();
+    }
+  }
+
+  return (
+    <div className="flex w-full flex-col items-center gap-3">
+      <button
+        type="button"
+        onClick={toggle}
+        data-testid="mic-button"
+        data-recording={isRecording}
+        aria-label={isRecording ? "Stop recording" : "Start recording"}
+        className={clsx(
+          "flex h-16 w-16 items-center justify-center rounded-full text-cream shadow-lg transition-all",
+          isRecording
+            ? "scale-110 bg-red-500 shadow-red-500/40 hover:bg-red-600"
+            : "bg-ink hover:bg-ink/85"
+        )}
+      >
+        {isRecording ? (
+          <span className="block h-5 w-5 rounded-sm bg-cream" />
+        ) : (
+          <MicIcon />
+        )}
+      </button>
+      <div className="text-center">
+        <div className="text-xs font-semibold uppercase tracking-[0.14em] text-mute">
+          {isRecording ? "Recording — tap to stop" : "Tap to talk"}
+        </div>
+        {error && (
+          <div className="mt-1 text-xs text-red-700">{error}</div>
+        )}
+        {!error && (
+          <p className="mt-1 text-[11px] text-mute">
+            Max 30s · Sarvam Saarika · voice via Bulbul
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MicIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-6 w-6"
+      aria-hidden="true"
+    >
+      <rect
+        x="9"
+        y="3"
+        width="6"
+        height="11"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M5 11a7 7 0 0 0 14 0M12 18v3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 
@@ -169,7 +270,6 @@ function TurnInput({ onSubmit }: { onSubmit: (text: string) => void }) {
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // Autofocus whenever the input appears (each listening cycle).
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
@@ -182,7 +282,6 @@ function TurnInput({ onSubmit }: { onSubmit: (text: string) => void }) {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    // Enter submits, Shift+Enter inserts newline.
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submit();
@@ -219,7 +318,7 @@ function TurnInput({ onSubmit }: { onSubmit: (text: string) => void }) {
         </button>
       </div>
       <p className="mt-2 text-center text-[11px] text-mute">
-        V1 preview · voice adapters ship after the bakeoff
+        Text mode · add a Sarvam key in onboarding to talk by voice
       </p>
     </form>
   );
