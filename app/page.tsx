@@ -1,22 +1,45 @@
-// Placeholder hero for U1. U8 replaces this with the full marketing homepage
-// (R1-R4) including the 4 feature blocks, demo video, and primary CTA.
+import Link from "next/link";
+import { DemoVideo } from "@/components/homepage/demo-video";
+import { FeatureBlocks } from "@/components/homepage/feature-blocks";
+import { Hero } from "@/components/homepage/hero";
+import { MobileGate } from "@/components/homepage/mobile-gate";
+
+// R1 + R2 + R3 + R4 + R12: marketing homepage with explicit reading order,
+// CSS-gated mobile interstitial, single primary CTA, no secondary surface.
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-8">
-      <div className="max-w-2xl text-center">
-        <div className="mb-6 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-coral">
-          <span className="h-2 w-2 rounded-full bg-coral shadow-[0_0_10px_rgba(232,93,59,0.4)]" />
-          Mockingbird
-        </div>
-        <h1 className="font-display text-5xl leading-tight tracking-tight text-ink md:text-6xl">
-          A PM interview prep buddy that talks back.
-        </h1>
-        <p className="mt-6 text-base text-mute">
-          Voice-first Product Design case practice with framework-aware probes.
-          Bring your own API keys. V1 scaffold in progress.
-        </p>
-      </div>
-    </main>
+    <>
+      {/* Mobile interstitial — visible only below lg (1024px) breakpoint */}
+      <MobileGate />
+
+      {/* Desktop homepage — visible at lg and up */}
+      <main className="hidden min-h-screen flex-col bg-cream lg:flex">
+        <Hero />
+        <DemoVideo />
+        <FeatureBlocks />
+        <section className="border-t border-ink/[0.08] px-8 py-section text-center">
+          <h2 className="font-display text-3xl tracking-tight text-ink md:text-4xl">
+            Practice the next interview the way you'd actually run it.
+          </h2>
+          <Link
+            href="/onboarding"
+            className="mt-8 inline-flex items-center gap-2 rounded-lg bg-ink px-6 py-3 text-sm font-medium text-cream hover:bg-ink/85"
+          >
+            Start a session →
+          </Link>
+          <p className="mt-12 text-xs text-mute">
+            Brought to you by{" "}
+            <a
+              href="https://x.com/bhavya_barri"
+              className="underline decoration-mute underline-offset-2 hover:text-ink"
+            >
+              @bhavya_barri
+            </a>
+            . Built for PM/AI Twitter.
+          </p>
+        </section>
+      </main>
+    </>
   );
 }
