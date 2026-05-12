@@ -1,31 +1,26 @@
 import type { Turn } from "@/lib/voice/state-machine";
 import type { CaseTemplate } from "@/lib/llm/prompts/case-templates";
-import {
-  renderPersonaWithCase,
-} from "@/lib/llm/prompts/persona-google-meta-pm";
-import {
-  renderFrameworkLibrary,
-  type FrameworkSpec,
-} from "@/lib/llm/prompts/framework-library";
+import { renderPersonaWithCase } from "@/lib/llm/prompts/persona-google-meta-pm";
 
 // Interviewer LLM orchestration. Pure functions for prompt assembly +
 // post-processing — the network calls live in app/api/interview/route.ts.
+//
+// As of 2026-05-12, the framework library is no longer injected into the
+// interviewer system prompt. Probes flow from natural interviewer curiosity
+// (see persona-google-meta-pm.ts). The framework library file remains in
+// the codebase as silent reference data; see U4 in
+// docs/plans/2026-05-12-001-feat-tension-grounded-feedback-plan.md.
 
 export interface AssemblePromptInput {
   caseTemplate: CaseTemplate;
-  frameworks: ReadonlyArray<FrameworkSpec>;
 }
 
 /** Assemble the full system prompt sent to Claude. */
 export function assembleSystemPrompt(input: AssemblePromptInput): string {
-  const frameworkSection = renderFrameworkLibrary(input.frameworks);
-  return renderPersonaWithCase(
-    {
-      title: input.caseTemplate.title,
-      body: input.caseTemplate.prompt,
-    },
-    frameworkSection
-  );
+  return renderPersonaWithCase({
+    title: input.caseTemplate.title,
+    body: input.caseTemplate.prompt,
+  });
 }
 
 /** Convert session turns to Anthropic message-history format. Stricken

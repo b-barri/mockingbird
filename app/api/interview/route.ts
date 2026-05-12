@@ -1,12 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { getActiveFrameworks } from "@/lib/auth/private-frameworks";
 import {
   assembleSystemPrompt,
   detectPersonaBreak,
   turnsToMessages,
 } from "@/lib/llm/interviewer";
 import { getCaseById } from "@/lib/llm/prompts/case-templates";
+import { rateLimit } from "@/lib/rate-limit";
 import type { Turn } from "@/lib/voice/state-machine";
 
 export const runtime = "edge";
@@ -21,7 +21,6 @@ interface InterviewRequest {
 // Body: { caseId, turns }
 // Headers:
 //   X-LLM-Key (required) — candidate's Anthropic API key, pass-through only
-//   X-Operator-Token (optional) — when matched, swaps private frameworks in
 //
 // Response: text/event-stream with chunks { text } and a final
 //   { telemetry: 'persona_break' } when the LLM dropped character.
@@ -32,8 +31,24 @@ interface InterviewRequest {
 // Anthropic default-denies browser-origin API calls in 2026.
 
 export async function POST(request: Request): Promise<Response> {
+  // Per-IP throttle before any body parsing so a flood is cheap to reject.
+  // 20/min comfortably exceeds a real session (~30 turns over 30 min).
+  const rl = await rateLimit(request, "interview");
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: `Too many requests — try again in ${rl.retryAfter}s.` },
+      {
+        status: 429,
+        headers: {
+          "retry-after": String(rl.retryAfter),
+          "x-ratelimit-limit": String(rl.limit),
+          "x-ratelimit-remaining": "0",
+        },
+      }
+    );
+  }
+
   const apiKey = request.headers.get("x-llm-key");
-  const operatorToken = request.headers.get("x-operator-token");
 
   if (!apiKey) {
     return NextResponse.json(
@@ -60,11 +75,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const frameworks = getActiveFrameworks(operatorToken);
-  const systemPrompt = assembleSystemPrompt({
-    caseTemplate,
-    frameworks,
-  });
+  const systemPrompt = assembleSystemPrompt({ caseTemplate });
   const messages = turnsToMessages(body.turns ?? []);
 
   let anthropic: Anthropic;

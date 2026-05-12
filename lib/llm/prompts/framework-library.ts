@@ -1,7 +1,25 @@
-// Public PM framework library. The interviewer LLM is "aware" of these
-// frameworks via the system prompt. R14 says when the candidate skips a
-// load-bearing step, the AI asks the matching probe — not a feedback
-// statement ("you skipped X").
+// ====================================================================
+// DORMANT AS OF 2026-05-12.
+//
+// This library is no longer injected into the interviewer system prompt.
+// Mid-session probes flow from natural interviewer curiosity (see
+// persona-google-meta-pm.ts), and post-session feedback grounds in each
+// case's evalRubric (see case-templates/product-design.ts) — not in this
+// framework data.
+//
+// The file is retained as silent reference: the data shape may be useful
+// scaffolding if future case types (Strategy, Growth, Metrics) want a
+// structured probe library, and the existing operator-private-framework
+// system (lib/auth/private-frameworks.ts) still imports the types.
+//
+// See: docs/plans/2026-05-12-001-feat-tension-grounded-feedback-plan.md (U4)
+// ====================================================================
+
+// Public PM framework library. The interviewer LLM was previously "aware" of
+// these frameworks via the system prompt. R14 said when the candidate skipped
+// a load-bearing step, the AI asked the matching probe — not a feedback
+// statement ("you skipped X"). That wiring is removed; the data persists for
+// reference.
 //
 // The operator can override this library with private content via
 // OPERATOR_PRIVATE_FRAMEWORKS env-var per R21 (see lib/auth/private-frameworks.ts).

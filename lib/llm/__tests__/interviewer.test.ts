@@ -6,46 +6,58 @@ import {
   turnsToMessages,
 } from "../interviewer";
 import { PRODUCT_DESIGN_CASES } from "@/lib/llm/prompts/case-templates";
-import { PUBLIC_FRAMEWORKS } from "@/lib/llm/prompts/framework-library";
 import type { Turn } from "@/lib/voice/state-machine";
 
 describe("assembleSystemPrompt", () => {
-  it("includes persona, case title + body, and framework library", () => {
+  it("includes persona, case title, and case body", () => {
     const caseTemplate = PRODUCT_DESIGN_CASES[0]; // meditation-app
-    const prompt = assembleSystemPrompt({
-      caseTemplate,
-      frameworks: PUBLIC_FRAMEWORKS,
-    });
+    const prompt = assembleSystemPrompt({ caseTemplate });
     // Persona signature
     expect(prompt).toMatch(/Product Manager/i);
     expect(prompt).toMatch(/Alex/);
     // Case content
     expect(prompt).toContain(caseTemplate.title);
     expect(prompt).toContain("meditation");
-    // At least one framework appears
-    expect(prompt).toContain("CIRCLES");
-    expect(prompt).toContain("AARM");
-    // Probe-not-feedback rule is in the prompt
-    expect(prompt).toMatch(/probe.*not.*feedback/i);
   });
 
-  it("renders framework step probes inline so the LLM knows what to ask", () => {
+  it("preserves the probe-not-feedback rule and BAD/GOOD example pair", () => {
     const prompt = assembleSystemPrompt({
       caseTemplate: PRODUCT_DESIGN_CASES[0],
-      frameworks: PUBLIC_FRAMEWORKS,
     });
-    // CIRCLES "Report Needs" probe should appear verbatim
-    expect(prompt).toMatch(/what needs are you prioritizing/i);
-    expect(prompt).toMatch(/2-3 distinct ways you could address/i);
+    expect(prompt).toMatch(/Probe,?\s+(?:not|don'?t)\s+feedback/i);
+    expect(prompt).toMatch(/BAD:/);
+    expect(prompt).toMatch(/GOOD:/);
+    expect(prompt).toMatch(/never says.*you skipped X/i);
+  });
+
+  it("does NOT inject the framework library into the live interviewer prompt", () => {
+    // R2 of the tension-grounded-feedback plan: the framework library is
+    // dormant — its content must not appear in the assembled prompt.
+    const prompt = assembleSystemPrompt({
+      caseTemplate: PRODUCT_DESIGN_CASES[0],
+    });
+    expect(prompt).not.toMatch(/\bCIRCLES\b/);
+    expect(prompt).not.toMatch(/\bAARM\b/);
+    expect(prompt).not.toMatch(/\bGoals-Signals-Metrics\b/);
+    expect(prompt).not.toMatch(/Probe if skipped:/);
+    expect(prompt).not.toMatch(/# Framework library you're aware of/);
   });
 
   it("explicitly forbids the persona-break shapes", () => {
     const prompt = assembleSystemPrompt({
       caseTemplate: PRODUCT_DESIGN_CASES[0],
-      frameworks: PUBLIC_FRAMEWORKS,
     });
     expect(prompt).toMatch(/never appear/i);
     expect(prompt).toMatch(/"As an AI"/);
+  });
+
+  it("retains opening-turn discipline (greet, state case, stop)", () => {
+    const prompt = assembleSystemPrompt({
+      caseTemplate: PRODUCT_DESIGN_CASES[0],
+    });
+    expect(prompt).toMatch(/Greet the candidate/i);
+    expect(prompt).toMatch(/state the case in one clean sentence/i);
+    expect(prompt).toMatch(/Do not probe in the opening/i);
   });
 });
 
