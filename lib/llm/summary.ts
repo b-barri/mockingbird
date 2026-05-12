@@ -37,13 +37,23 @@ export function assembleSummaryUserMessage(input: AssembleSummaryInput): string 
     )
     .join("\n\n");
 
+  // The eval rubric names the case's tensions and what strong vs weak
+  // engagement on each side looks like. It is the load-bearing eval criteria
+  // for the coach prompt — feedback must ground in these tensions, not in
+  // framework checklists. Rendered exactly once, between case title and
+  // transcript so the LLM has it as orienting context before reading the
+  // candidate's words.
   return `Case: ${input.caseTemplate.title}
+
+Tensions this case is testing:
+
+${input.caseTemplate.evalRubric}
 
 Transcript:
 
 ${transcriptLines}
 
-Generate the summary paragraph now.`;
+Now produce the feedback.`;
 }
 
 export function summarySystemPrompt(): string {

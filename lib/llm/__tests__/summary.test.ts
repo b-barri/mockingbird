@@ -74,4 +74,37 @@ describe("summary prompt assembly (R16)", () => {
     expect(message).toContain("finished");
     expect(message).not.toContain("still typ");
   });
+
+  it("user message includes the case evalRubric under a labeled section", () => {
+    const message = assembleSummaryUserMessage({
+      caseTemplate: PRODUCT_DESIGN_CASES[0],
+      turns: [turn({ id: "u-1", text: "Hello." })],
+    });
+    expect(message).toMatch(/Tensions this case is testing:/i);
+    expect(message).toContain(PRODUCT_DESIGN_CASES[0].evalRubric);
+  });
+
+  it("user message renders the evalRubric exactly once even on repeated calls", () => {
+    const inputs = {
+      caseTemplate: PRODUCT_DESIGN_CASES[0],
+      turns: [turn({ id: "u-1", text: "Hello." })],
+    };
+    const m1 = assembleSummaryUserMessage(inputs);
+    const m2 = assembleSummaryUserMessage(inputs);
+    const rubric = PRODUCT_DESIGN_CASES[0].evalRubric;
+    expect(m1.split(rubric).length - 1).toBe(1);
+    expect(m2.split(rubric).length - 1).toBe(1);
+  });
+
+  it("user message places the evalRubric section before the transcript", () => {
+    const message = assembleSummaryUserMessage({
+      caseTemplate: PRODUCT_DESIGN_CASES[0],
+      turns: [turn({ id: "u-1", text: "Hello." })],
+    });
+    const rubricIdx = message.indexOf("Tensions this case is testing:");
+    const transcriptIdx = message.indexOf("Transcript:");
+    expect(rubricIdx).toBeGreaterThan(-1);
+    expect(transcriptIdx).toBeGreaterThan(-1);
+    expect(rubricIdx).toBeLessThan(transcriptIdx);
+  });
 });
