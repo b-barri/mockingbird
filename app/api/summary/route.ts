@@ -75,7 +75,7 @@ export async function POST(request: Request): Promise<Response> {
       try {
         const completion = anthropic.messages.stream({
           model: "claude-sonnet-4-6",
-          max_tokens: 512,
+          max_tokens: 700,
           system: summarySystemPrompt(),
           messages: [{ role: "user", content: userMessage }],
         });

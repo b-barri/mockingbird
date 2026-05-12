@@ -50,6 +50,35 @@ describe("SummaryCard (R16a — 8 required elements)", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders multi-paragraph summary as separate <p> elements split on blank lines", () => {
+    const twoParaText =
+      "Paragraph one describes what worked, anchored to a candidate moment.\n\nParagraph two describes what was missed, with prescriptive coaching for the gap.";
+    const { container } = render(
+      <SummaryCard {...baseProps} loading={false} summaryText={twoParaText} />,
+    );
+    // Find the paragraphs inside the summary section
+    const summarySection = container.querySelector(
+      '[data-testid="summary-paragraph"]',
+    );
+    expect(summarySection).not.toBeNull();
+    const paragraphs = summarySection!.querySelectorAll("p");
+    expect(paragraphs.length).toBe(2);
+    expect(paragraphs[0].textContent).toContain("what worked");
+    expect(paragraphs[1].textContent).toContain("what was missed");
+  });
+
+  it("renders single-paragraph text as one <p> when no double newline present", () => {
+    const onePara = "Just one paragraph with no blank line in it.";
+    const { container } = render(
+      <SummaryCard {...baseProps} loading={false} summaryText={onePara} />,
+    );
+    const summarySection = container.querySelector(
+      '[data-testid="summary-paragraph"]',
+    );
+    const paragraphs = summarySection!.querySelectorAll("p");
+    expect(paragraphs.length).toBe(1);
+  });
+
   it("(c) duration and (e) spend appear in the stats row", () => {
     render(<SummaryCard {...baseProps} loading={false} summaryText="x" />);
     expect(screen.getByText("29:42")).toBeInTheDocument();

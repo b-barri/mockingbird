@@ -19,23 +19,56 @@ function turn(o: Partial<Turn> = {}): Turn {
 }
 
 describe("summary prompt assembly (R16)", () => {
-  it("system prompt forbids bullets/headers and caps word count", () => {
+  it("system prompt enforces two-paragraph prose shape with worked / missed sections", () => {
     const sys = summarySystemPrompt();
-    expect(sys).toMatch(/no bullets, no headers, no bold/i);
-    expect(sys).toMatch(/no more than 180 words/i);
+    expect(sys).toMatch(/two paragraphs/i);
+    expect(sys).toMatch(/single blank line/i);
+    expect(sys).toMatch(/what worked/i);
+    expect(sys).toMatch(/what was missed/i);
   });
 
-  it("system prompt names the 3 required sections (structure, strongest, gaps)", () => {
+  it("system prompt requires anchoring every observation to a candidate moment or named tension", () => {
     const sys = summarySystemPrompt();
-    expect(sys).toMatch(/Structure/);
-    expect(sys).toMatch(/Strongest moment/);
-    expect(sys).toMatch(/Framework gaps/);
+    expect(sys).toMatch(/anchor/i);
+    expect(sys).toMatch(/candidate moment|something the candidate (actually )?said/i);
+    expect(sys).toMatch(/named tension|tension substance|substance of the (?:named )?tension/i);
   });
 
-  it("system prompt forbids sycophancy ('no great job overall')", () => {
+  it("system prompt requires prescriptive coaching in the missed paragraph", () => {
     const sys = summarySystemPrompt();
-    expect(sys).toMatch(/No sycophancy/i);
-    expect(sys).toMatch(/great job overall/);
+    expect(sys).toMatch(/prescriptive/i);
+    expect(sys).toMatch(/stronger PM would have|stronger answer would have/i);
+  });
+
+  it("system prompt sets the 240-280 word budget for the output", () => {
+    const sys = summarySystemPrompt();
+    expect(sys).toMatch(/240[\s\-–—to]+280\s*words/i);
+  });
+
+  it("system prompt forbids framework names and step-number language", () => {
+    const sys = summarySystemPrompt();
+    expect(sys).toMatch(/CIRCLES/);
+    expect(sys).toMatch(/AARM/);
+    expect(sys).toMatch(/Goals-Signals-Metrics/);
+    expect(sys).toMatch(/step\s+(N|1|2)/i);
+    expect(sys).not.toMatch(/Framework gaps/);
+  });
+
+  it("system prompt forbids sycophancy and generic praise patterns", () => {
+    const sys = summarySystemPrompt();
+    expect(sys).toMatch(/sycophancy/i);
+    expect(sys).toMatch(/great job|well done|i love that/i);
+    expect(sys).toMatch(/good structure|organized your answer well|be more specific/i);
+  });
+
+  it("system prompt forbids bullets, headers, and bold within paragraphs", () => {
+    const sys = summarySystemPrompt();
+    // The prompt frames these as "must NEVER appear" — assert each item is named.
+    expect(sys).toMatch(/bullets/i);
+    expect(sys).toMatch(/headers/i);
+    expect(sys).toMatch(/bold/i);
+    // And confirm they are listed under a prohibition framing.
+    expect(sys).toMatch(/must NEVER appear|not allowed|forbidden|do not (use|include)/i);
   });
 
   it("user message includes case title + transcript with speaker prefixes", () => {
