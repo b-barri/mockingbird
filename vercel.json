@@ -3,19 +3,5 @@
   "framework": "nextjs",
   "buildCommand": "pnpm build",
   "devCommand": "pnpm dev",
-  "installCommand": "pnpm install",
-  "functions": {
-    "app/api/interview/route.ts": {
-      "runtime": "edge"
-    },
-    "app/api/summary/route.ts": {
-      "runtime": "edge"
-    },
-    "app/api/validate-key/route.ts": {
-      "runtime": "edge"
-    },
-    "app/api/telemetry/route.ts": {
-      "runtime": "edge"
-    }
-  }
+  "installCommand": "pnpm install"
 }
