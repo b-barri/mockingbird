@@ -6,11 +6,19 @@ import type { NextConfig } from "next";
 // (R3); session pages may need a stricter CSP at deploy time.
 //
 // Dev mode needs 'unsafe-eval' for Next.js React Refresh (hot reload).
-// Production strips it so the strict R6b posture holds in deployed builds.
+// Prod allows inline scripts because Next.js App Router uses inline
+// <script>self.__next_f.push(...)</script> tags to stream React Server
+// Component data; blocking them silently truncates the RSC stream and
+// React 19 unmounts the entire DOM after hydration fails. The "right"
+// answer is nonce-based CSP via middleware (each inline script gets a
+// per-request nonce); 'unsafe-inline' is the pragmatic V1 tradeoff while
+// the rest of the XSS-resistance posture (no dangerouslySetInnerHTML, no
+// untrusted HTML rendering anywhere) holds — see the security audit
+// notes. Tighten when adding more user-supplied content surfaces.
 const isDev = process.env.NODE_ENV !== "production";
 const scriptSrc = isDev
   ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
-  : "script-src 'self'";
+  : "script-src 'self' 'unsafe-inline'";
 
 const cspDirectives = [
   "default-src 'self'",
