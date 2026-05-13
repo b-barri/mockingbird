@@ -122,7 +122,24 @@ function SessionInner() {
     };
   }, [stopAudio]);
 
-  const voiceModeActive = Boolean(voiceKey) && SUPPORTED_VOICE_PROVIDERS.has(voiceProvider);
+  // Whether the candidate's onboarding configured a usable voice provider.
+  // Used to gate the input-mode toggle: a text-only candidate has nothing to
+  // switch to, so the toggle is hidden for them.
+  const voiceAvailable = Boolean(voiceKey) && SUPPORTED_VOICE_PROVIDERS.has(voiceProvider);
+
+  // Input mode is user-controlled per session rather than derived from key
+  // presence. Default is voice when available (preserves the original first
+  // impression), but the candidate can toggle to text mid-session — useful
+  // for long-form answers, quiet environments, mic flakiness, or just
+  // preference. Surfaced during dogfood as a coercion gap in the original
+  // derived-state design.
+  const [inputMode, setInputMode] = useState<"voice" | "text">(
+    voiceAvailable ? "voice" : "text"
+  );
+  const voiceModeActive = inputMode === "voice";
+  const toggleInputMode = useCallback(() => {
+    setInputMode((m) => (m === "voice" ? "text" : "voice"));
+  }, []);
 
   // currentQuestion = latest non-stricken AI turn. Updates live as the LLM
   // stream fills the turn via TRANSCRIPT_PARTIAL. Undefined while idle so
@@ -339,10 +356,22 @@ function SessionInner() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // Empty turns array — the LLM generates the opening from system prompt
-    // alone (greeting + case statement, no probe per the persona rules).
+    // Anthropic rejects empty messages arrays — we have to send something.
+    // A minimal synthetic "Hello" mirrors the candidate connecting to the
+    // call and lets the system prompt's opening instructions take over
+    // (greet + state case + stop, no probe). This turn is API-only; we
+    // don't dispatch it to the state machine so the transcript stays
+    // candidate-authored.
+    const kickMessage: Turn = {
+      id: "session-kick",
+      speaker: "user",
+      text: "Hello.",
+      partial: false,
+      stricken: false,
+      timestamp: now,
+    };
     const llmResult = await streamLlmResponse({
-      turnsForAPI: [],
+      turnsForAPI: [kickMessage],
       aiTurnId: aiId,
       // Text mode: first chunk lights speaking. Voice mode: defer to audio
       // playback start so the candidate doesn't see "speaking" while text
@@ -614,6 +643,9 @@ function SessionInner() {
       onVoiceBlob={voiceModeActive ? handleVoiceBlob : undefined}
       onMicError={voiceModeActive ? handleMicError : undefined}
       onErrorAction={handleErrorAction}
+      voiceProvider={voiceProvider}
+      inputMode={inputMode}
+      onToggleInputMode={voiceAvailable ? toggleInputMode : undefined}
     />
   );
 }

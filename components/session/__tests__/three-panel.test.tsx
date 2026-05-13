@@ -134,6 +134,171 @@ describe("ThreePanel — R7 + R8 layout", () => {
     ).toBeInTheDocument();
   });
 
+  describe("Pause toggle (timer-only)", () => {
+    it("button is disabled before the session has started", () => {
+      const session = buildSession(); // state.kind === 'idle', no startedAt
+      render(
+        <ThreePanel session={session} dispatch={() => {}} caseTitle="x" />
+      );
+      const button = screen.getByTestId("pause-toggle");
+      expect(button).toBeDisabled();
+    });
+
+    it("toggling flips the label between Pause and Resume", async () => {
+      const session = buildSession({
+        state: { kind: "listening" },
+        startedAt: Date.now() - 5_000,
+      });
+      render(
+        <ThreePanel session={session} dispatch={() => {}} caseTitle="x" />
+      );
+      const button = screen.getByTestId("pause-toggle");
+      expect(button).toHaveTextContent(/Pause/i);
+      expect(button).toHaveAttribute("data-paused", "false");
+      await userEvent.click(button);
+      expect(button).toHaveTextContent(/Resume/i);
+      expect(button).toHaveAttribute("data-paused", "true");
+      await userEvent.click(button);
+      expect(button).toHaveTextContent(/Pause/i);
+      expect(button).toHaveAttribute("data-paused", "false");
+    });
+
+    it("hides the input affordance while paused (listening state)", async () => {
+      const onSubmitTurn = vi.fn();
+      const session = buildSession({
+        state: { kind: "listening" },
+        startedAt: Date.now() - 5_000,
+      });
+      render(
+        <ThreePanel
+          session={session}
+          dispatch={() => {}}
+          caseTitle="x"
+          onSubmitTurn={onSubmitTurn}
+        />
+      );
+      // Text input visible before pause
+      expect(screen.getByTestId("turn-input")).toBeInTheDocument();
+      await userEvent.click(screen.getByTestId("pause-toggle"));
+      // Text input gone, paused copy visible
+      expect(screen.queryByTestId("turn-input")).toBeNull();
+      expect(screen.getByText(/Paused/i)).toBeInTheDocument();
+    });
+
+  });
+
+  describe("Input-mode toggle (text ↔ voice)", () => {
+    it("renders the toggle when onToggleInputMode is provided", () => {
+      const session = buildSession({
+        state: { kind: "listening" },
+        startedAt: Date.now() - 5_000,
+      });
+      render(
+        <ThreePanel
+          session={session}
+          dispatch={() => {}}
+          caseTitle="x"
+          onSubmitTurn={() => {}}
+          inputMode="text"
+          onToggleInputMode={() => {}}
+        />
+      );
+      const toggle = screen.getByTestId("toggle-input-mode");
+      expect(toggle).toBeInTheDocument();
+      expect(toggle).toHaveTextContent(/Use voice instead/i);
+    });
+
+    it("toggle label flips with inputMode prop", () => {
+      const session = buildSession({
+        state: { kind: "listening" },
+        startedAt: Date.now() - 5_000,
+      });
+      const { rerender } = render(
+        <ThreePanel
+          session={session}
+          dispatch={() => {}}
+          caseTitle="x"
+          onVoiceBlob={() => {}}
+          inputMode="voice"
+          onToggleInputMode={() => {}}
+        />
+      );
+      expect(screen.getByTestId("toggle-input-mode")).toHaveTextContent(
+        /Type instead/i
+      );
+      rerender(
+        <ThreePanel
+          session={session}
+          dispatch={() => {}}
+          caseTitle="x"
+          onSubmitTurn={() => {}}
+          inputMode="text"
+          onToggleInputMode={() => {}}
+        />
+      );
+      expect(screen.getByTestId("toggle-input-mode")).toHaveTextContent(
+        /Use voice instead/i
+      );
+    });
+
+    it("clicking the toggle calls onToggleInputMode", async () => {
+      const onToggleInputMode = vi.fn();
+      const session = buildSession({
+        state: { kind: "listening" },
+        startedAt: Date.now() - 5_000,
+      });
+      render(
+        <ThreePanel
+          session={session}
+          dispatch={() => {}}
+          caseTitle="x"
+          onSubmitTurn={() => {}}
+          inputMode="text"
+          onToggleInputMode={onToggleInputMode}
+        />
+      );
+      await userEvent.click(screen.getByTestId("toggle-input-mode"));
+      expect(onToggleInputMode).toHaveBeenCalledTimes(1);
+    });
+
+    it("hides the toggle when onToggleInputMode is undefined (text-only candidate)", () => {
+      const session = buildSession({
+        state: { kind: "listening" },
+        startedAt: Date.now() - 5_000,
+      });
+      render(
+        <ThreePanel
+          session={session}
+          dispatch={() => {}}
+          caseTitle="x"
+          onSubmitTurn={() => {}}
+          inputMode="text"
+        />
+      );
+      expect(screen.queryByTestId("toggle-input-mode")).toBeNull();
+    });
+
+    it("hides the toggle while paused", async () => {
+      const session = buildSession({
+        state: { kind: "listening" },
+        startedAt: Date.now() - 5_000,
+      });
+      render(
+        <ThreePanel
+          session={session}
+          dispatch={() => {}}
+          caseTitle="x"
+          onSubmitTurn={() => {}}
+          inputMode="text"
+          onToggleInputMode={() => {}}
+        />
+      );
+      expect(screen.getByTestId("toggle-input-mode")).toBeInTheDocument();
+      await userEvent.click(screen.getByTestId("pause-toggle"));
+      expect(screen.queryByTestId("toggle-input-mode")).toBeNull();
+    });
+  });
+
   it("session reducer integration: strike + scratchpad update produce expected state", () => {
     let s = sessionReducer(initialSession, { type: "START_SESSION", at: 0 });
     s = sessionReducer(s, {
