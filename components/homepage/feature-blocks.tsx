@@ -37,16 +37,16 @@ export function FeatureBlocks() {
   return (
     <section
       data-testid="feature-blocks"
-      className="mx-auto w-full max-w-[1440px] px-8 py-section"
+      className="mx-auto w-full max-w-[1440px] px-4 py-section sm:px-6 lg:px-8"
     >
       <div className="ascii-rule mb-8 max-w-[680px]">
         ── WHY MOCKINGBIRD ──────────────────────────────────────
       </div>
-      <h2 className="mb-12 max-w-2xl font-display text-3xl leading-tight tracking-tight text-ink md:text-4xl">
+      <h2 className="mb-10 max-w-2xl font-display text-2xl leading-tight tracking-tight text-ink sm:text-3xl md:mb-12 md:text-4xl">
         What you actually get.
       </h2>
 
-      <div className="grid gap-x-16 gap-y-14 md:grid-cols-2">
+      <div className="grid gap-x-10 gap-y-10 sm:gap-y-14 md:grid-cols-2 md:gap-x-16">
         {FEATURE_BLOCKS.map((block, idx) => (
           <article
             key={block.title}

@@ -106,7 +106,7 @@ export function SummaryCard({
           <span className="pulse-dot" />
           SESSION COMPLETE &middot; {duration}
         </div>
-        <h1 className="mb-3 font-display text-5xl leading-[1.0] tracking-tight text-ink md:text-6xl">
+        <h1 className="mb-3 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl sm:leading-[1.0] md:text-6xl">
           {caseTitle}
         </h1>
         <p className="font-mono text-[14px] leading-relaxed text-mute">
@@ -141,8 +141,9 @@ export function SummaryCard({
         )}
       </div>
 
-      {/* Stats row — 3 tan mono panels */}
-      <section className="mb-10 grid grid-cols-3 gap-3">
+      {/* Stats row — 3 tan mono panels. Stack on phone widths so each
+          number remains legible; restore the 3-col strip from sm up. */}
+      <section className="mb-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="pf-panel p-4">
           <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-mute">
             duration
@@ -192,7 +193,7 @@ export function SummaryCard({
       {/* Summary paragraph — Alex's read */}
       <section
         data-testid="summary-paragraph"
-        className="mb-10 rounded-md border border-ink/[0.10] bg-white p-7 md:p-8"
+        className="mb-10 rounded-md border border-ink/[0.10] bg-white p-5 sm:p-7 md:p-8"
       >
         <div className="ascii-rule mb-5">
           ── ALEX&rsquo;S READ ────────────────────────────────────

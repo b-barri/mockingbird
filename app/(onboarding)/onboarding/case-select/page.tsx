@@ -124,14 +124,14 @@ function CaseSelectInner() {
         [STEP 2/2]&nbsp;&nbsp;DRAFT_CASE_TYPE
       </div>
 
-      <h1 className="mb-3 font-display text-5xl leading-[1.0] tracking-tight text-ink md:text-6xl">
+      <h1 className="mb-3 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl sm:leading-[1.0] md:text-6xl">
         Pick your poison.
       </h1>
-      <p className="mb-10 font-mono text-[13px] leading-relaxed text-mute">
+      <p className="mb-8 font-mono text-[13px] leading-relaxed text-mute sm:mb-10">
         // you pick the type. we deal the question. no peeking at the bank.
       </p>
 
-      <div className="brand-image-glow mb-12">
+      <div className="brand-image-glow mb-10 sm:mb-12">
         <Image
           src="/branding/choose_option.png"
           alt="Ember considering which case to pick"
@@ -214,7 +214,7 @@ function CaseSelectInner() {
             _
           </span>
         </span>
-        <span className="shrink-0 text-[11px] uppercase tracking-wider text-cream/60 transition-colors group-hover:text-cream">
+        <span className="hidden shrink-0 text-[11px] uppercase tracking-wider text-cream/60 transition-colors group-hover:text-cream sm:inline">
           Press ↵ to deal&nbsp;→
         </span>
       </button>
@@ -230,7 +230,7 @@ function CaseSelectInner() {
 
 export default function CaseSelectPage() {
   return (
-    <main className="mx-auto max-w-4xl px-8 pt-16 pb-section">
+    <main className="mx-auto max-w-4xl px-4 pt-10 pb-section sm:px-6 sm:pt-14 lg:px-8 lg:pt-16">
       <Suspense
         fallback={
           <div className="py-section text-center text-sm text-mute">

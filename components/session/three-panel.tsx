@@ -97,27 +97,28 @@ export function ThreePanel({
   const canPause = Boolean(session.startedAt) && !session.endedAt;
 
   return (
-    <div className="flex h-screen flex-col bg-cream">
+    <div className="flex min-h-screen flex-col bg-cream md:h-screen">
       {/* TOP BAR — Pre-flight Console direction: pulse-dot brand, mono case
-          label, mono timer pill, mono control buttons. */}
-      <header className="flex items-center justify-between border-b border-ink/10 bg-cream px-6 py-3">
-        <div className="flex items-center gap-6">
+          label, mono timer pill, mono control buttons. Wraps on mobile so
+          the case title gets its own line, keeping controls reachable. */}
+      <header className="flex flex-col gap-2 border-b border-ink/10 bg-cream px-4 py-3 sm:px-6 md:flex-row md:items-center md:justify-between md:gap-0">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 md:gap-6">
           <div className="flex items-baseline gap-3">
             <span className="pulse-dot" />
             <span className="font-mono text-[13px] font-semibold tracking-wide text-ink">
               MOCKINGBIRD
             </span>
           </div>
-          <div className="flex items-baseline gap-2">
+          <div className="flex min-w-0 items-baseline gap-2">
             <span className="font-mono text-[11px] text-mute">
               [SESSION]&nbsp;<span className="text-coral">LIVE</span>&nbsp;//
             </span>
-            <span className="font-mono text-[14px] font-semibold tracking-tight text-ink">
+            <span className="truncate font-mono text-[13px] font-semibold tracking-tight text-ink sm:text-[14px]">
               {caseTitle}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-1.5 font-mono text-[12px] text-mute">
             <span className="text-[10px] uppercase tracking-[0.14em]">
               elapsed
@@ -133,39 +134,34 @@ export function ThreePanel({
             data-testid="pause-toggle"
             data-paused={paused}
             aria-pressed={paused}
-            className="inline-flex items-center gap-1.5 rounded-[3px] border border-ink/20 bg-cream px-3 py-[7px] font-mono text-[12px] text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-[3px] border border-ink/20 bg-cream px-2.5 py-[6px] font-mono text-[12px] text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40 sm:px-3 sm:py-[7px]"
           >
             {paused ? "▶ Resume" : "⏸ Pause"}
           </button>
           <button
             type="button"
             onClick={onEndSession}
-            className="inline-flex items-center gap-1.5 rounded-[3px] border border-red-900/30 bg-cream px-3 py-[7px] font-mono text-[12px] text-red-900 transition-colors hover:border-red-900 hover:bg-red-50"
+            className="inline-flex items-center gap-1.5 rounded-[3px] border border-red-900/30 bg-cream px-2.5 py-[6px] font-mono text-[12px] text-red-900 transition-colors hover:border-red-900 hover:bg-red-50 sm:px-3 sm:py-[7px]"
           >
             ▸ End session
           </button>
         </div>
       </header>
 
-      {/* THREE PANELS */}
+      {/* PANELS — mobile: flex column, voice first; desktop: 2- or 3-col grid. */}
       <main
         data-testid="three-panel-grid"
         data-scratchpad-collapsed={session.scratchpadCollapsed}
         className={clsx(
-          "grid flex-1 gap-4 overflow-hidden p-4 transition-[grid-template-columns] duration-200 ease-out",
+          "flex flex-1 flex-col gap-4 p-3 sm:p-4 md:grid md:overflow-hidden md:transition-[grid-template-columns] md:duration-200 md:ease-out",
           // R8 ratios: default 35/30/35; collapsed 40/60 (2:3 transcript:voice)
           session.scratchpadCollapsed
-            ? "grid-cols-[2fr_3fr]"
-            : "grid-cols-[1fr_1.1fr_1.2fr]"
+            ? "md:grid-cols-[2fr_3fr]"
+            : "md:grid-cols-[1fr_1.1fr_1.2fr]"
         )}
       >
-        <section className="overflow-hidden rounded-xl border border-ink/[0.08] bg-white">
-          <TranscriptPanel
-            turns={session.turns}
-            onStrikeTurn={(id) => dispatch({ type: "STRIKE_TURN", id })}
-          />
-        </section>
-        <section className="overflow-hidden rounded-xl border border-ink/[0.08] bg-white">
+        {/* Voice stage is order-1 on mobile (the action surface), middle on desktop. */}
+        <section className="order-1 min-h-[26rem] overflow-hidden rounded-xl border border-ink/[0.08] bg-white md:order-2 md:min-h-0">
           <VoiceStage
             state={session.state.kind}
             currentQuestion={currentQuestion}
@@ -180,8 +176,14 @@ export function ThreePanel({
             onToggleInputMode={onToggleInputMode}
           />
         </section>
+        <section className="order-2 min-h-[18rem] overflow-hidden rounded-xl border border-ink/[0.08] bg-white md:order-1 md:min-h-0">
+          <TranscriptPanel
+            turns={session.turns}
+            onStrikeTurn={(id) => dispatch({ type: "STRIKE_TURN", id })}
+          />
+        </section>
         {!session.scratchpadCollapsed && (
-          <section className="overflow-hidden rounded-xl border border-ink/[0.08] bg-white">
+          <section className="order-3 min-h-[16rem] overflow-hidden rounded-xl border border-ink/[0.08] bg-white md:min-h-0">
             <ScratchpadPanel
               value={session.scratchpad}
               onChange={(text) =>
@@ -197,12 +199,13 @@ export function ThreePanel({
       </main>
 
       {/* COLLAPSED-STATE EXPAND BUTTON — appears when scratchpad is hidden.
-          Sits above the mascot so the bottom-right corner stays composed. */}
+          Pinned lower-left on mobile so it doesn't fight the mascot for the
+          bottom-right; original right-side placement holds on desktop. */}
       {session.scratchpadCollapsed && (
         <button
           type="button"
           onClick={() => dispatch({ type: "SCRATCHPAD_COLLAPSE", collapsed: false })}
-          className="fixed bottom-[12.5rem] right-6 z-10 rounded-full border border-ink/[0.1] bg-white px-4 py-2.5 text-xs font-medium text-mute shadow-lg hover:text-ink"
+          className="fixed bottom-4 left-4 z-10 rounded-full border border-ink/[0.1] bg-white px-3 py-2 text-xs font-medium text-mute shadow-lg hover:text-ink md:bottom-[12.5rem] md:left-auto md:right-6 md:px-4 md:py-2.5"
           aria-label="Show scratchpad"
         >
           Show scratchpad ↗

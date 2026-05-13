@@ -49,7 +49,7 @@ export function Mascot({ state }: MascotProps) {
     <div
       data-testid="session-mascot"
       data-frame={frame}
-      className="brand-image-glow pointer-events-none fixed bottom-5 right-5 z-30 h-32 w-32 rounded-2xl shadow-[0_18px_40px_-18px_rgba(26,22,18,0.45)] ring-1 ring-ink/[0.08] sm:h-36 sm:w-36 md:h-40 md:w-40"
+      className="brand-image-glow pointer-events-none fixed bottom-3 right-3 z-30 h-20 w-20 rounded-2xl shadow-[0_18px_40px_-18px_rgba(26,22,18,0.45)] ring-1 ring-ink/[0.08] sm:bottom-5 sm:right-5 sm:h-32 sm:w-32 md:h-40 md:w-40"
     >
       <Image
         key={frame}

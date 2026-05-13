@@ -52,16 +52,16 @@ export function Anatomy() {
     <section
       id="anatomy"
       data-testid="anatomy"
-      className="mx-auto w-full max-w-[1440px] px-8 py-section"
+      className="mx-auto w-full max-w-[1440px] px-4 py-section sm:px-6 lg:px-8"
     >
-      <div className="ascii-rule mb-10 max-w-[680px]">
+      <div className="ascii-rule mb-8 max-w-[680px] sm:mb-10">
         ── ANATOMY OF A SESSION ─────────────────────────────────
       </div>
 
-      <h2 className="mb-3 max-w-2xl font-display text-3xl leading-tight tracking-tight text-ink md:text-4xl">
+      <h2 className="mb-3 max-w-2xl font-display text-2xl leading-tight tracking-tight text-ink sm:text-3xl md:text-4xl">
         Three phases. One real loop.
       </h2>
-      <p className="mb-12 max-w-2xl text-base leading-relaxed text-mute">
+      <p className="mb-10 max-w-2xl text-base leading-relaxed text-mute sm:mb-12">
         Click any phase for the page itself. Same copy you'll see in the
         product, same tokens, same voice.
       </p>

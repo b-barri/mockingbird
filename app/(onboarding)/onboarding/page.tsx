@@ -71,25 +71,25 @@ export default function OnboardingPage() {
   const voiceReady = voiceKey.trim().length > 0;
 
   return (
-    <main className="mx-auto max-w-3xl px-8 pt-16 pb-section">
+    <main className="mx-auto max-w-3xl px-4 pt-10 pb-section sm:px-6 sm:pt-14 lg:px-8 lg:pt-16">
       <div className="mb-4 font-mono text-[11px] tracking-wide text-coral">
         [STEP 1/2]&nbsp;&nbsp;ONBOARDING · BYO_KEYS
       </div>
 
-      <h1 className="mb-3 font-display text-5xl leading-[1.05] tracking-tight text-ink">
+      <h1 className="mb-3 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
         Bring your keys.
         <br />
         We&apos;ll bring the interviewer.
       </h1>
 
-      <p className="mb-10 max-w-[520px] font-mono text-[14px] leading-relaxed text-mute">
+      <p className="mb-8 max-w-[520px] font-mono text-[13px] leading-relaxed text-mute sm:mb-10 sm:text-[14px]">
         // keys live in your browser. validated synchronously before any
         tokens get spent.
       </p>
 
       {/* Prominent banner: Ember holding the keys. Mirrors the case-select
           page's choose_option banner so the two onboarding steps parallel. */}
-      <div className="brand-image-glow mb-12">
+      <div className="brand-image-glow mb-10 sm:mb-12">
         <Image
           src="/branding/ember_keys.png"
           alt="Ember holding the keys, ready for the candidate"
@@ -102,7 +102,7 @@ export default function OnboardingPage() {
 
       <form onSubmit={handleStart} className="space-y-5">
         {/* LLM panel */}
-        <fieldset className="pf-panel p-6">
+        <fieldset className="pf-panel p-4 sm:p-6">
           <legend className="sr-only">Pick your interviewer&apos;s brain</legend>
           <div className="ascii-rule mb-4">
             ── LLM ──────────────────────────────────────────
@@ -145,7 +145,7 @@ export default function OnboardingPage() {
         </fieldset>
 
         {/* Voice panel */}
-        <fieldset className="pf-panel p-6">
+        <fieldset className="pf-panel p-4 sm:p-6">
           <legend className="sr-only">Pick a voice for Alex</legend>
           <div className="ascii-rule mb-4">
             ── VOICE ──────────────────────────── [OPTIONAL]
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
         </fieldset>
 
         {/* Budget panel: cost estimate + remember toggle */}
-        <div className="pf-panel space-y-4 p-6">
+        <div className="pf-panel space-y-4 p-4 sm:p-6">
           <div className="ascii-rule">
             ── BUDGET ───────────────────────────────────────
           </div>

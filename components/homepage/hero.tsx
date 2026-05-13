@@ -9,26 +9,26 @@ export function Hero() {
   return (
     <section
       data-testid="homepage-hero"
-      className="mx-auto grid w-full max-w-[1440px] grid-cols-[1.05fr_1fr] items-center gap-16 px-8 pt-24 pb-section"
+      className="mx-auto grid w-full max-w-[1440px] grid-cols-1 items-center gap-10 px-4 pt-12 pb-section sm:px-6 sm:pt-16 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-8 lg:pt-24"
     >
       <div>
-        <div className="mb-6 flex items-center gap-2.5 font-mono text-[12px] tracking-wide text-coral">
+        <div className="mb-5 flex items-center gap-2.5 font-mono text-[12px] tracking-wide text-coral sm:mb-6">
           <span className="pulse-dot" />
           <span>&gt; mockingbird_</span>
         </div>
 
-        <h1 className="font-display text-5xl leading-[1.02] tracking-tight text-ink md:text-6xl">
+        <h1 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl md:text-6xl">
           A PM interview buddy that pressure-tests your answer the way a real
           panel would.
         </h1>
 
-        <p className="mt-7 max-w-xl text-base leading-relaxed text-mute">
+        <p className="mt-5 max-w-xl text-base leading-relaxed text-mute sm:mt-7">
           Real Product Design cases, out loud, with an interviewer who pushes
           on the moves you'd rather move past. BYO API key. No accounts, no
           payments, no "book a demo."
         </p>
 
-        <div className="mt-10 flex items-center gap-6">
+        <div className="mt-8 flex flex-col items-start gap-4 sm:mt-10 sm:flex-row sm:items-center sm:gap-6">
           <Link href="/onboarding" className="pf-exec-btn">
             <span className="arrow">▸</span>
             Deal me a case

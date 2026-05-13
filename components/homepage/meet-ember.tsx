@@ -37,13 +37,13 @@ export function MeetEmber() {
     <section
       id="ember"
       data-testid="meet-ember"
-      className="mx-auto w-full max-w-[1440px] px-8 py-section"
+      className="mx-auto w-full max-w-[1440px] px-4 py-section sm:px-6 lg:px-8"
     >
-      <div className="ascii-rule mb-10 max-w-[680px]">
+      <div className="ascii-rule mb-8 max-w-[680px] sm:mb-10">
         ── BUDDY ────── EMBER ───────────────────────────────────
       </div>
 
-      <div className="grid items-center gap-16 md:grid-cols-[1fr_1.1fr]">
+      <div className="grid items-center gap-10 md:grid-cols-[1fr_1.1fr] md:gap-16">
         <div className="brand-video-glow w-full">
           <video
             ref={videoRef}
@@ -66,7 +66,7 @@ export function MeetEmber() {
         </div>
 
         <div>
-          <h2 className="mb-6 font-display text-4xl leading-[1.02] tracking-tight text-ink md:text-5xl">
+          <h2 className="mb-5 font-display text-3xl leading-[1.05] tracking-tight text-ink sm:text-4xl sm:leading-[1.02] md:text-5xl">
             Meet Ember.
           </h2>
 

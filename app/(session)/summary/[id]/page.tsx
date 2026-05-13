@@ -96,7 +96,7 @@ export default function SummaryPage() {
   }, [id]);
 
   return (
-    <main className="min-h-screen bg-cream px-8 py-section">
+    <main className="min-h-screen bg-cream px-4 py-section sm:px-6 lg:px-8">
       <SummaryCard
         sessionId={id}
         caseTitle={caseTitle}
