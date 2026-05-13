@@ -1,14 +1,16 @@
 # Mockingbird
 
-PM interview voice agent. Voice-first Product Design case practice with framework-aware probes, BYO API keys, and a provider-pluggable voice layer that doubles as an empirical testbed for voice-AI providers.
+PM interview voice agent. Voice-first Product Design case practice with a senior-PM interviewer persona (Alex), BYO API keys, and a provider-pluggable voice layer that doubles as an empirical testbed for voice-AI providers.
 
 Working name: **Mockingbird** (placeholder).
 
 ## Status
 
-**V1 scaffold (U1)** — Next.js 15 + TypeScript + Tailwind + Vitest + Playwright initialized. Subsequent units land incrementally per the plan.
+**V1 in progress.** Voice loop (Sarvam STT/TTS + Cartesia), interviewer persona, 30 product-design cases, and tension-grounded post-session feedback are live. Voice provider bakeoff and live-deploy validation are the next gates.
 
-See [`docs/plans/2026-05-11-001-feat-pm-interview-voice-agent-plan.md`](docs/plans/2026-05-11-001-feat-pm-interview-voice-agent-plan.md) for the full V1 implementation plan, and [`docs/brainstorms/2026-05-11-pm-interview-voice-agent-requirements.md`](docs/brainstorms/2026-05-11-pm-interview-voice-agent-requirements.md) for the requirements that originated it.
+**Feedback model.** Sessions are evaluated against case-specific tensions, not framework checklists. Each case names its tensions (e.g. "engagement vs harm" for an Instagram-for-teens case; "passenger trust vs detour cost vs driver economics" for Ola Pool), and the post-session summary is two paragraphs of prose — *what worked* and *what was missed and could have been better* — anchored to specific candidate moments and the tension substance. No framework names ever surface to the candidate. See the tension-grounded feedback [plan](docs/plans/2026-05-12-001-feat-tension-grounded-feedback-plan.md) and [requirements](docs/brainstorms/2026-05-12-tension-grounded-feedback-requirements.md).
+
+Origin plan: [`docs/plans/2026-05-11-001-feat-pm-interview-voice-agent-plan.md`](docs/plans/2026-05-11-001-feat-pm-interview-voice-agent-plan.md). Origin requirements: [`docs/brainstorms/2026-05-11-pm-interview-voice-agent-requirements.md`](docs/brainstorms/2026-05-11-pm-interview-voice-agent-requirements.md).
 
 ## Develop
 
