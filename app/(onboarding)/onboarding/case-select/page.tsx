@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import {
   PRODUCT_DESIGN_CASES,
   pickRandomCase,
@@ -78,6 +78,15 @@ function CaseSelectInner() {
   const voice = params.get("voice") ?? "cartesia";
   const [selectedType, setSelectedType] =
     useState<CaseType["id"]>("product-design");
+
+  // Auto-focus the start button on mount (a case is pre-selected) and on
+  // subsequent selection changes. Keyboard candidates can land on the page
+  // and immediately press Enter; mouse users get the same experience as
+  // before since hover/click still works on the unfocused button.
+  const startButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    startButtonRef.current?.focus();
+  }, [selectedType]);
 
   if (PRODUCT_DESIGN_CASES.length === 0) {
     return (
@@ -192,6 +201,7 @@ function CaseSelectInner() {
         // ready? hit it.
       </p>
       <button
+        ref={startButtonRef}
         type="button"
         onClick={startCase}
         data-testid="start-case"
