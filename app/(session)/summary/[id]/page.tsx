@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { SummaryCard } from "@/components/summary/summary-card";
 import { getKey } from "@/lib/auth/key-storage";
 import { getCaseById } from "@/lib/llm/prompts/case-templates";
+import type { StructuredFeedback } from "@/lib/llm/summary";
 import {
   formatTotalCost,
 } from "@/lib/telemetry/cost-tracker";
@@ -13,16 +14,17 @@ import {
   loadCompletedSession,
 } from "@/lib/voice/session-store";
 
-// R16 + R16a: post-session summary route. Reads the completed session from
-// sessionStorage (saved by the session page on End), POSTs transcript to
-// /api/summary, streams the generated paragraph into the card.
+// R16 + R16a + 2026-05-13 amendment: post-session summary route. Reads the
+// completed session from sessionStorage (saved by the session page on End),
+// POSTs transcript to /api/summary, awaits the buffered structured JSON
+// response, hands it to the card.
 
 export default function SummaryPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const id = params?.id ?? "";
 
-  const [summaryText, setSummaryText] = useState("");
+  const [feedback, setFeedback] = useState<StructuredFeedback | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
   const [caseTitle, setCaseTitle] = useState("");
@@ -65,16 +67,19 @@ export default function SummaryPage() {
             turns: session.turns,
           }),
         });
-        if (!response.ok || !response.body) {
-          setError(`Summary service returned ${response.status}.`);
+        if (cancelled) return;
+        const data = (await response.json()) as
+          | StructuredFeedback
+          | { error: string };
+        if (!response.ok || "error" in data) {
+          const message =
+            "error" in data ? data.error : `Summary service returned ${response.status}.`;
+          setError(message);
           setLoading(false);
           return;
         }
-        await streamSummary(response.body, (chunk) => {
-          if (cancelled) return;
-          setSummaryText((prev) => prev + chunk);
-        });
-        if (!cancelled) setLoading(false);
+        setFeedback(data);
+        setLoading(false);
       } catch (err) {
         if (cancelled) return;
         setError(
@@ -99,39 +104,9 @@ export default function SummaryPage() {
         spend={spend}
         loading={loading}
         error={error}
-        summaryText={summaryText || undefined}
+        feedback={feedback}
         onViewTranscript={() => router.push(`/session?case=${id}&review=1`)}
       />
     </main>
   );
-}
-
-/** Parse a text/event-stream body and call onChunk(text) for each data event. */
-async function streamSummary(
-  body: ReadableStream<Uint8Array>,
-  onChunk: (text: string) => void
-): Promise<void> {
-  const reader = body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      const data = line.replace(/^data:\s*/, "").trim();
-      if (!data || data === "[DONE]") continue;
-      try {
-        const parsed = JSON.parse(data) as { text?: string; error?: string };
-        if (parsed.error) {
-          throw new Error(parsed.error);
-        }
-        if (parsed.text) onChunk(parsed.text);
-      } catch {
-        // Tolerate partial JSON in fragmented chunks.
-      }
-    }
-  }
 }

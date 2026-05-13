@@ -1,43 +1,72 @@
 import type { Turn } from "@/lib/voice/state-machine";
 import type { CaseTemplate } from "@/lib/llm/prompts/case-templates";
 
-// Post-session coach prompt — tension-grounded feedback. The case's named
-// tensions are supplied in the user message under "Tensions this case is
-// testing"; this prompt instructs the LLM to use those tensions as the eval
-// rubric and produce two-part prose (what worked / what was missed) without
-// framework name-drops or checklist language.
+// Post-session coach prompt — tension-grounded structured feedback.
+//
+// As of the 2026-05-13 amendment, the output is structured JSON rather than
+// free prose. Each session produces 4 dimension assessments (Customer focus,
+// Structure, and two case-specific tension sides derived from the case's
+// evalRubric) with categorical verdicts (strong / developing / missing) plus
+// two prose paragraphs (what worked / what was missed). Numeric scores remain
+// out of scope per the brainstorm.
 
-const COACH_SYSTEM_PROMPT = `The interview is now over. You're transitioning out of your interviewer role (Alex) into coaching mode for the candidate.
+export type DimensionVerdict = "strong" | "developing" | "missing";
 
-The user message includes a section titled "Tensions this case is testing." Those tensions are your eval rubric. Read the transcript and judge how well the candidate engaged each side of the tension(s).
+export interface DimensionAssessment {
+  readonly name: string;
+  readonly verdict: DimensionVerdict;
+  readonly observation: string;
+}
 
-Produce exactly TWO paragraphs of plain prose, separated by a single blank line (\\n\\n).
+export interface StructuredFeedback {
+  readonly dimensions: ReadonlyArray<DimensionAssessment>;
+  readonly whatWorked: string;
+  readonly whatMissed: string;
+}
 
-Paragraph 1 — what worked:
-- Name 1–2 specific moments where the candidate engaged a tension side well.
-- Anchor each observation to either (a) something the candidate actually said (paraphrased or briefly quoted), or (b) the substance of the named tension in plain language.
-- If genuinely little worked, this paragraph can be short. Do not manufacture praise.
+const COACH_SYSTEM_PROMPT = `You are Alex — the interviewer the candidate just finished a session with. The interview is over and you are now in coach mode, evaluating their performance.
 
-Paragraph 2 — what was missed and could have been better:
-- Name the tension side(s) the candidate skipped or engaged weakly.
-- For each gap, name what a stronger PM would have done differently — be PRESCRIPTIVE, not just diagnostic ("a stronger answer would have led with X before optimizing for Y").
-- Anchor to a candidate moment where the miss occurred when one exists; otherwise anchor to the tension substance.
+The user message includes:
+- The case title
+- A section titled "Tensions this case is testing" with the case's eval rubric
+- The session transcript
 
-Anchoring rule (CRITICAL):
-- Every observation in BOTH paragraphs anchors to either a candidate moment or a named tension. Generic observations with no anchor are not allowed.
+Use the eval rubric to identify the case's named tension sides. Read the transcript. Judge how well the candidate engaged each side.
 
-Things that must NEVER appear in your output:
-- Framework names: "CIRCLES", "AARM", "Goals-Signals-Metrics", or analogous acronyms.
+OUTPUT FORMAT: Return ONLY a single JSON object matching this exact schema. No preamble, no markdown code fence, no trailing explanation — just the JSON object as the entire response.
+
+{
+  "dimensions": [
+    {"name": "Customer focus", "verdict": "<strong|developing|missing>", "observation": "<10-20 words>"},
+    {"name": "Structure", "verdict": "<strong|developing|missing>", "observation": "<10-20 words>"},
+    {"name": "<First tension side from the rubric as a short noun phrase, e.g., 'Engagement side'>", "verdict": "<strong|developing|missing>", "observation": "<10-20 words>"},
+    {"name": "<Second tension side from the rubric as a short noun phrase, e.g., 'Harm side'>", "verdict": "<strong|developing|missing>", "observation": "<10-20 words>"}
+  ],
+  "whatWorked": "<one paragraph, 100-140 words>",
+  "whatMissed": "<one paragraph, 100-140 words>"
+}
+
+Constraints on structure:
+- Always exactly 4 dimensions, in the order above: Customer focus, Structure, then two case-tension sides derived from the rubric.
+- The two case-tension dimensions are named after the actual tension sides the case is testing (extract from the "Tensions this case is testing" section). For example, an engagement-vs-harm case might use "Engagement side" and "Harm side"; a passenger-trust-vs-driver-economics case might use "Passenger trust" and "Driver economics".
+- Each verdict is exactly one of these three strings: "strong", "developing", "missing". No other vocabulary.
+
+Constraints on content:
+- Each observation is 10-20 words. Anchor it to a candidate moment (paraphrased or briefly quoted) OR to the tension substance in plain language.
+- whatWorked + whatMissed together total 240-280 words; each individual paragraph is 100-140 words.
+- whatWorked can be shorter if genuinely little worked — do not manufacture praise.
+- whatMissed is prescriptive: name what a stronger PM would have done differently ("a stronger answer would have led with X before optimizing for Y"), not just diagnostic ("you didn't address Y").
+
+Things that must NEVER appear in any field (observation, whatWorked, or whatMissed):
+- Framework names: "CIRCLES", "AARM", "Goals-Signals-Metrics", or any analogous acronym.
 - Checklist or step language: "step 1", "step N of X", "you skipped step Y", "the framework", "framework gaps".
 - Generic praise or criticism without an anchor: "good structure", "you organized your answer well", "be more specific", "great session overall", "you have lots of potential".
 - Sycophancy: "great job", "I love that", "well done".
-- Bullets, headers, numbered lists, or bold formatting within either paragraph.
+- Numeric scores, percentages, ordinal ratings of any kind. Categorical verdicts only.
 
 Tone:
 - Direct, honest, senior-PM voice. One sharp specific observation beats three rounded encouragements. No sycophancy.
-- If the answer was weak, say so — anchored to a specific moment, never as a global judgment.
-
-Length: 240–280 words total across both paragraphs. Do not pad to hit the floor; do not exceed the ceiling.`;
+- If the answer was weak, say so — anchored to a specific moment, never as a global judgment.`;
 
 export interface AssembleSummaryInput {
   caseTemplate: CaseTemplate;
@@ -45,7 +74,6 @@ export interface AssembleSummaryInput {
 }
 
 export function assembleSummaryUserMessage(input: AssembleSummaryInput): string {
-  // Pre-stringify the transcript so the LLM has it as a single input message.
   const transcriptLines = input.turns
     .filter((t) => !t.stricken && !t.partial)
     .map(
@@ -54,12 +82,6 @@ export function assembleSummaryUserMessage(input: AssembleSummaryInput): string 
     )
     .join("\n\n");
 
-  // The eval rubric names the case's tensions and what strong vs weak
-  // engagement on each side looks like. It is the load-bearing eval criteria
-  // for the coach prompt — feedback must ground in these tensions, not in
-  // framework checklists. Rendered exactly once, between case title and
-  // transcript so the LLM has it as orienting context before reading the
-  // candidate's words.
   return `Case: ${input.caseTemplate.title}
 
 Tensions this case is testing:
@@ -70,9 +92,89 @@ Transcript:
 
 ${transcriptLines}
 
-Now produce the feedback.`;
+Now produce the feedback as JSON.`;
 }
 
 export function summarySystemPrompt(): string {
   return COACH_SYSTEM_PROMPT;
+}
+
+// Server-side parsing of the LLM JSON response. Tolerant to a markdown code
+// fence wrapper (some Claude responses wrap JSON in ```json ... ```), but
+// strict on the schema once parsed. Throws on any structural mismatch so the
+// route can surface a clean error to the client.
+const VALID_VERDICTS: ReadonlySet<DimensionVerdict> = new Set([
+  "strong",
+  "developing",
+  "missing",
+]);
+
+export function parseFeedback(raw: string): StructuredFeedback {
+  const trimmed = raw.trim();
+  // Strip optional markdown code fence (```json ... ``` or ``` ... ```).
+  const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  const jsonStr = fenceMatch ? fenceMatch[1] : trimmed;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch (err) {
+    throw new Error(
+      `Could not parse feedback as JSON: ${err instanceof Error ? err.message : "unknown error"}`
+    );
+  }
+
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("Feedback JSON must be an object");
+  }
+  const obj = parsed as Record<string, unknown>;
+
+  if (!Array.isArray(obj.dimensions)) {
+    throw new Error("Feedback JSON must have a 'dimensions' array");
+  }
+  if (obj.dimensions.length !== 4) {
+    throw new Error(
+      `Feedback JSON must have exactly 4 dimensions; got ${obj.dimensions.length}`
+    );
+  }
+  const dimensions: DimensionAssessment[] = obj.dimensions.map(
+    (d: unknown, idx: number) => {
+      if (!d || typeof d !== "object") {
+        throw new Error(`Dimension ${idx} is not an object`);
+      }
+      const dim = d as Record<string, unknown>;
+      if (typeof dim.name !== "string" || dim.name.length === 0) {
+        throw new Error(`Dimension ${idx} missing name`);
+      }
+      if (
+        typeof dim.verdict !== "string" ||
+        !VALID_VERDICTS.has(dim.verdict as DimensionVerdict)
+      ) {
+        throw new Error(
+          `Dimension ${idx} ('${dim.name}') has invalid verdict '${dim.verdict}'; must be strong/developing/missing`
+        );
+      }
+      if (typeof dim.observation !== "string" || dim.observation.length === 0) {
+        throw new Error(`Dimension ${idx} ('${dim.name}') missing observation`);
+      }
+      return {
+        name: dim.name,
+        verdict: dim.verdict as DimensionVerdict,
+        observation: dim.observation,
+      };
+    }
+  );
+
+  if (typeof obj.whatWorked !== "string" || obj.whatWorked.length === 0) {
+    throw new Error("Feedback JSON missing whatWorked string");
+  }
+  if (typeof obj.whatMissed !== "string" || obj.whatMissed.length === 0) {
+    throw new Error("Feedback JSON missing whatMissed string");
+  }
+
+  return {
+    dimensions,
+    whatWorked: obj.whatWorked,
+    whatMissed: obj.whatMissed,
+  };
 }

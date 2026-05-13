@@ -3,10 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import type { StructuredFeedback } from "@/lib/llm/summary";
 
 interface SummaryCardProps {
-  /** Generated summary text, or undefined while loading. */
-  summaryText?: string;
+  /** Structured tension-grounded feedback (dimensions + prose), or undefined while loading. */
+  feedback?: StructuredFeedback;
   /** Loading flag — shows skeleton when true. */
   loading: boolean;
   /** Error message when generation failed. */
@@ -23,6 +24,43 @@ interface SummaryCardProps {
   onViewTranscript?: () => void;
 }
 
+// Categorical verdict → visual classes. Strong = green, developing = amber,
+// missing = red-tinted with a hollow dot to suggest "absent." No numeric
+// values — verdict is categorical only.
+const VERDICT_STYLES: Record<
+  "strong" | "developing" | "missing",
+  { card: string; verdict: string; dot: string; label: string }
+> = {
+  strong: {
+    card: "bg-green-50 border-green-200",
+    verdict: "text-green-700",
+    dot: "bg-green-600",
+    label: "strong",
+  },
+  developing: {
+    card: "bg-amber-50 border-amber-200",
+    verdict: "text-amber-700",
+    dot: "bg-amber-500",
+    label: "developing",
+  },
+  missing: {
+    card: "bg-red-50 border-red-200",
+    verdict: "text-red-700",
+    dot: "bg-white border border-red-500",
+    label: "missing",
+  },
+};
+
+function formatFeedbackForClipboard(feedback: StructuredFeedback): string {
+  const dimensionLines = feedback.dimensions
+    .map(
+      (d) =>
+        `${d.name} — ${d.verdict.toUpperCase()}\n${d.observation}`
+    )
+    .join("\n\n");
+  return `${dimensionLines}\n\nWhat worked:\n${feedback.whatWorked}\n\nWhat was missed:\n${feedback.whatMissed}`;
+}
+
 // R16a 8-element post-session summary card in the Pre-flight Console direction:
 //   (a) summary paragraph (with skeleton while loading)
 //   (b) copy-to-clipboard
@@ -33,7 +71,7 @@ interface SummaryCardProps {
 //   (g) loading state
 //   (h) error state
 export function SummaryCard({
-  summaryText,
+  feedback,
   loading,
   error,
   caseTitle,
@@ -45,9 +83,9 @@ export function SummaryCard({
   const [copied, setCopied] = useState(false);
 
   async function copySummary() {
-    if (!summaryText) return;
+    if (!feedback) return;
     try {
-      await navigator.clipboard.writeText(summaryText);
+      await navigator.clipboard.writeText(formatFeedbackForClipboard(feedback));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -93,7 +131,7 @@ export function SummaryCard({
           width={1448}
           height={1086}
           priority
-          className="w-full rounded-2xl shadow-[0_24px_50px_-22px_rgba(26,22,18,0.4)] ring-1 ring-ink/[0.08]"
+          className="mx-auto w-full max-w-md rounded-2xl shadow-[0_24px_50px_-22px_rgba(26,22,18,0.4)] ring-1 ring-ink/[0.08]"
         />
         {loading && (
           <div className="mt-4 flex items-center justify-center gap-2 font-mono text-[11px] tracking-wide text-mute">
@@ -181,19 +219,69 @@ export function SummaryCard({
             <p className="mt-2 font-mono text-[11px] text-mute">{error}</p>
           </div>
         )}
-        {!loading && !error && summaryText && (
+        {!loading && !error && feedback && (
           <>
-            <div className="space-y-4">
-              {summaryText.split(/\n\n+/).map((para, i) => (
+            {/* Dimension cards — 2x2 grid for 4 dimensions. Categorical
+                verdicts only (strong / developing / missing), no scores. */}
+            <div
+              data-testid="dimension-grid"
+              className="mb-7 grid grid-cols-1 gap-3 sm:grid-cols-2"
+            >
+              {feedback.dimensions.map((dim) => {
+                const styles = VERDICT_STYLES[dim.verdict];
+                return (
+                  <div
+                    key={dim.name}
+                    data-testid="dimension-card"
+                    data-verdict={dim.verdict}
+                    className={`rounded-md border p-3 ${styles.card}`}
+                  >
+                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mute">
+                      {dim.name}
+                    </div>
+                    <div
+                      className={`mb-1.5 font-display text-[15px] font-semibold leading-none ${styles.verdict}`}
+                    >
+                      <span
+                        className={`mr-1.5 inline-block h-2 w-2 rounded-full align-middle ${styles.dot}`}
+                      />
+                      {styles.label}
+                    </div>
+                    <p className="text-[12.5px] leading-[1.45] text-ink/85">
+                      {dim.observation}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Prose narratives — two paragraphs as in R5. */}
+            <div data-testid="feedback-prose" className="space-y-5">
+              <div>
+                <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-coral">
+                  What worked
+                </div>
                 <p
-                  key={i}
+                  data-testid="what-worked"
                   className="text-[16px] leading-[1.7] text-ink"
                 >
-                  {para}
+                  {feedback.whatWorked}
                 </p>
-              ))}
+              </div>
+              <div>
+                <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-coral">
+                  What was missed and could have been better
+                </div>
+                <p
+                  data-testid="what-missed"
+                  className="text-[16px] leading-[1.7] text-ink"
+                >
+                  {feedback.whatMissed}
+                </p>
+              </div>
             </div>
-            <div className="mt-4 flex justify-end">
+
+            <div className="mt-6 flex justify-end">
               <button
                 type="button"
                 onClick={copySummary}
