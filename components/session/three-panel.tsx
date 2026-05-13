@@ -174,7 +174,7 @@ export function ThreePanel({
             onErrorAction={onErrorAction}
             voiceProvider={voiceProvider}
             inputMode={inputMode}
-            onToggleInputMode={paused ? undefined : onToggleInputMode}
+            onToggleInputMode={onToggleInputMode}
           />
         </section>
         {!session.scratchpadCollapsed && (

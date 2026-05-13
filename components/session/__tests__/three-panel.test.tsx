@@ -187,8 +187,8 @@ describe("ThreePanel — R7 + R8 layout", () => {
 
   });
 
-  describe("Input-mode toggle (text ↔ voice)", () => {
-    it("renders the toggle when onToggleInputMode is provided", () => {
+  describe("Input-mode segmented pill toggle", () => {
+    it("renders both pill options when onToggleInputMode is provided", () => {
       const session = buildSession({
         state: { kind: "listening" },
         startedAt: Date.now() - 5_000,
@@ -203,12 +203,12 @@ describe("ThreePanel — R7 + R8 layout", () => {
           onToggleInputMode={() => {}}
         />
       );
-      const toggle = screen.getByTestId("toggle-input-mode");
-      expect(toggle).toBeInTheDocument();
-      expect(toggle).toHaveTextContent(/Use voice instead/i);
+      expect(screen.getByTestId("toggle-input-mode")).toBeInTheDocument();
+      expect(screen.getByTestId("toggle-voice")).toBeInTheDocument();
+      expect(screen.getByTestId("toggle-text")).toBeInTheDocument();
     });
 
-    it("toggle label flips with inputMode prop", () => {
+    it("marks the active option with aria-pressed=true and the other with false", () => {
       const session = buildSession({
         state: { kind: "listening" },
         startedAt: Date.now() - 5_000,
@@ -223,8 +223,13 @@ describe("ThreePanel — R7 + R8 layout", () => {
           onToggleInputMode={() => {}}
         />
       );
-      expect(screen.getByTestId("toggle-input-mode")).toHaveTextContent(
-        /Type instead/i
+      expect(screen.getByTestId("toggle-voice")).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
+      expect(screen.getByTestId("toggle-text")).toHaveAttribute(
+        "aria-pressed",
+        "false"
       );
       rerender(
         <ThreePanel
@@ -236,12 +241,17 @@ describe("ThreePanel — R7 + R8 layout", () => {
           onToggleInputMode={() => {}}
         />
       );
-      expect(screen.getByTestId("toggle-input-mode")).toHaveTextContent(
-        /Use voice instead/i
+      expect(screen.getByTestId("toggle-voice")).toHaveAttribute(
+        "aria-pressed",
+        "false"
+      );
+      expect(screen.getByTestId("toggle-text")).toHaveAttribute(
+        "aria-pressed",
+        "true"
       );
     });
 
-    it("clicking the toggle calls onToggleInputMode", async () => {
+    it("clicking the inactive option fires onToggleInputMode; clicking active is a no-op", async () => {
       const onToggleInputMode = vi.fn();
       const session = buildSession({
         state: { kind: "listening" },
@@ -257,7 +267,11 @@ describe("ThreePanel — R7 + R8 layout", () => {
           onToggleInputMode={onToggleInputMode}
         />
       );
-      await userEvent.click(screen.getByTestId("toggle-input-mode"));
+      // Clicking the currently-active option (text) does nothing
+      await userEvent.click(screen.getByTestId("toggle-text"));
+      expect(onToggleInputMode).not.toHaveBeenCalled();
+      // Clicking the inactive option (voice) fires the callback
+      await userEvent.click(screen.getByTestId("toggle-voice"));
       expect(onToggleInputMode).toHaveBeenCalledTimes(1);
     });
 
@@ -278,7 +292,7 @@ describe("ThreePanel — R7 + R8 layout", () => {
       expect(screen.queryByTestId("toggle-input-mode")).toBeNull();
     });
 
-    it("hides the toggle while paused", async () => {
+    it("remains visible during pause — switching is a settings change for the next turn", async () => {
       const session = buildSession({
         state: { kind: "listening" },
         startedAt: Date.now() - 5_000,
@@ -295,7 +309,37 @@ describe("ThreePanel — R7 + R8 layout", () => {
       );
       expect(screen.getByTestId("toggle-input-mode")).toBeInTheDocument();
       await userEvent.click(screen.getByTestId("pause-toggle"));
-      expect(screen.queryByTestId("toggle-input-mode")).toBeNull();
+      // Pill stays visible even while paused.
+      expect(screen.getByTestId("toggle-input-mode")).toBeInTheDocument();
+    });
+
+    it("renders at the top of the voice stage (above the question card)", () => {
+      const session = buildSession({
+        state: { kind: "listening" },
+        startedAt: Date.now() - 5_000,
+      });
+      render(
+        <ThreePanel
+          session={session}
+          dispatch={() => {}}
+          caseTitle="x"
+          currentQuestion="What's your initial frame?"
+          onSubmitTurn={() => {}}
+          inputMode="text"
+          onToggleInputMode={() => {}}
+        />
+      );
+      const stage = screen.getByTestId("voice-stage");
+      const toggle = screen.getByTestId("toggle-input-mode");
+      const question = screen.getByText(/What's your initial frame/);
+      // Both elements are inside the voice stage
+      expect(stage).toContainElement(toggle);
+      expect(stage).toContainElement(question);
+      // Toggle DOM-position-precedes the question card
+      const stageChildren = Array.from(stage.querySelectorAll("*"));
+      expect(stageChildren.indexOf(toggle)).toBeLessThan(
+        stageChildren.indexOf(question)
+      );
     });
   });
 

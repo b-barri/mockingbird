@@ -215,6 +215,51 @@ export function VoiceStage({
       data-state={state}
       className="flex h-full flex-col gap-4 overflow-hidden p-6"
     >
+      {/* Input-mode toggle — segmented pill, always visible at the top of
+          the stage when the candidate has a voice key configured. Switching
+          mid-session takes effect on the next listening turn. Hidden for
+          text-only candidates (no onToggleInputMode means no voice key was
+          configured at onboarding, so there's nothing to switch to). */}
+      {onToggleInputMode && (
+        <div
+          data-testid="toggle-input-mode"
+          className="shrink-0 self-center inline-flex rounded-full border border-ink/[0.12] bg-cream/70 p-0.5 gap-0.5"
+        >
+          <button
+            type="button"
+            data-testid="toggle-voice"
+            aria-pressed={inputMode === "voice"}
+            onClick={() => {
+              if (inputMode !== "voice") onToggleInputMode();
+            }}
+            className={clsx(
+              "rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors",
+              inputMode === "voice"
+                ? "bg-ink text-cream"
+                : "text-mute hover:text-ink"
+            )}
+          >
+            🎤 Voice
+          </button>
+          <button
+            type="button"
+            data-testid="toggle-text"
+            aria-pressed={inputMode === "text"}
+            onClick={() => {
+              if (inputMode !== "text") onToggleInputMode();
+            }}
+            className={clsx(
+              "rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors",
+              inputMode === "text"
+                ? "bg-ink text-cream"
+                : "text-mute hover:text-ink"
+            )}
+          >
+            ⌨ Text
+          </button>
+        </div>
+      )}
+
       {/* Top section scrolls when the AI's current question is long. The
           mic/text input below stays anchored — the candidate should never
           have to scroll to find the input affordance. */}
@@ -269,20 +314,6 @@ export function VoiceStage({
           )}
           {textModeActive && onSubmitTurn && (
             <TurnInput onSubmit={onSubmitTurn} />
-          )}
-          {onToggleInputMode && (
-            <div className="mt-2 flex justify-center">
-              <button
-                type="button"
-                onClick={onToggleInputMode}
-                data-testid="toggle-input-mode"
-                className="font-mono text-[11px] uppercase tracking-wider text-mute transition-colors hover:text-ink"
-              >
-                {inputMode === "voice"
-                  ? "Type instead ↓"
-                  : "Use voice instead ↑"}
-              </button>
-            </div>
           )}
         </div>
       )}
