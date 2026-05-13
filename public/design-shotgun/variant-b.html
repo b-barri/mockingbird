@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Variant B — Pre-flight Console · Mockingbird prep</title>
+<meta name="viewport" content="width=1440" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="./tailwind.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: "#F7F4ED",
+          ink:   "#1A1612",
+          coral: "#E85D3B",
+          mute:  "#6B5F50",
+          tan:   "#EDE5D6",
+        },
+        fontFamily: {
+          display: ["'Instrument Serif'", "serif"],
+          sans:    ["'Inter'", "system-ui", "sans-serif"],
+          mono:    ["'JetBrains Mono'", "ui-monospace", "monospace"],
+        },
+      },
+    },
+  };
+</script>
+<style>
+  html, body { background: #F7F4ED; color: #1A1612; }
+  body {
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,93,59,0.05), transparent 60%);
+    background-attachment: fixed;
+    font-feature-settings: "ss01","ss02","cv11";
+  }
+  .panel {
+    background: #EDE5D6;
+    border: 1px solid rgba(26,22,18,0.18);
+    border-radius: 4px;
+  }
+  .ascii-rule {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(26,22,18,0.45);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .toggle-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 3px;
+    border: 1px solid rgba(26,22,18,0.20);
+    background: #F7F4ED;
+    color: #1A1612;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .toggle-pill[data-active="true"] {
+    border-color: #1A1612;
+    background: #1A1612;
+    color: #F7F4ED;
+  }
+  .toggle-pill .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(26,22,18,0.30);
+  }
+  .toggle-pill[data-active="true"] .dot { background: #E85D3B; }
+  .key-field {
+    width: 100%;
+    background: #F7F4ED;
+    border: 1px solid rgba(26,22,18,0.20);
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: #1A1612;
+    outline: none;
+    border-radius: 3px;
+  }
+  .key-field:focus { border-color: #1A1612; }
+  .status-ready { color: #E85D3B; }
+  .status-pending { color: rgba(26,22,18,0.35); }
+  .meter-block {
+    display: inline-block;
+    width: 16px; height: 10px;
+    margin-right: 2px;
+    background: rgba(26,22,18,0.15);
+    vertical-align: middle;
+  }
+  .meter-block.fill { background: #E85D3B; }
+  .small-caps {
+    font-family: 'Inter', sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .draft-card {
+    background: #EDE5D6;
+    border: 1px solid rgba(26,22,18,0.18);
+    border-radius: 5px;
+    padding: 16px 18px 14px;
+    position: relative;
+  }
+  .draft-card[data-active="true"] {
+    box-shadow: inset 0 0 0 2px #E85D3B;
+    border-color: transparent;
+    background: #F7F4ED;
+  }
+  .draft-card[data-disabled="true"] { opacity: 0.55; }
+  .stat-block {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #6B5F50;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(26,22,18,0.18);
+    letter-spacing: 0.02em;
+  }
+  .exec-btn {
+    width: 100%;
+    background: #1A1612;
+    color: #F7F4ED;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 14px 16px;
+    border-radius: 3px;
+    text-align: left;
+  }
+  .exec-btn .arrow { color: #E85D3B; margin-right: 8px; }
+
+  /* === motion: making the console feel alive === */
+
+  /* blinking cursor — matches the project's existing caret-blink rhythm */
+  @keyframes caret-blink {
+    0%, 50%  { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+  .caret {
+    display: inline-block;
+    width: 0.55em;
+    color: #E85D3B;
+    animation: caret-blink 1s steps(2, end) infinite;
+  }
+  .caret-light {
+    color: rgba(247, 244, 237, 0.85);
+    animation: caret-blink 1s steps(2, end) infinite;
+  }
+
+  /* slow pulse on the live READY dot — orb-pulse rhythm */
+  @keyframes status-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.25); opacity: 0.78; }
+  }
+  .status-ready::before {
+    content: "●";
+    display: inline-block;
+    margin-right: 4px;
+    animation: status-pulse 3s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  /* heartbeat on the selected draft card's coral inset */
+  @keyframes card-heartbeat {
+    0%, 100% { box-shadow: inset 0 0 0 2px rgba(232, 93, 59, 1.0); }
+    50%      { box-shadow: inset 0 0 0 2px rgba(232, 93, 59, 0.55); }
+  }
+  .draft-card[data-active="true"] {
+    animation: card-heartbeat 2.6s ease-in-out infinite;
+  }
+
+  /* ASCII rules type in from left on first load — one shot */
+  @keyframes rule-type-in {
+    from { clip-path: inset(0 100% 0 0); }
+    to   { clip-path: inset(0 0 0 0); }
+  }
+  .ascii-rule {
+    animation: rule-type-in 0.55s steps(28, end) both;
+  }
+  .ascii-rule.delayed-1 { animation-delay: 0.15s; }
+  .ascii-rule.delayed-2 { animation-delay: 0.30s; }
+  .ascii-rule.delayed-3 { animation-delay: 0.45s; }
+
+  /* blinking caret next to an empty key field placeholder */
+  .field-with-caret {
+    position: relative;
+  }
+  .field-with-caret .field-caret {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #E85D3B;
+    animation: caret-blink 1s steps(2, end) infinite;
+    transition: opacity 0.15s ease;
+  }
+  .field-with-caret { position: relative; }
+  .field-with-caret .key-field:not(:placeholder-shown) ~ .field-caret,
+  .field-with-caret .key-field:focus ~ .field-caret {
+    opacity: 0;
+  }
+
+  /* cost meter blocks fade in staggered on load */
+  @keyframes block-fade-in {
+    from { opacity: 0; transform: translateX(-3px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .meter-block {
+    animation: block-fade-in 0.4s ease-out both;
+  }
+  .meter-block:nth-child(2) { animation-delay: 0.08s; }
+  .meter-block:nth-child(3) { animation-delay: 0.16s; }
+  .meter-block:nth-child(4) { animation-delay: 0.24s; }
+  .meter-block:nth-child(5) { animation-delay: 0.32s; }
+
+  /* respect reduced-motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .caret, .caret-light, .status-ready::before,
+    .draft-card[data-active="true"], .ascii-rule,
+    .field-with-caret .field-caret, .meter-block {
+      animation: none;
+    }
+  }
+</style>
+</head>
+<body class="font-sans">
+
+<!-- variant banner -->
+<header class="border-b border-ink/10 bg-cream/80 backdrop-blur sticky top-0 z-10">
+  <div class="mx-auto max-w-[1440px] px-8 py-3 flex items-center justify-between">
+    <div class="flex items-baseline gap-3">
+      <span class="font-display text-2xl tracking-tight">Variant B</span>
+      <span class="small-caps text-coral">Pre-flight Console</span>
+    </div>
+    <nav class="flex items-center gap-5 text-sm">
+      <a href="/design-shotgun/index.html" class="text-mute hover:text-ink">← All variants</a>
+      <a href="/design-shotgun/variant-a.html" class="text-mute hover:text-ink">A · Editorial Studio</a>
+      <a href="/design-shotgun/variant-c.html" class="text-mute hover:text-ink">C · Backstage Quiet</a>
+    </nav>
+  </div>
+</header>
+
+<main class="mx-auto max-w-[1440px] px-8 pt-10 pb-24">
+  <div class="grid grid-cols-2 gap-x-12">
+
+    <!-- ============================================== -->
+    <!-- LEFT HALF — Step 1: Keys (config panel)        -->
+    <!-- ============================================== -->
+    <section class="pr-2">
+
+      <div class="mono text-[11px] text-coral mb-4 tracking-wide">
+        [STEP 1/2]&nbsp;&nbsp;ONBOARDING · BYO_KEYS
+      </div>
+
+      <h1 class="font-display text-[50px] leading-[1.05] tracking-tight text-ink mb-3">
+        Bring your keys.<br />
+        We&rsquo;ll bring the interviewer.
+      </h1>
+
+      <p class="text-[13px] leading-relaxed text-mute max-w-[480px] mb-8 mono">
+        // keys live in your browser. validated synchronously before any tokens get spent.
+      </p>
+
+      <!-- LLM panel -->
+      <div class="panel p-5 mb-5">
+        <div class="ascii-rule mb-3">── LLM ──────────────────────────────────────────</div>
+
+        <div class="flex gap-2 mb-4">
+          <span class="toggle-pill" data-active="true"><span class="dot"></span>anthropic</span>
+          <span class="toggle-pill"><span class="dot"></span>openai</span>
+        </div>
+
+        <div class="flex items-center gap-3 mb-2">
+          <label class="mono text-[11px] text-mute flex-shrink-0 w-[170px]">ANTHROPIC_API_KEY</label>
+          <input class="key-field flex-1" placeholder="sk-ant-…" />
+          <span class="mono text-[11px] status-ready flex-shrink-0 w-[80px]">READY</span>
+        </div>
+        <p class="mono text-[11px] text-mute mt-2">// powers the interviewer&rsquo;s brain. spend lands on your account.</p>
+      </div>
+
+      <!-- Voice panel -->
+      <div class="panel p-5 mb-5">
+        <div class="ascii-rule delayed-1 mb-3">── VOICE ────────────────────────── [OPTIONAL]</div>
+
+        <div class="flex gap-2 mb-4">
+          <span class="toggle-pill" data-active="true"><span class="dot"></span>cartesia</span>
+          <span class="toggle-pill"><span class="dot"></span>sarvam</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <label class="mono text-[11px] text-mute flex-shrink-0 w-[170px]">CARTESIA_API_KEY</label>
+          <input class="key-field flex-1" placeholder="paste, or leave blank for text mode" />
+          <span class="mono text-[11px] status-pending flex-shrink-0 w-[80px]">○ PENDING</span>
+        </div>
+        <p class="mono text-[11px] text-mute mt-2">// gives alex a mouth. skip to run text-only.</p>
+      </div>
+
+      <!-- Cost meter + persist -->
+      <div class="panel p-5 mb-6 space-y-4">
+        <div class="ascii-rule delayed-2">── BUDGET ───────────────────────────────────────</div>
+        <div class="flex items-center justify-between">
+          <span class="mono text-[11px] text-mute">EST_COST_PER_SESSION</span>
+          <div>
+            <span class="meter-block fill"></span>
+            <span class="meter-block fill"></span>
+            <span class="meter-block fill"></span>
+            <span class="meter-block"></span>
+            <span class="meter-block"></span>
+            <span class="mono text-[12px] text-ink ml-2">$0.18 – $0.42 / 30min</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 pt-2 border-t border-ink/10">
+          <input type="checkbox" id="persist" />
+          <label for="persist" class="mono text-[11px] text-ink">
+            [&nbsp;]&nbsp;PERSIST_KEYS&nbsp;&nbsp;<span class="text-mute">// remember on this device</span>
+          </label>
+        </div>
+      </div>
+
+      <button class="exec-btn">
+        <span class="arrow">▸</span>EXEC: continue → /onboarding/case-select<span class="caret-light">_</span>
+      </button>
+
+    </section>
+
+    <!-- ============================================== -->
+    <!-- RIGHT HALF — Step 2: Draft cards               -->
+    <!-- ============================================== -->
+    <section class="pl-6 border-l border-ink/10">
+
+      <div class="mono text-[11px] text-coral mb-4 tracking-wide">
+        [STEP 2/2]&nbsp;&nbsp;DRAFT_CASE_TYPE
+      </div>
+
+      <h1 class="font-display text-[60px] leading-[1.0] tracking-tight text-ink mb-3">
+        Pick your poison.
+      </h1>
+
+      <p class="text-[13px] leading-relaxed text-mute mb-2 mono">
+        // you pick the type. we deal the question. no peeking at the bank.
+      </p>
+
+      <div class="flex items-center justify-end mb-6">
+        <span class="mono text-[10px] text-mute bg-tan px-2 py-1 rounded-sm">MOCKINGBIRD&nbsp;v0.1</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+
+        <!-- Card 1 — Product Design (ACTIVE) -->
+        <div class="draft-card" data-active="true">
+          <div class="flex items-start justify-between">
+            <h2 class="font-display text-[24px] leading-tight text-ink">Product Design</h2>
+            <span class="mono text-[10px] text-coral font-semibold">SELECTED</span>
+          </div>
+          <p class="text-[12.5px] text-mute leading-relaxed mt-2">
+            The bread-and-butter. Clarify, segment, prioritize, sketch a
+            solution out loud.
+          </p>
+          <div class="stat-block">
+            DIFFICULTY ★★★☆☆<br/>
+            BANK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5 questions<br/>
+            TIME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~30 min<br/>
+            STATUS&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-coral">LIVE</span>
+          </div>
+        </div>
+
+        <!-- Card 2 — Strategy -->
+        <div class="draft-card" data-disabled="true">
+          <div class="flex items-start justify-between">
+            <h2 class="font-display text-[24px] leading-tight text-ink">Strategy</h2>
+            <span class="mono text-[10px] text-mute">COOKING</span>
+          </div>
+          <p class="text-[12.5px] text-mute leading-relaxed mt-2">
+            Market entry, competitive response, big-bet framing.
+          </p>
+          <div class="stat-block">
+            DIFFICULTY ★★★★☆<br/>
+            BANK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 questions<br/>
+            TIME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~45 min<br/>
+            STATUS&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-mute">COOKING · V2</span>
+          </div>
+        </div>
+
+        <!-- Card 3 — Estimation -->
+        <div class="draft-card" data-disabled="true">
+          <div class="flex items-start justify-between">
+            <h2 class="font-display text-[24px] leading-tight text-ink">Estimation</h2>
+            <span class="mono text-[10px] text-mute">COOKING</span>
+          </div>
+          <p class="text-[12.5px] text-mute leading-relaxed mt-2">
+            Market sizing and back-of-the-envelope math.
+          </p>
+          <div class="stat-block">
+            DIFFICULTY ★★☆☆☆<br/>
+            BANK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 questions<br/>
+            TIME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~25 min<br/>
+            STATUS&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-mute">COOKING · V2</span>
+          </div>
+        </div>
+
+        <!-- Card 4 — Behavioral -->
+        <div class="draft-card" data-disabled="true">
+          <div class="flex items-start justify-between">
+            <h2 class="font-display text-[24px] leading-tight text-ink">Behavioral</h2>
+            <span class="mono text-[10px] text-mute">COOKING</span>
+          </div>
+          <p class="text-[12.5px] text-mute leading-relaxed mt-2">
+            Past projects, leadership stories, the conflict you navigated.
+          </p>
+          <div class="stat-block">
+            DIFFICULTY ★★☆☆☆<br/>
+            BANK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 questions<br/>
+            TIME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~30 min<br/>
+            STATUS&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-mute">COOKING · V2</span>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="exec-btn mt-8">
+        <span class="arrow">▸</span>EXEC: deal_random_case --type product-design<span class="caret-light">_</span>
+      </button>
+
+      <p class="mt-5 mono text-[11px] text-mute">
+        $ cd ../onboarding
+      </p>
+
+    </section>
+
+  </div>
+</main>
+
+<footer class="mx-auto max-w-[1440px] px-8 py-10 border-t border-ink/10 text-xs text-mute flex justify-between">
+  <span>Variant B · Pre-flight Console</span>
+  <span class="mono">2026-05-12 · mockingbird-design-exploration</span>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Step 2 · Case — Variant B (Pre-flight Console)</title>
+<meta name="viewport" content="width=1440" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="./tailwind.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { cream: "#F7F4ED", ink: "#1A1612", coral: "#E85D3B", mute: "#6B5F50", tan: "#EDE5D6" },
+        fontFamily: {
+          display: ["'Instrument Serif'", "serif"],
+          sans: ["'Inter'", "system-ui", "sans-serif"],
+          mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
+        },
+      },
+    },
+  };
+</script>
+<style>
+  html, body { background: #F7F4ED; color: #1A1612; }
+  body {
+    background-image: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,93,59,0.05), transparent 60%);
+    background-attachment: fixed;
+    font-feature-settings: "ss01","ss02","cv11";
+  }
+  .ascii-rule { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(26,22,18,0.45); letter-spacing: 0.08em; white-space: nowrap; overflow: hidden; }
+  .small-caps { font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .draft-card { background: #EDE5D6; border: 1px solid rgba(26,22,18,0.18); border-radius: 5px; padding: 18px 20px 16px; position: relative; }
+  .draft-card[data-disabled="true"] { opacity: 0.55; }
+  .stat-block { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6B5F50; margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(26,22,18,0.18); letter-spacing: 0.02em; }
+  .exec-btn { width: 100%; background: #1A1612; color: #F7F4ED; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 500; padding: 14px 16px; border-radius: 3px; text-align: left; }
+  .exec-btn .arrow { color: #E85D3B; margin-right: 8px; }
+
+  /* motion */
+  @keyframes caret-blink { 0%,50% { opacity:1 } 51%,100% { opacity:0 } }
+  .caret-light { display: inline-block; color: rgba(247,244,237,0.85); animation: caret-blink 1s steps(2,end) infinite; }
+  @keyframes card-heartbeat {
+    0%,100% { box-shadow: inset 0 0 0 2px rgba(232,93,59,1.0); }
+    50%     { box-shadow: inset 0 0 0 2px rgba(232,93,59,0.55); }
+  }
+  .draft-card[data-active="true"] {
+    border-color: transparent;
+    background: #F7F4ED;
+    animation: card-heartbeat 2.6s ease-in-out infinite;
+  }
+  @keyframes rule-type-in { from { clip-path: inset(0 100% 0 0) } to { clip-path: inset(0 0 0 0) } }
+  .ascii-rule { animation: rule-type-in 0.55s steps(28,end) both; }
+
+  /* Brand image glow — mirrors .brand-image-glow from app/globals.css so the
+     warm-lit Ember banner reads as native to the cream page. */
+  .brand-image-glow { position: relative; isolate: isolate; }
+  .brand-image-glow::before {
+    content: "";
+    position: absolute;
+    inset: -8%;
+    z-index: -1;
+    background: radial-gradient(ellipse at 50% 55%, rgba(232, 142, 70, 0.34), rgba(232, 93, 59, 0.13) 45%, transparent 72%);
+    filter: blur(28px);
+    pointer-events: none;
+  }
+  @keyframes ember-breathe {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.012); }
+  }
+  .brand-image-glow img { animation: ember-breathe 6s ease-in-out infinite; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .caret-light, .draft-card[data-active="true"], .ascii-rule, .ember-illustration img { animation: none; }
+  }
+</style>
+</head>
+<body class="font-sans">
+
+<header class="border-b border-ink/10 bg-cream/80 backdrop-blur sticky top-0 z-10">
+  <div class="mx-auto max-w-[1440px] px-8 py-3 flex items-center justify-between">
+    <div class="flex items-baseline gap-3">
+      <span class="font-display text-2xl tracking-tight">Variant B</span>
+      <span class="small-caps text-coral">Pre-flight Console · Step 2 / 2</span>
+    </div>
+    <nav class="flex items-center gap-5 text-sm">
+      <a href="/design-shotgun/index.html" class="text-mute hover:text-ink">← All variants</a>
+      <a href="/design-shotgun/variant-b-homepage.html" class="text-mute hover:text-ink">Homepage</a>
+      <a href="/design-shotgun/variant-b-step1.html" class="text-mute hover:text-ink">← Step 1 · Keys</a>
+    </nav>
+  </div>
+</header>
+
+<main class="mx-auto max-w-4xl px-8 pt-16 pb-24">
+
+  <div class="mono text-[11px] text-coral mb-4 tracking-wide">
+    [STEP 2/2]&nbsp;&nbsp;DRAFT_CASE_TYPE
+  </div>
+
+  <h1 class="font-display text-[60px] leading-[1.0] tracking-tight text-ink mb-3">
+    Pick your poison.
+  </h1>
+  <p class="text-[13px] leading-relaxed text-mute mb-10 mono">
+    // you pick the type. we deal the question. no peeking at the bank.
+  </p>
+
+  <!-- Prominent banner: Ember deliberating over the options.
+       Matches the established /onboarding/case-select pattern from app code. -->
+  <div class="brand-image-glow mb-12">
+    <img
+      src="/branding/choose_option.png"
+      alt="Ember considering which case to pick"
+      class="w-full rounded-2xl ring-1 ring-ink/[0.08] shadow-[0_24px_50px_-22px_rgba(26,22,18,0.40)]"
+    />
+  </div>
+
+  <div class="ascii-rule mb-6">── BANK ─────────────────────────────────────────────────────────</div>
+
+  <div class="grid grid-cols-2 gap-4">
+
+    <div class="draft-card" data-active="true">
+      <div class="flex items-start justify-between">
+        <h2 class="font-display text-[26px] leading-tight text-ink">Product Design</h2>
+        <span class="mono text-[10px] text-coral font-semibold">SELECTED</span>
+      </div>
+      <p class="text-[12.5px] text-mute leading-relaxed mt-2">
+        The bread-and-butter. Clarify, segment, prioritize, sketch a solution out loud.
+      </p>
+      <div class="stat-block">
+        DIFFICULTY ★★★☆☆<br/>
+        BANK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5 questions<br/>
+        TIME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~30 min<br/>
+        STATUS&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-coral">LIVE</span>
+      </div>
+    </div>
+
+    <div class="draft-card" data-disabled="true">
+      <div class="flex items-start justify-between">
+        <h2 class="font-display text-[26px] leading-tight text-ink">Strategy</h2>
+        <span class="mono text-[10px] text-mute">COOKING</span>
+      </div>
+      <p class="text-[12.5px] text-mute leading-relaxed mt-2">
+        Market entry, competitive response, big-bet framing.
+      </p>
+      <div class="stat-block">
+        DIFFICULTY ★★★★☆<br/>
+        BANK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 questions<br/>
+        TIME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~45 min<br/>
+        STATUS&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-mute">COOKING · V2</span>
+      </div>
+    </div>
+
+    <div class="draft-card" data-disabled="true">
+      <div class="flex items-start justify-between">
+        <h2 class="font-display text-[26px] leading-tight text-ink">Estimation</h2>
+        <span class="mono text-[10px] text-mute">COOKING</span>
+      </div>
+      <p class="text-[12.5px] text-mute leading-relaxed mt-2">
+        Market sizing and back-of-the-envelope math.
+      </p>
+      <div class="stat-block">
+        DIFFICULTY ★★☆☆☆<br/>
+        BANK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 questions<br/>
+        TIME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~25 min<br/>
+        STATUS&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-mute">COOKING · V2</span>
+      </div>
+    </div>
+
+    <div class="draft-card" data-disabled="true">
+      <div class="flex items-start justify-between">
+        <h2 class="font-display text-[26px] leading-tight text-ink">Behavioral</h2>
+        <span class="mono text-[10px] text-mute">COOKING</span>
+      </div>
+      <p class="text-[12.5px] text-mute leading-relaxed mt-2">
+        Past projects, leadership stories, the conflict you navigated.
+      </p>
+      <div class="stat-block">
+        DIFFICULTY ★★☆☆☆<br/>
+        BANK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 questions<br/>
+        TIME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~30 min<br/>
+        STATUS&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-mute">COOKING · V2</span>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="exec-btn mt-8">
+    <span class="arrow">▸</span>EXEC: deal_random_case --type product-design<span class="caret-light">_</span>
+  </button>
+
+  <p class="mt-5 mono text-[11px] text-mute">
+    <a href="/design-shotgun/variant-b-step1.html" class="hover:text-ink">$ cd ../onboarding</a>
+  </p>
+
+</main>
+
+<footer class="mx-auto max-w-[1440px] px-8 py-10 border-t border-ink/10 text-xs text-mute flex justify-between">
+  <span>Variant B · Step 2 · case selection · Ember restored</span>
+  <span class="mono">2026-05-12 · mockingbird-design-exploration</span>
+</footer>
+
+</body>
+</html>

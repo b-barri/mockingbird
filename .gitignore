@@ -46,3 +46,4 @@ yarn-error.log*
 
 # excalidraw (legacy, see /Users/bhavya/Vibe_coding/sarvam/excalidraw.log)
 excalidraw.log
+.gstack/

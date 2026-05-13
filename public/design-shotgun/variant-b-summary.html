@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Summary — Variant B (Pre-flight Console)</title>
+<meta name="viewport" content="width=1440" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="./tailwind.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { cream: "#F7F4ED", ink: "#1A1612", coral: "#E85D3B", mute: "#6B5F50", tan: "#EDE5D6" },
+        fontFamily: {
+          display: ["'Instrument Serif'", "serif"],
+          sans: ["'Inter'", "system-ui", "sans-serif"],
+          mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
+        },
+        spacing: { section: "5rem" },
+      },
+    },
+  };
+</script>
+<style>
+  html, body { background: #F7F4ED; color: #1A1612; }
+  body {
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,93,59,0.06), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(232,93,59,0.04), transparent 65%);
+    background-attachment: fixed;
+    font-feature-settings: "ss01","ss02","cv11";
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .small-caps { font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+  .ascii-rule { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(26,22,18,0.45); letter-spacing: 0.08em; white-space: nowrap; overflow: hidden; }
+  .panel { background: #FFFFFF; border: 1px solid rgba(26,22,18,0.10); border-radius: 6px; }
+  .stat-panel { background: #EDE5D6; border: 1px solid rgba(26,22,18,0.14); border-radius: 6px; padding: 16px 18px; }
+
+  .exec-btn {
+    background: #1A1612; color: #F7F4ED;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    padding: 14px 20px; border-radius: 3px;
+    text-align: left; display: inline-block; text-decoration: none;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .exec-btn:hover { background: #2a201a; transform: translateY(-1px); }
+  .exec-btn .arrow { color: #E85D3B; margin-right: 8px; }
+
+  /* === motion === */
+  @keyframes caret-blink { 0%,50% { opacity:1 } 51%,100% { opacity:0 } }
+  .caret { display: inline-block; color: #E85D3B; animation: caret-blink 1s steps(2,end) infinite; }
+  .caret-light { display: inline-block; color: rgba(247,244,237,0.85); animation: caret-blink 1s steps(2,end) infinite; }
+
+  @keyframes status-pulse { 0%,100% { transform: scale(1); opacity:1 } 50% { transform: scale(1.25); opacity:0.78 } }
+  .pulse-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #E85D3B; animation: status-pulse 3s ease-in-out infinite; box-shadow: 0 0 10px rgba(232,93,59,0.40); }
+
+  @keyframes rule-type-in { from { clip-path: inset(0 100% 0 0) } to { clip-path: inset(0 0 0 0) } }
+  .ascii-rule { animation: rule-type-in 0.55s steps(28,end) both; }
+  .ascii-rule.d1 { animation-delay: 0.15s }
+  .ascii-rule.d2 { animation-delay: 0.30s }
+
+  /* Brand glow halo, matches case-select banner */
+  .brand-image-glow { position: relative; isolate: isolate; }
+  .brand-image-glow::before {
+    content: ""; position: absolute; inset: -8%; z-index: -1;
+    background: radial-gradient(ellipse at 50% 55%, rgba(232, 142, 70, 0.32), rgba(232, 93, 59, 0.12) 45%, transparent 72%);
+    filter: blur(28px);
+    pointer-events: none;
+  }
+  @keyframes ember-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.012); } }
+  .brand-image-glow img { animation: ember-breathe 6s ease-in-out infinite; }
+
+  /* Framework hit/miss list */
+  .fw-row { display: grid; grid-template-columns: 32px 130px 60px 1fr; gap: 12px; padding: 9px 0; align-items: center; border-bottom: 1px dashed rgba(26,22,18,0.10); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .fw-row:last-child { border-bottom: 0; }
+  .fw-row .fw-mark { font-size: 14px; }
+  .fw-row.hit .fw-mark { color: #E85D3B; }
+  .fw-row.miss .fw-mark { color: rgba(26,22,18,0.30); }
+  .fw-row .fw-name { font-weight: 600; color: #1A1612; }
+  .fw-row.miss .fw-name { color: rgba(26,22,18,0.50); }
+  .fw-row .fw-status { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: #6B5F50; }
+  .fw-row.hit .fw-status { color: #E85D3B; }
+  .fw-row .fw-note { font-family: 'Inter', sans-serif; font-size: 12.5px; color: #6B5F50; line-height: 1.5; }
+
+  /* Quote callout — Alex's voice */
+  .alex-quote {
+    border-left: 2px solid #E85D3B;
+    padding: 4px 0 4px 18px;
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.5;
+    color: #1A1612;
+  }
+  .alex-quote .speaker { font-family: 'JetBrains Mono', monospace; font-style: normal; font-size: 10.5px; color: #E85D3B; font-weight: 600; letter-spacing: 0.12em; display: block; margin-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .caret, .caret-light, .pulse-dot, .ascii-rule, .brand-image-glow img { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- =============================================== -->
+<!-- TOP BAR — same brand pulse, no live indicator    -->
+<!-- =============================================== -->
+<header class="border-b border-ink/10 bg-cream/80 backdrop-blur sticky top-0 z-10">
+  <div class="mx-auto max-w-[1440px] px-6 py-3 flex items-center justify-between">
+    <div class="flex items-baseline gap-3">
+      <span class="pulse-dot"></span>
+      <span class="mono text-[13px] text-ink font-semibold tracking-wide">MOCKINGBIRD</span>
+    </div>
+    <div class="mono text-[11px] text-mute">
+      [SESSION]&nbsp;<span class="text-ink">COMPLETE</span>&nbsp;//&nbsp;product_design.friending_feature_v2
+    </div>
+    <nav class="flex items-center gap-6 text-[13px]">
+      <a href="/design-shotgun/variant-b-homepage.html" class="mono text-mute hover:text-ink">Home</a>
+      <a href="/design-shotgun/index.html" class="mono text-mute hover:text-ink">All variants</a>
+    </nav>
+  </div>
+</header>
+
+<main class="mx-auto max-w-4xl px-8 pt-section pb-section">
+
+  <!-- =========================================== -->
+  <!-- Completion header                            -->
+  <!-- =========================================== -->
+  <div class="mono text-[11px] text-coral mb-4 tracking-wide flex items-center gap-2">
+    <span class="pulse-dot" style="width:7px;height:7px;"></span>
+    SESSION COMPLETE &middot; 28:14
+  </div>
+
+  <h1 class="font-display text-[60px] leading-[1.0] tracking-tight text-ink mb-3">
+    Design a friending feature.
+  </h1>
+
+  <p class="text-[15px] leading-relaxed text-mute max-w-[560px] mb-12 mono">
+    // nice. here&rsquo;s the read on what just happened.
+  </p>
+
+  <!-- =========================================== -->
+  <!-- Banner: Ember post-analysis (analyzed.png)   -->
+  <!-- =========================================== -->
+  <div class="brand-image-glow mb-12">
+    <img
+      src="/branding/analyzed.png"
+      alt="Ember with the analysis complete, sitting at the desk"
+      class="w-full rounded-2xl ring-1 ring-ink/[0.08] shadow-[0_24px_50px_-22px_rgba(26,22,18,0.40)]"
+    />
+  </div>
+
+  <!-- =========================================== -->
+  <!-- Stat row                                     -->
+  <!-- =========================================== -->
+  <div class="grid grid-cols-3 gap-3 mb-10">
+
+    <div class="stat-panel">
+      <div class="small-caps text-mute mb-1.5">duration</div>
+      <div class="font-mono text-[28px] font-semibold tabular-nums text-ink leading-none">28:14</div>
+      <div class="mono text-[10px] text-mute mt-2">// of 30:00 target</div>
+    </div>
+
+    <div class="stat-panel">
+      <div class="small-caps text-mute mb-1.5">approx. spend</div>
+      <div class="font-mono text-[28px] font-semibold tabular-nums text-ink leading-none">$0.31</div>
+      <div class="mono text-[10px] text-mute mt-2">// charged to your provider, not us</div>
+    </div>
+
+    <div class="stat-panel">
+      <div class="small-caps text-mute mb-1.5">transcript</div>
+      <a href="#" class="mono text-[13.5px] text-coral hover:underline font-medium">view full &rarr;</a>
+      <div class="mono text-[10px] text-mute mt-2.5">id: <span class="text-ink">a8f3-c91e</span></div>
+    </div>
+
+  </div>
+
+  <!-- =========================================== -->
+  <!-- Analysis panel — the actual feedback         -->
+  <!-- =========================================== -->
+  <section class="panel p-8 mb-10">
+
+    <div class="ascii-rule mb-5">── ALEX&rsquo;S READ ────────────────────────────────────</div>
+
+    <p class="text-[16px] leading-[1.7] text-ink mb-5">
+      Strong opener. You clarified the platform and strategic intent before
+      jumping to segments &mdash; that&rsquo;s the move that separates
+      product-design rounds from feature-brainstorm rounds. Most candidates
+      skip both. You also stayed with retention as the goal and didn&rsquo;t
+      get pulled into engagement vanity, which is where this case usually
+      goes sideways.
+    </p>
+
+    <p class="text-[16px] leading-[1.7] text-ink mb-5">
+      Where it got soft: you listed three segments cleanly but didn&rsquo;t
+      <span class="font-semibold">pick</span>. I had to probe at 03:48
+      &mdash; that probe ate ~90 seconds you&rsquo;d have wanted for the
+      solution sketch. By the time you got to friend-request anxiety,
+      you had eight minutes left to design and pressure-test the actual
+      feature. Tight.
+    </p>
+
+    <p class="text-[16px] leading-[1.7] text-ink mb-2">
+      For next time: when you state segments, also state the leverage rank
+      out loud. &ldquo;Three segments &mdash; A, B, C. I&rsquo;d prioritize
+      B because of X.&rdquo; Two sentences. It earns you back the 90 seconds.
+    </p>
+
+  </section>
+
+  <!-- =========================================== -->
+  <!-- Framework hit/miss                            -->
+  <!-- =========================================== -->
+  <section class="panel p-8 mb-10">
+
+    <div class="ascii-rule d1 mb-2">── FRAMEWORK MOVES ─────────────────────────────────────</div>
+    <p class="mono text-[10px] text-mute mb-4">// the moves alex listened for, and which ones landed</p>
+
+    <div class="fw-row hit">
+      <span class="fw-mark">✓</span>
+      <span class="fw-name">CIRCLES</span>
+      <span class="fw-status">HIT</span>
+      <span class="fw-note">Clarification + segmentation came in order. Caught the platform context at 00:18.</span>
+    </div>
+
+    <div class="fw-row miss">
+      <span class="fw-mark">&mdash;</span>
+      <span class="fw-name">AARM</span>
+      <span class="fw-status">SKIPPED</span>
+      <span class="fw-note">Acquisition / Activation framing not surfaced. Worth thinking about for retention cases.</span>
+    </div>
+
+    <div class="fw-row hit">
+      <span class="fw-mark">✓</span>
+      <span class="fw-name">JTBD</span>
+      <span class="fw-status">HIT</span>
+      <span class="fw-note">Implicit at 06:12 when you reframed friending as &ldquo;tighter ties beat follow count.&rdquo;</span>
+    </div>
+
+    <div class="fw-row hit">
+      <span class="fw-mark">✓</span>
+      <span class="fw-name">GOAL → METRIC</span>
+      <span class="fw-status">HIT</span>
+      <span class="fw-note">30-day cohort retention named explicitly. Good. No metric drift.</span>
+    </div>
+
+    <div class="fw-row miss">
+      <span class="fw-mark">&mdash;</span>
+      <span class="fw-name">2×2 PRIORITIZATION</span>
+      <span class="fw-status">SKIPPED</span>
+      <span class="fw-note">Three segments listed without an axis. This is the 90s you lost &mdash; see Alex&rsquo;s read above.</span>
+    </div>
+
+  </section>
+
+  <!-- =========================================== -->
+  <!-- One key moment — pulled quote                -->
+  <!-- =========================================== -->
+  <section class="mb-10">
+
+    <div class="ascii-rule d2 mb-5">── ONE MOMENT TO REMEMBER ──────────────────────────────</div>
+
+    <div class="alex-quote">
+      <span class="speaker">ALEX &middot; 03:48</span>
+      &ldquo;Walk me through your segments more carefully &mdash; who&rsquo;s
+      the highest-leverage one for the retention goal we just established?&rdquo;
+    </div>
+
+    <p class="mono text-[11px] text-mute mt-4 max-w-[640px]">
+      // this is the probe. when an interviewer asks &ldquo;more carefully,&rdquo;
+      they&rsquo;re telling you the segment work isn&rsquo;t doing the
+      strategic work yet. recognize the cue, rank fast.
+    </p>
+
+  </section>
+
+  <!-- =========================================== -->
+  <!-- Spend breakdown                              -->
+  <!-- =========================================== -->
+  <section class="panel p-8 mb-12">
+
+    <div class="ascii-rule mb-4">── SPEND BREAKDOWN ─────────────────────────────────────</div>
+
+    <div class="mono text-[12.5px] leading-[1.9]">
+      <div class="flex justify-between border-b border-ink/10 pb-2 mb-2">
+        <span class="text-mute">LLM &middot; anthropic claude-sonnet-4-6</span>
+        <span class="text-ink tabular-nums">$0.24</span>
+      </div>
+      <div class="flex justify-between border-b border-ink/10 pb-2 mb-2">
+        <span class="text-mute">VOICE &middot; cartesia sonic-2</span>
+        <span class="text-ink tabular-nums">$0.07</span>
+      </div>
+      <div class="flex justify-between pt-2 text-[13.5px]">
+        <span class="text-ink font-semibold">TOTAL</span>
+        <span class="text-ink tabular-nums font-semibold">$0.31</span>
+      </div>
+    </div>
+
+    <p class="mono text-[10.5px] text-mute mt-4">
+      // landed on your provider account. // refresh and run again for &lt; $0.50.
+    </p>
+
+  </section>
+
+  <!-- =========================================== -->
+  <!-- CTA                                          -->
+  <!-- =========================================== -->
+  <section class="text-center pt-4 border-t border-ink/10 mt-4">
+
+    <h2 class="font-display text-[36px] leading-tight tracking-tight text-ink mt-12 mb-3">
+      Run it again.
+    </h2>
+
+    <p class="text-[14px] text-mute max-w-md mx-auto mb-8 leading-relaxed">
+      The best candidates ran this loop three times before their onsite. New random case, same Alex.
+    </p>
+
+    <a href="/design-shotgun/variant-b-step2.html" class="exec-btn">
+      <span class="arrow">▸</span>Deal me another case<span class="caret-light">_</span>
+    </a>
+
+    <p class="mt-8 mono text-[11px] text-mute">
+      <a href="/design-shotgun/variant-b-homepage.html" class="hover:text-ink">$ cd ~</a>
+      &nbsp;&middot;&nbsp;
+      <a href="#" class="hover:text-ink">download transcript.txt</a>
+    </p>
+
+  </section>
+
+</main>
+
+</body>
+</html>

@@ -1,4 +1,5 @@
 import { clsx } from "clsx";
+import Image from "next/image";
 import type { VoiceStateKind } from "@/lib/voice/types";
 
 interface OrbProps {
@@ -8,10 +9,11 @@ interface OrbProps {
   size?: "default" | "small";
 }
 
-// Port of mocks/v2-three-panel.html orb: coral radial gradient, two
-// expanding rings on listening/speaking, dimmed greyed-out variant for
-// error states. R9 requires both orb animation AND status text — see
-// VoiceStage for the text companion.
+// Port of mocks/v2-three-panel.html orb: now a circular interviewer
+// portrait (Alex) with the coral radial gradient as a fallback backdrop,
+// two expanding rings on listening/speaking, and a grayscaled+dimmed
+// variant for error states. R9 requires both orb animation AND status
+// text — see VoiceStage for the text companion.
 export function Orb({ state, size = "default" }: OrbProps) {
   const isError =
     state === "mic-permission-denied" ||
@@ -23,6 +25,7 @@ export function Orb({ state, size = "default" }: OrbProps) {
 
   const wrapperSize = size === "small" ? "h-12 w-12" : "h-[200px] w-[200px]";
   const orbSize = size === "small" ? "h-10 w-10" : "h-[156px] w-[156px]";
+  const sizesAttr = size === "small" ? "48px" : "200px";
 
   return (
     <div
@@ -48,7 +51,10 @@ export function Orb({ state, size = "default" }: OrbProps) {
       )}
       <div
         className={clsx(
-          "rounded-full shadow-[0_30px_70px_rgba(232,93,59,0.28),0_0_0_1px_rgba(255,255,255,0.5)_inset]",
+          // overflow-hidden clips the portrait into a perfect circle.
+          // Gradient stays as a backdrop so a missing/transparent image
+          // still reads as "the orb."
+          "relative overflow-hidden rounded-full shadow-[0_30px_70px_rgba(232,93,59,0.28),0_0_0_1px_rgba(255,255,255,0.5)_inset]",
           orbSize,
           {
             "animate-orb-pulse": !isError && state !== "idle",
@@ -60,8 +66,16 @@ export function Orb({ state, size = "default" }: OrbProps) {
               state === "idle",
           }
         )}
-        aria-hidden
-      />
+      >
+        <Image
+          src="/images/interviewer.png"
+          alt="Alex, your interviewer"
+          fill
+          sizes={sizesAttr}
+          priority={size !== "small"}
+          className={clsx("object-cover", isError && "grayscale")}
+        />
+      </div>
     </div>
   );
 }

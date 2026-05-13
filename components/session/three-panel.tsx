@@ -108,10 +108,13 @@ export function ThreePanel({
               MOCKINGBIRD
             </span>
           </div>
-          <div className="font-mono text-[11px] text-mute">
-            [SESSION]&nbsp;<span className="text-coral">LIVE</span>
-            &nbsp;//&nbsp;
-            <span className="text-ink">{caseTitle}</span>
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[11px] text-mute">
+              [SESSION]&nbsp;<span className="text-coral">LIVE</span>&nbsp;//
+            </span>
+            <span className="font-mono text-[14px] font-semibold tracking-tight text-ink">
+              {caseTitle}
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-3">

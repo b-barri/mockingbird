@@ -19,16 +19,16 @@ export function CostEstimate({ llmProvider, voiceProvider }: CostEstimateProps) 
       className="rounded-lg border border-ink/[0.08] bg-cream/60 p-4"
     >
       <div className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-mute">
-        Estimated cost per session
+        Roughly what one case will cost you
       </div>
       <div className="font-display text-2xl tracking-tight text-ink">
         {formatCostRange(range)}
       </div>
       <p className="mt-2 text-xs leading-relaxed text-mute">
-        Charged to your{" "}
-        <strong className="text-ink">own provider accounts</strong>, not to
-        Mockingbird. Estimates are based on a 30-minute session and may vary
-        with how long you speak.
+        Goes to{" "}
+        <strong className="text-ink">your provider account</strong>, not to
+        Mockingbird. Math assumes a 30-minute case — quieter candidates pay
+        less. Yes, that's a metric you can game.
       </p>
     </aside>
   );

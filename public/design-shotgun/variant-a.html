@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Variant A — Editorial Studio · Mockingbird prep</title>
+<meta name="viewport" content="width=1440" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="./tailwind.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: "#F7F4ED",
+          ink:   "#1A1612",
+          coral: "#E85D3B",
+          mute:  "#6B5F50",
+          tan:   "#EDE5D6",
+        },
+        fontFamily: {
+          display: ["'Instrument Serif'", "serif"],
+          sans:    ["'Inter'", "system-ui", "sans-serif"],
+          mono:    ["'JetBrains Mono'", "ui-monospace", "monospace"],
+        },
+      },
+    },
+  };
+</script>
+<style>
+  html, body { background: #F7F4ED; color: #1A1612; }
+  body {
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,93,59,0.06), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(232,93,59,0.04), transparent 65%);
+    background-attachment: fixed;
+    font-feature-settings: "ss01","ss02","cv11";
+  }
+  .roman { font-family: 'Instrument Serif', serif; font-style: italic; }
+  .editorial-rule { height: 1px; background: rgba(26,22,18,0.12); }
+  .pullquote { border-left: 2px solid #E85D3B; padding-left: 14px; }
+  .field-line {
+    border: 0;
+    border-bottom: 1px solid rgba(26,22,18,0.22);
+    background: transparent;
+    padding: 10px 0 8px;
+    width: 100%;
+    font: inherit;
+    color: #1A1612;
+    outline: none;
+  }
+  .field-line:focus { border-bottom-color: #1A1612; }
+  .field-line::placeholder { color: #6B5F50; font-style: italic; }
+  .legend-italic { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 18px; color: #1A1612; }
+  .small-caps {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body class="font-sans">
+
+<!-- variant banner -->
+<header class="border-b border-ink/10 bg-cream/80 backdrop-blur sticky top-0 z-10">
+  <div class="mx-auto max-w-[1440px] px-8 py-3 flex items-center justify-between">
+    <div class="flex items-baseline gap-3">
+      <span class="font-display text-2xl tracking-tight">Variant A</span>
+      <span class="small-caps text-coral">Editorial Studio</span>
+    </div>
+    <nav class="flex items-center gap-5 text-sm">
+      <a href="/design-shotgun/index.html" class="text-mute hover:text-ink">← All variants</a>
+      <a href="/design-shotgun/variant-b.html" class="text-mute hover:text-ink">B · Pre-flight Console</a>
+      <a href="/design-shotgun/variant-c.html" class="text-mute hover:text-ink">C · Backstage Quiet</a>
+    </nav>
+  </div>
+</header>
+
+<!-- two-screen spread -->
+<main class="mx-auto max-w-[1440px] px-8 pt-10 pb-24">
+  <div class="grid grid-cols-2 gap-x-12">
+
+    <!-- ============================================== -->
+    <!-- LEFT HALF — Step 1: Keys                       -->
+    <!-- ============================================== -->
+    <section class="pr-2">
+
+      <div class="small-caps text-coral mb-5 flex items-center gap-2">
+        <span class="inline-block h-1.5 w-1.5 rounded-full bg-coral"></span>
+        Onboarding · Step 1 of 2
+      </div>
+
+      <h1 class="font-display text-[56px] leading-[1.02] tracking-tight text-ink mb-6">
+        Bring your keys.<br />
+        We&rsquo;ll bring the<br />
+        interviewer.
+      </h1>
+
+      <p class="text-[15px] leading-relaxed text-mute max-w-[520px] mb-10">
+        Keys live in your browser, not on our servers. Pick a model, paste your
+        LLM key, and we&rsquo;ll do a quick handshake with your provider before
+        any tokens get spent.
+      </p>
+
+      <div class="editorial-rule mb-8"></div>
+
+      <!-- Two-column form: form left, editorial notes right -->
+      <div class="grid grid-cols-[1.4fr_1fr] gap-x-8">
+
+        <!-- left column: form -->
+        <div class="space-y-9">
+
+          <!-- LLM section -->
+          <div>
+            <div class="legend-italic mb-3">Pick your interviewer&rsquo;s brain.</div>
+            <div class="flex gap-2 mb-4">
+              <button class="flex-1 border border-ink bg-ink text-cream text-sm font-medium rounded-sm py-2">Anthropic Claude</button>
+              <button class="flex-1 border border-ink/15 text-ink text-sm font-medium rounded-sm py-2">OpenAI GPT</button>
+            </div>
+            <label class="block">
+              <span class="small-caps text-mute mb-2 block">Anthropic API key</span>
+              <input class="field-line font-mono text-[13px]" placeholder="sk-ant-…" />
+            </label>
+          </div>
+
+          <!-- Voice section -->
+          <div>
+            <div class="legend-italic mb-1 flex items-center gap-2">
+              Pick a voice for Alex.
+              <span class="font-sans not-italic text-[10px] font-bold uppercase tracking-[0.14em] text-mute bg-tan px-1.5 py-0.5 rounded">Optional · V1</span>
+            </div>
+            <p class="text-[13px] text-mute italic leading-relaxed mb-3 max-w-[380px]">
+              Voice adapters are stubs in V1. Skip this to read the questions
+              and type your answers.
+            </p>
+            <div class="flex gap-2 mb-4">
+              <button class="flex-1 border border-ink bg-ink text-cream text-sm font-medium rounded-sm py-2">Cartesia</button>
+              <button class="flex-1 border border-ink/15 text-ink text-sm font-medium rounded-sm py-2">Sarvam</button>
+              <button class="flex-1 border border-ink/15 text-ink text-sm font-medium rounded-sm py-2">ElevenLabs</button>
+            </div>
+            <label class="block">
+              <span class="small-caps text-mute mb-2 block">Cartesia API key</span>
+              <input class="field-line font-mono text-[13px]" placeholder="paste, or skip for text mode" />
+            </label>
+          </div>
+
+          <!-- Cost + remember -->
+          <div class="pt-6 border-t border-ink/10 space-y-4">
+            <div class="flex items-baseline justify-between">
+              <span class="small-caps text-mute">Est. per 30-min session</span>
+              <span class="font-mono text-[13px] text-ink">~$0.18 – $0.42</span>
+            </div>
+            <label class="flex items-start gap-2.5 text-xs text-mute">
+              <input type="checkbox" class="mt-1" />
+              <span>Remember keys on this device. Stored in localStorage. Uncheck on a shared laptop.</span>
+            </label>
+          </div>
+
+          <button class="w-full rounded-sm bg-ink py-3 text-sm font-semibold text-cream tracking-wide hover:bg-ink/85">
+            On to case selection &nbsp;&rarr;
+          </button>
+
+        </div>
+
+        <!-- right column: editorial notes -->
+        <aside class="text-[13px] leading-relaxed text-mute space-y-7 pt-1">
+          <div class="pullquote">
+            <p class="font-display italic text-ink text-[18px] leading-snug mb-2">
+              &ldquo;Spend lands on your account, not ours.&rdquo;
+            </p>
+            <p>
+              Powers the interviewer&rsquo;s brain. Anthropic&rsquo;s Claude or
+              OpenAI&rsquo;s GPT&mdash;your choice, your bill.
+            </p>
+          </div>
+
+          <div>
+            <p class="roman text-ink text-[15px] mb-1">On the voice.</p>
+            <p>
+              Alex grows actual vocal cords after the V0 bakeoff. Until then,
+              voice keys are exercised but rendered through stubs.
+            </p>
+          </div>
+
+          <div>
+            <p class="roman text-ink text-[15px] mb-1">On safety.</p>
+            <p>
+              Keys never touch our servers. CSP restricts outbound origins in
+              <code class="font-mono text-[11px]">next.config.ts</code>.
+            </p>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- vertical editorial hairline -->
+    <div class="hidden md:block"></div>
+    <style>
+      main > .grid { position: relative; }
+      main > .grid::before {
+        content: "";
+        position: absolute;
+        top: 0; bottom: 0;
+        left: 50%;
+        width: 1px;
+        background: rgba(26,22,18,0.10);
+      }
+    </style>
+
+    <!-- ============================================== -->
+    <!-- RIGHT HALF — Step 2: Case selection            -->
+    <!-- ============================================== -->
+    <section class="pl-6 relative">
+
+      <div class="small-caps text-coral mb-5 flex items-center gap-2">
+        <span class="inline-block h-1.5 w-1.5 rounded-full bg-coral"></span>
+        Onboarding · Step 2 of 2
+      </div>
+
+      <h1 class="font-display text-[64px] leading-[1.0] tracking-tight text-ink mb-6">
+        Pick your<br/>poison.
+      </h1>
+
+      <p class="text-[15px] leading-relaxed text-mute max-w-[500px] mb-8">
+        Like a real loop: you pick the type, we deal the question at random
+        when you press start. No peeking at the bank.
+      </p>
+
+      <!-- editorial illustration credit, top-right corner -->
+      <div class="absolute top-4 right-0 w-[140px]">
+        <img src="/branding/choose_option.png" alt="Mascot deciding"
+             class="w-full opacity-90 rounded-sm" />
+        <p class="text-[10px] text-mute italic mt-1 leading-snug text-right">
+          Alex, considering<br />the options.
+        </p>
+      </div>
+
+      <div class="editorial-rule mt-4 mb-6"></div>
+
+      <div class="small-caps text-mute mb-4">Contents · Case Bank</div>
+
+      <ol class="space-y-5">
+        <!-- Available -->
+        <li class="group cursor-pointer">
+          <div class="flex items-baseline gap-4">
+            <span class="roman text-coral text-[28px] leading-none">I.</span>
+            <div class="flex-1 border-b border-coral pb-3">
+              <div class="flex items-baseline justify-between">
+                <h2 class="font-display text-[26px] leading-tight text-ink">Product Design</h2>
+                <span class="small-caps text-mute">5 in the bank</span>
+              </div>
+              <p class="text-[13px] text-mute italic leading-relaxed mt-1 max-w-[420px]">
+                The bread-and-butter. Clarify, segment, prioritize, sketch a
+                solution out loud. Most common at Google, Meta, and almost
+                every consumer PM loop.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <!-- Forthcoming -->
+        <li class="opacity-50">
+          <div class="flex items-baseline gap-4">
+            <span class="roman text-mute text-[28px] leading-none">II.</span>
+            <div class="flex-1 border-b border-ink/10 pb-3">
+              <div class="flex items-baseline justify-between">
+                <h2 class="font-display text-[22px] leading-tight text-ink">Strategy</h2>
+                <span class="small-caps text-mute italic">Forthcoming</span>
+              </div>
+              <p class="text-[13px] text-mute italic leading-relaxed mt-1 max-w-[420px]">
+                Market entry, competitive response, big-bet framing.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <li class="opacity-50">
+          <div class="flex items-baseline gap-4">
+            <span class="roman text-mute text-[28px] leading-none">III.</span>
+            <div class="flex-1 border-b border-ink/10 pb-3">
+              <div class="flex items-baseline justify-between">
+                <h2 class="font-display text-[22px] leading-tight text-ink">Estimation</h2>
+                <span class="small-caps text-mute italic">Forthcoming</span>
+              </div>
+              <p class="text-[13px] text-mute italic leading-relaxed mt-1 max-w-[420px]">
+                Market sizing and back-of-the-envelope math.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <li class="opacity-50">
+          <div class="flex items-baseline gap-4">
+            <span class="roman text-mute text-[28px] leading-none">IV.</span>
+            <div class="flex-1 pb-3">
+              <div class="flex items-baseline justify-between">
+                <h2 class="font-display text-[22px] leading-tight text-ink">Behavioral</h2>
+                <span class="small-caps text-mute italic">Forthcoming</span>
+              </div>
+              <p class="text-[13px] text-mute italic leading-relaxed mt-1 max-w-[420px]">
+                Past projects, leadership stories, that conflict you navigated.
+              </p>
+            </div>
+          </div>
+        </li>
+      </ol>
+
+      <button class="mt-10 w-full rounded-sm bg-ink py-3 text-sm font-semibold text-cream tracking-wide hover:bg-ink/85">
+        Deal me a Product Design case &nbsp;&rarr;
+      </button>
+
+      <p class="mt-5 text-center text-[12px] text-coral italic">
+        &larr; Back to key entry
+      </p>
+
+    </section>
+  </div>
+</main>
+
+<footer class="mx-auto max-w-[1440px] px-8 py-10 border-t border-ink/10 text-xs text-mute flex justify-between">
+  <span>Variant A · Editorial Studio</span>
+  <span class="italic">Mockingbird design exploration · 2026-05-12</span>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mockingbird · product prep redesign exploration</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #F7F4ED;
+    --ink:   #1A1612;
+    --coral: #E85D3B;
+    --mute:  #6B5F50;
+    --tan:   #EDE5D6;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,93,59,0.06), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(232,93,59,0.04), transparent 65%);
+    background-attachment: fixed;
+    font-feature-settings: "ss01","ss02","cv11";
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 64px 32px; }
+
+  .eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--coral);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--coral);
+    display: inline-block;
+  }
+
+  h1.hub-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 60px;
+    line-height: 1.02;
+    letter-spacing: -0.015em;
+    margin: 0 0 18px 0;
+    max-width: 800px;
+  }
+  .lede {
+    color: var(--mute);
+    font-size: 16px;
+    line-height: 1.6;
+    max-width: 640px;
+    margin: 0 0 56px 0;
+  }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 1024px) {
+    .cards { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--cream);
+    border: 1px solid rgba(26,22,18,0.10);
+    border-radius: 8px;
+    padding: 28px 26px 24px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  .card:hover {
+    border-color: var(--ink);
+    transform: translateY(-2px);
+  }
+  .card .letter {
+    font-family: 'Instrument Serif', serif;
+    font-size: 80px;
+    line-height: 0.9;
+    color: var(--coral);
+    margin-bottom: 14px;
+    font-style: italic;
+  }
+  .card .tag {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--mute);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .card h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 26px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin: 0 0 12px 0;
+  }
+  .card p {
+    color: var(--mute);
+    font-size: 13.5px;
+    line-height: 1.6;
+    margin: 0 0 18px 0;
+    flex: 1;
+  }
+  .card .features {
+    border-top: 1px solid rgba(26,22,18,0.10);
+    padding-top: 14px;
+    margin-bottom: 18px;
+  }
+  .card .features li {
+    font-size: 12px;
+    color: var(--ink);
+    list-style: none;
+    padding-left: 16px;
+    position: relative;
+    margin-bottom: 5px;
+  }
+  .card .features li::before {
+    content: "·";
+    color: var(--coral);
+    position: absolute;
+    left: 4px;
+    font-weight: bold;
+  }
+  .card .open {
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+    align-self: flex-start;
+  }
+
+  .meta-row {
+    margin-top: 56px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(26,22,18,0.10);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--mute);
+  }
+  .meta-row .badge {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--tan);
+    color: var(--ink);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+
+  .scope-note {
+    margin-top: 18px;
+    padding: 18px 20px;
+    background: var(--tan);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .scope-note strong { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<main class="wrap">
+
+  <div class="eyebrow">Design-shotgun · 3 directions</div>
+
+  <h1 class="hub-title">Mockingbird &middot; product prep redesign</h1>
+
+  <p class="lede">
+    Three visual directions for the two-screen onboarding flow
+    (<strong>API key entry</strong> &rarr; <strong>case type selection</strong>).
+    Same copy, same components, same design tokens &mdash; three different opinions
+    on what kind of product Mockingbird is. Click a card to view at full
+    fidelity; each variant cross-links to the other two.
+  </p>
+
+  <div class="cards">
+
+    <!-- Variant A -->
+    <a href="/design-shotgun/variant-a.html" class="card">
+      <div class="letter">A.</div>
+      <div class="tag">Direction A</div>
+      <h2>Editorial Studio</h2>
+      <p>
+        Magazine-style two-column layout, large Instrument Serif headlines,
+        and case types presented as a contents page with serif Roman numerals
+        in coral. The mascot becomes an editorial illustration credit. Reads
+        like the front matter of a thoughtful magazine.
+      </p>
+      <ul class="features">
+        <li>Two-column Step 1 with pull-quote notes</li>
+        <li>Hairline-underline inputs (no boxed fields)</li>
+        <li>I. / II. / III. / IV. case list</li>
+      </ul>
+      <span class="open">Open variant A &nbsp;&rarr;</span>
+    </a>
+
+    <!-- Variant B -->
+    <a href="/design-shotgun/variant-b.html" class="card">
+      <div class="letter">B.</div>
+      <div class="tag">Direction B</div>
+      <h2>Pre-flight Console</h2>
+      <p>
+        JetBrains Mono is the primary chrome. ASCII section dividers,
+        &#9679;READY / &#9675;PENDING status dots, a meter-style budget bar,
+        and a 2&times;2 grid of &ldquo;draft cards&rdquo; with stat blocks
+        (DIFFICULTY, BANK, TIME, STATUS). Engineered, deliberate, slightly nerdy
+        in a craftsman way.
+      </p>
+      <ul class="features">
+        <li>Mono labels and ASCII dividers</li>
+        <li>Tan-bg config panels with crisp borders</li>
+        <li>Draft cards with mono stat blocks</li>
+      </ul>
+      <span class="open">Open variant B &nbsp;&rarr;</span>
+    </a>
+
+    <!-- Variant C -->
+    <a href="/design-shotgun/variant-c.html" class="card">
+      <div class="letter">C.</div>
+      <div class="tag">Direction C</div>
+      <h2>Backstage Quiet</h2>
+      <p>
+        Subtractive. Single-column on each side. Hairline fields, dramatic
+        vertical breathing room, one focal case rendered as editorial type
+        (no card chrome), V2 cases demoted to one footer line of italic text.
+        Coral appears only on the two primary CTAs. The mascot sits small at
+        the foot, like Alex waiting patiently.
+      </p>
+      <ul class="features">
+        <li>Single-column on both screens</li>
+        <li>Coral used only on the two CTAs</li>
+        <li>Mascot in sitting/waiting pose, small</li>
+      </ul>
+      <span class="open">Open variant C &nbsp;&rarr;</span>
+    </a>
+
+  </div>
+
+  <div class="scope-note">
+    <strong>What to look for as you flip through.</strong>
+    On Step 1: which treatment makes pasting a real <code>sk-ant-&hellip;</code>
+    key feel <em>safe</em>? On Step 2: which makes &ldquo;Pick your poison&rdquo;
+    feel like a meaningful choice rather than a settings dropdown? And how does
+    each direction handle the three V2-disabled case types &mdash; visible-but-muted,
+    or demoted to a footer line?
+  </div>
+
+  <!-- Variant B detail section -->
+  <div style="margin-top: 72px; padding-top: 28px; border-top: 1px solid rgba(26,22,18,0.10);">
+    <div class="eyebrow" style="color: var(--coral); margin-bottom: 14px;">Approved direction · 2026-05-12</div>
+    <h2 style="font-family: 'Instrument Serif', serif; font-size: 36px; line-height: 1.05; letter-spacing: -0.01em; margin: 0 0 12px 0;">
+      Variant B in detail
+    </h2>
+    <p style="color: var(--mute); font-size: 15px; line-height: 1.6; max-width: 640px; margin: 0 0 32px 0;">
+      Four mockup surfaces in the Pre-flight Console aesthetic.
+      Step 1 and Step 2 split into separate pages (matches the two-route
+      architecture). Homepage redesigned to introduce Ember by name and show
+      the product in motion. Click any card.
+    </p>
+
+    <div class="cards" style="grid-template-columns: 1fr 1fr 1fr; row-gap: 20px;">
+
+      <a href="/design-shotgun/variant-b-homepage.html" class="card">
+        <div class="letter">/</div>
+        <div class="tag">New · Homepage</div>
+        <h2 style="font-size: 22px;">Homepage</h2>
+        <p style="font-size: 12.5px;">
+          Hero with Ember, demo strip, three phase cards, feature grid, Meet
+          Ember section, CTA. Interactive: blinking carets, breathing Ember,
+          orb pulse, hover-lift phase cards.
+        </p>
+        <span class="open">Open homepage &nbsp;&rarr;</span>
+      </a>
+
+      <a href="/design-shotgun/variant-b-step1.html" class="card">
+        <div class="letter">1.</div>
+        <div class="tag">Onboarding · Step 1</div>
+        <h2 style="font-size: 22px;">Keys</h2>
+        <p style="font-size: 12.5px;">
+          BYO API key entry as a configuration panel. ASCII section dividers,
+          status dots, blinking carets in empty fields, cost meter. Standalone
+          full-width page.
+        </p>
+        <span class="open">Open step 1 &nbsp;&rarr;</span>
+      </a>
+
+      <a href="/design-shotgun/variant-b-step2.html" class="card">
+        <div class="letter">2.</div>
+        <div class="tag">Onboarding · Step 2 · Ember restored</div>
+        <h2 style="font-size: 22px;">Case</h2>
+        <p style="font-size: 12.5px;">
+          Draft cards with stat blocks (DIFFICULTY/BANK/TIME/STATUS) and the
+          existing choose_option.png Ember illustration restored in the
+          top-right corner, framed by the warm halo.
+        </p>
+        <span class="open">Open step 2 &nbsp;&rarr;</span>
+      </a>
+
+      <a href="/design-shotgun/variant-b-session.html" class="card">
+        <div class="letter">3.</div>
+        <div class="tag">Session · Live interview</div>
+        <h2 style="font-size: 22px;">Session</h2>
+        <p style="font-size: 12.5px;">
+          Three-panel layout: transcript / voice stage / scratchpad. Pulsing
+          coral orb, live waveform, framework pills auto-detected. Ember does
+          NOT appear here &mdash; Alex&rsquo;s stage time.
+        </p>
+        <span class="open">Open session &nbsp;&rarr;</span>
+      </a>
+
+      <a href="/design-shotgun/variant-b-summary.html" class="card">
+        <div class="letter">4.</div>
+        <div class="tag">Summary · Post-session</div>
+        <h2 style="font-size: 22px;">Summary</h2>
+        <p style="font-size: 12.5px;">
+          Completion screen with the existing <code>analyzed.png</code> Ember
+          as banner. Alex&rsquo;s read paragraph, framework hit/miss table,
+          pulled probe-of-the-day, spend breakdown, &ldquo;deal another&rdquo; CTA.
+        </p>
+        <span class="open">Open summary &nbsp;&rarr;</span>
+      </a>
+
+      <a href="/design-shotgun/variant-b.html" class="card" style="opacity: 0.75;">
+        <div class="letter">±</div>
+        <div class="tag">Side-by-side · Review</div>
+        <h2 style="font-size: 22px;">Combined</h2>
+        <p style="font-size: 12.5px;">
+          The original combined-view mockup: Step 1 + Step 2 next to each
+          other for at-a-glance evaluation. Kept for reference; not a proposal
+          to ship them on one page.
+        </p>
+        <span class="open">Open combined view &nbsp;&rarr;</span>
+      </a>
+
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <span>3 variants &middot; same copy &middot; same design tokens &middot; different opinions</span>
+    <span class="badge">2026-05-12 &middot; product-prep</span>
+  </div>
+
+</main>
+
+</body>
+</html>

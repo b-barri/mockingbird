@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkFormat, providerLabel } from "@/lib/auth/key-validation";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
@@ -25,6 +26,28 @@ interface ValidateResponse {
 // is never persisted server-side.
 
 export async function POST(request: Request): Promise<NextResponse<ValidateResponse>> {
+  // Strictest bucket: this endpoint pings the upstream provider with the
+  // submitted key, so unthrottled it becomes a credential-stuffing oracle
+  // (audit H1). A real user pastes a key once or twice, never 5x/min.
+  const rl = await rateLimit(request, "validateKey");
+  if (!rl.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        provider: "?",
+        error: `Too many validation attempts — try again in ${rl.retryAfter}s.`,
+      },
+      {
+        status: 429,
+        headers: {
+          "retry-after": String(rl.retryAfter),
+          "x-ratelimit-limit": String(rl.limit),
+          "x-ratelimit-remaining": "0",
+        },
+      }
+    );
+  }
+
   let body: ValidateRequest;
   try {
     body = (await request.json()) as ValidateRequest;

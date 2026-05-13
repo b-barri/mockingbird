@@ -46,6 +46,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      // /design-shotgun is a static design-exploration hub served from
+      // public/. Next.js strips the trailing slash and then can't resolve
+      // the extensionless path, so we rewrite the bare directory to its
+      // index file. Remove this when the exploration is archived.
+      { source: "/design-shotgun", destination: "/design-shotgun/index.html" },
+    ];
+  },
 };
 
 export default nextConfig;

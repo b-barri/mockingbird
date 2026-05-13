@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Voice Experience Report — Sarvam vs Cartesia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #1a1714;
+    --ink-soft: #4a4540;
+    --ink-muted: #7a7570;
+    --paper: #faf6ef;
+    --paper-warm: #f4ede0;
+    --rule: #d9d2c2;
+    --saffron: #c2410c;
+    --saffron-soft: #fde8d4;
+    --teal: #0f766e;
+    --teal-soft: #cffaf3;
+    --good: #15803d;
+    --warn: #b45309;
+    --bad: #b91c1c;
+    --good-soft: #dcfce7;
+    --warn-soft: #fef3c7;
+    --bad-soft: #fee2e2;
+    --shadow: 0 1px 0 rgba(26,23,20,.04), 0 8px 24px -12px rgba(26,23,20,.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.65;
+    font-feature-settings: "ss01", "cv01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+
+  /* MASTHEAD */
+  .masthead {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 2.5rem;
+    margin-bottom: 3.5rem;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+    margin-bottom: 1.25rem;
+  }
+  .eyebrow span { color: var(--saffron); }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0 0 1rem;
+    color: var(--ink);
+  }
+  h1 em { font-style: italic; color: var(--saffron); font-weight: 400; }
+  .deck {
+    font-family: 'Fraunces', serif;
+    font-size: 1.35rem;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    max-width: 42rem;
+    margin: 0;
+  }
+  .meta {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 2.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  /* HEADINGS */
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 2rem;
+    letter-spacing: -0.01em;
+    margin: 4.5rem 0 1.25rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+  }
+  h2 .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--saffron);
+    margin-right: 0.75rem;
+    vertical-align: 0.4rem;
+    font-weight: 500;
+  }
+  h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.35rem;
+    margin: 2.5rem 0 0.75rem;
+    color: var(--ink);
+  }
+  h4 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    margin: 2rem 0 0.5rem;
+  }
+
+  p { margin: 0 0 1rem; max-width: 44rem; }
+  p.lead { font-size: 1.1rem; max-width: 46rem; }
+  a { color: var(--saffron); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+
+  /* TLDR CARD */
+  .tldr {
+    background: var(--paper-warm);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 1.75rem 2rem;
+    margin: 2.5rem 0;
+    box-shadow: var(--shadow);
+  }
+  .tldr h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    color: var(--saffron);
+  }
+  .tldr ul { margin: 0.5rem 0 0; padding-left: 1.2rem; }
+  .tldr li { margin-bottom: 0.4rem; max-width: 44rem; }
+
+  /* TABLES */
+  .tablewrap { overflow-x: auto; margin: 1.5rem 0 2rem; border: 1px solid var(--rule); border-radius: 6px; background: white; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.85rem 1rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th {
+    background: var(--paper-warm);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+  }
+  tr:last-child td { border-bottom: none; }
+  td.metric { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+  td.dim { font-weight: 600; width: 22%; }
+
+  /* VERDICT CHIPS */
+  .chip {
+    display: inline-block;
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .chip.good { background: var(--good-soft); color: var(--good); }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip.bad  { background: var(--bad-soft);  color: var(--bad); }
+  .chip.neutral { background: #ede7d8; color: var(--ink-soft); }
+
+  /* SPLIT */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin: 1.5rem 0 2rem; }
+  @media (max-width: 720px) { .split { grid-template-columns: 1fr; } }
+  .col {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 1.5rem 1.5rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .col.sarvam { border-top: 3px solid var(--saffron); }
+  .col.cartesia { border-top: 3px solid var(--teal); }
+  .col h3 { margin-top: 0; font-size: 1.1rem; }
+  .col h3 .sub { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--ink-muted); font-weight: 400; margin-left: 0.4rem; }
+  .col ul { padding-left: 1.1rem; margin: 0; }
+  .col li { margin-bottom: 0.4rem; font-size: 0.92rem; }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 3px solid var(--saffron);
+    padding: 0.75rem 0 0.75rem 1.25rem;
+    margin: 1.5rem 0;
+    background: linear-gradient(to right, var(--saffron-soft), transparent 65%);
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+  .callout b { font-family: 'Inter', sans-serif; font-style: normal; font-weight: 600; color: var(--ink); }
+
+  /* CODE PATH */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.83rem;
+    background: var(--paper-warm);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  /* EDGE CASE LIST */
+  .cases { list-style: none; padding: 0; margin: 1.5rem 0; }
+  .cases li {
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    background: white;
+    display: grid;
+    grid-template-columns: 1.5fr 2fr 2fr;
+    gap: 1.25rem;
+  }
+  @media (max-width: 760px) { .cases li { grid-template-columns: 1fr; gap: 0.5rem; } }
+  .cases .case-name { font-weight: 600; }
+  .cases .case-name .desc { display: block; font-weight: 400; font-size: 0.85rem; color: var(--ink-muted); margin-top: 0.2rem; }
+  .cases .case-prov { font-size: 0.9rem; }
+  .cases .case-prov .ph { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; text-transform: uppercase; color: var(--ink-muted); display: block; margin-bottom: 0.15rem; }
+
+  /* RECS */
+  .rec { display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem 1.25rem; background: white; border: 1px solid var(--rule); border-radius: 6px; }
+  .rec .pri { font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 600; color: var(--saffron); line-height: 1; min-width: 2rem; }
+  .rec .body { flex: 1; }
+  .rec .body b { display: block; font-size: 1.02rem; margin-bottom: 0.2rem; }
+  .rec .body span { font-size: 0.93rem; color: var(--ink-soft); }
+
+  /* FOOTER */
+  footer {
+    margin-top: 5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-muted);
+    font-size: 0.85rem;
+  }
+  footer h4 { margin-top: 0; }
+  footer ul { padding-left: 1.2rem; columns: 2; column-gap: 2rem; }
+  @media (max-width: 720px) { footer ul { columns: 1; } }
+  footer li { margin-bottom: 0.35rem; break-inside: avoid; font-size: 0.82rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- MASTHEAD -->
+  <header class="masthead">
+    <div class="eyebrow">Internal Research · <span>Mockingbird</span> · Voice provider bakeoff</div>
+    <h1>Sarvam <em>vs</em> Cartesia — where each one wins, where each one breaks</h1>
+    <p class="deck">A grounded comparison of the two voice stacks already wired into this codebase: what each does well, where each fails for Indic and code-mixed workloads, and what to change before V1.</p>
+    <div class="meta">
+      <span><b>Author</b> Bhavya · PM portfolio research</span>
+      <span><b>Date</b> 12 May 2026</span>
+      <span><b>Scope</b> TTS · ASR · Latency · Edge cases · Cost</span>
+      <span><b>Status</b> Pre-bakeoff draft</span>
+    </div>
+  </header>
+
+  <!-- TLDR -->
+  <div class="tldr">
+    <h3>TL;DR — five things to internalize</h3>
+    <ul>
+      <li><b>Sarvam wins on Indic-native naturalness and ASR; Cartesia wins on raw streaming latency and emotional range</b> — and they are not substitutable for Indic-first products without trade-offs.</li>
+      <li><b>You're benchmarking outdated models.</b> The code runs <code>bulbul:v2</code> and Cartesia <code>sonic-2</code> — Bulbul V3 (Feb 2026) and Sonic-3.5 (May 2026) are the current generation. Any bakeoff result on v2/Sonic-2 will under-represent both.</li>
+      <li><b>Cartesia's ASR (Ink-Whisper) does not publicly enumerate Indic language support.</b> A full-stack Cartesia build for an Indic product likely needs Sarvam Saaras anyway — which collapses the "single provider" thesis.</li>
+      <li><b>Your pipeline silently penalizes Cartesia.</b> A 1500-char hard cap (Sarvam's limit) is applied to both, and ASR locale is <code>en</code> for Cartesia vs <code>en-IN</code> for Sarvam — apples-to-oranges before audio ever plays.</li>
+      <li><b>For Mockingbird specifically</b> (PM interview practice, primarily English with Indian-candidate audience, 30-60 min sessions): the contest is closer than the headline numbers suggest. Sarvam's Indian-English voices and long-form stability give it the edge on cultural resonance; Cartesia's latency and expressiveness make it the better fit for fast, conversational follow-ups.</li>
+    </ul>
+  </div>
+
+  <!-- WHAT YOU'VE ACTUALLY BUILT -->
+  <h2><span class="num">01</span>What's actually wired up today</h2>
+  <p class="lead">Before grading anything, here's what the codebase is really doing. Both providers are integrated as stateless edge-runtime proxies in <code>/app/api/voice/</code>, with the client picking provider per request via an <code>X-Voice-Provider</code> header (defaulting to Sarvam).</p>
+
+  <div class="split">
+    <div class="col sarvam">
+      <h3>Sarvam <span class="sub">primary · default</span></h3>
+      <ul>
+        <li><b>TTS:</b> Bulbul <code>v2</code> · speaker <code>anushka</code> (female, Indian-English)</li>
+        <li><b>ASR:</b> Saaras <code>v3</code> · language <code>en-IN</code></li>
+        <li><b>Sample rate (TTS):</b> 22,050 Hz · WAV 16-bit PCM</li>
+        <li><b>Auth:</b> <code>api-subscription-key</code> header, pass-through (candidate-owned)</li>
+        <li><b>Text cap:</b> 1,500 chars (Sarvam Bulbul limit, enforced as the global cap)</li>
+        <li><b>Source:</b> <code>app/api/voice/synthesize/route.ts:78–135</code></li>
+      </ul>
+    </div>
+    <div class="col cartesia">
+      <h3>Cartesia <span class="sub">secondary · opt-in via header</span></h3>
+      <ul>
+        <li><b>TTS:</b> Sonic <code>2</code> · voice <code>Kiefer</code> (male, English voice-agent persona, UUID <code>228fca29…</code>)</li>
+        <li><b>ASR:</b> <code>ink-whisper</code> · language <code>en</code> (no India locale)</li>
+        <li><b>Sample rate (TTS):</b> 24,000 Hz · WAV 16-bit PCM</li>
+        <li><b>Auth:</b> Bearer + required <code>cartesia-version: 2025-04-16</code></li>
+        <li><b>Response shape:</b> single binary blob, wrapped server-side to match Sarvam's chunked-array shape</li>
+        <li><b>Source:</b> <code>app/api/voice/synthesize/route.ts:137–197</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>Reading this honestly:</b> the current setup compares a Sarvam female en-IN voice against a Cartesia male English-accent voice, both throttled to Sarvam's text cap, with Sarvam asked to recognize Indian-English and Cartesia asked to recognize generic English. Any "user prefers X" finding from this configuration is partly a finding about <em>this configuration</em>, not the providers in the abstract.
+  </div>
+
+  <!-- HEAD TO HEAD -->
+  <h2><span class="num">02</span>Head-to-head, by dimension</h2>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Dimension</th><th>Sarvam (Bulbul V3 / Saaras V3)</th><th>Cartesia (Sonic-3.5 / Ink-Whisper)</th><th>Verdict</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="dim">Indic TTS naturalness</td>
+          <td>Trained from scratch on Indian speech; 11 langs live (22 on roadmap); preferred over Sonic-3 in Josh Talks 20k-vote blind study across all conditions (full-band + 8kHz telephony).</td>
+          <td>42 langs total, 9 Indic; ~18–20 Indic voices; architecturally English-first with Indic added. Smallest.ai (vendor) benchmark shows Cartesia underperforming on Hindi mixed sentences.</td>
+          <td><span class="chip good">Sarvam</span></td>
+        </tr>
+        <tr>
+          <td class="dim">Code-mixing (Hinglish)</td>
+          <td>Single-pass architecture, no language-boundary detector; claimed lowest CER on code-mixed text.</td>
+          <td>Hinglish marketed on <code>/india</code> page; no published CER. One vendor benchmark favored Cartesia for "Hindi-in-English" framing — likely English-dominant code-mix.</td>
+          <td><span class="chip good">Sarvam</span> for Hindi-dominant · <span class="chip neutral">Toss-up</span> for English-dominant</td>
+        </tr>
+        <tr>
+          <td class="dim">ASR — Indic coverage</td>
+          <td>Saaras V3: 22 Indic langs + English in one unified model. Dedicated <code>codemix</code> output mode preserves both scripts. WER ~19.3% on IndicVoices-10.</td>
+          <td>Ink-Whisper: no public Indic language list. Built for real-time English voice-agent loops.</td>
+          <td><span class="chip good">Sarvam</span> (decisive)</td>
+        </tr>
+        <tr>
+          <td class="dim">TTS latency (TTFB)</td>
+          <td>Not publicly published; integrator reports cite ~250ms pipeline. Streaming exists.</td>
+          <td>40ms (Turbo) / ~90ms (standard) claimed; third-party India measurement ~156ms. Genuine architectural edge via State Space Models.</td>
+          <td><span class="chip good">Cartesia</span></td>
+        </tr>
+        <tr>
+          <td class="dim">Voice diversity / expressiveness</td>
+          <td>35+ voices, professional artists, categorized by use case (edtech / support / storytelling).</td>
+          <td>~18–20 named Indic voices; <em>"AI laughter"</em> and emotional range a real differentiator; instant voice cloning at 1 credit/char.</td>
+          <td><span class="chip good">Cartesia</span> for expressiveness · <span class="chip good">Sarvam</span> for Indic catalog breadth</td>
+        </tr>
+        <tr>
+          <td class="dim">Pricing (1M chars/mo TTS)</td>
+          <td class="metric">~$36/mo (Bulbul v3 @ ₹30/10k chars)</td>
+          <td class="metric">~$90/mo (Scale plan, credits → audio-seconds math)</td>
+          <td><span class="chip good">Sarvam</span> (~2.5x cheaper)</td>
+        </tr>
+        <tr>
+          <td class="dim">Pricing (500 hrs/mo ASR)</td>
+          <td class="metric">~$180/mo (Saaras @ ₹30/hr)</td>
+          <td class="metric">~$65/mo (Ink @ $0.13/hr)</td>
+          <td><span class="chip good">Cartesia</span> on price · but coverage gap on Indic is the gating issue</td>
+        </tr>
+        <tr>
+          <td class="dim">Compliance / data residency</td>
+          <td>India-sovereign, VPC / on-prem, MeitY-aligned, IndiaAI subsidy recipient. Procurement pipeline for government and regulated finance.</td>
+          <td>SOC 2 Type 2; India residency via Blue Machines AI partnership (Feb 2026). Reactive India play.</td>
+          <td><span class="chip neutral">Not gating</span> for Mockingbird (consumer-grade, not regulated)</td>
+        </tr>
+        <tr>
+          <td class="dim">SDK / developer ergonomics</td>
+          <td>Python + JS SDKs, LiveKit / Pipecat / Bolna integrations. INR pricing adds friction for non-India procurement.</td>
+          <td>Mature multi-language SDKs, polished docs, USD pricing. Easier to integrate for international teams.</td>
+          <td><span class="chip good">Cartesia</span> on polish · <span class="chip neutral">Tie</span> on capability</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- WHAT'S WORKING / WHAT'S NOT -->
+  <h2><span class="num">03</span>What's working — what's not</h2>
+
+  <h3>Sarvam — what's working</h3>
+  <ul>
+    <li><b>The Indic substrate is real.</b> Bulbul V3's gains aren't from an English base model getting Hindi adapters bolted on — it's trained on Indian data from scratch. You hear it in the schwa handling and prosody, not just in spec tables.</li>
+    <li><b>Saaras V3's <code>codemix</code> output mode is uniquely useful</b> for any product that downstream processes the transcript (e.g., your interview transcript display or LLM prompt). Native script tokens stay native; Latin tokens stay Latin. No transliteration tax.</li>
+    <li><b>Voice-quality on telephony (8kHz)</b> beats Cartesia in the Josh Talks blind study across all 11 Indic languages — relevant if Mockingbird ever ships a phone-call interview mode for low-bandwidth users.</li>
+    <li><b>Procurement story.</b> For a government-scheme product, on-prem + sovereign compute is a checkbox you literally cannot replicate with Cartesia.</li>
+  </ul>
+
+  <h3>Sarvam — what's not working</h3>
+  <ul>
+    <li><b>Latency opacity.</b> No published, reproducible TTS TTFB number. You're trusting sales claims until you measure it yourself.</li>
+    <li><b>You're on v2.</b> Bulbul v3 dropped Feb 2026. The current code targets the older generation, which means every "Sarvam is fine" or "Sarvam is rough" judgment in your dev loop is on a model that's been superseded.</li>
+    <li><b>Hardcoded locale.</b> <code>en-IN</code> for ASR and <code>anushka</code> for TTS — no runtime language detection, no per-user voice preference, no fallback when ASR detects (say) Hindi but the route asked for en-IN.</li>
+    <li><b>No retry / fallback.</b> A Sarvam 5xx is a session-killer right now — no Cartesia failover, no exponential backoff in the edge route.</li>
+  </ul>
+
+  <h3>Cartesia — what's working</h3>
+  <ul>
+    <li><b>Latency is genuinely best-in-class</b> for streaming. The SSM architecture is a structural advantage, not a marketing claim. For interrupt-tolerant conversational UX, this matters.</li>
+    <li><b>Voice library polish.</b> Voice cloning, named-character voices, emotional inflection ("AI laughter"). For an interview-coach experience that wants personality, Cartesia gives you more knobs.</li>
+    <li><b>Developer experience.</b> Docs, SDKs, and the response model are cleaner than Sarvam's. Onboarding cost is lower.</li>
+    <li><b>English-first quality.</b> For the PM-interview-prep flow where the transcript will be primarily English with technical jargon, Cartesia produces fluent, broadcast-quality output.</li>
+  </ul>
+
+  <h3>Cartesia — what's not working</h3>
+  <ul>
+    <li><b>The Indic story is reactive.</b> India page exists, Indic voices exist, but the underlying model treats Indic as "another locale" rather than native. The number-pronunciation MOS regression (3.45 vs 4.41 in vendor benchmarks) is a tell.</li>
+    <li><b>Ink-Whisper has an Indic ASR coverage gap.</b> If your transcript needs to capture "मेरा नाम भव्य है" or "PMAY ka kya status hai", you're going to fall back to Sarvam, AssemblyAI, or Deepgram anyway.</li>
+    <li><b>Pricing model friction.</b> Credits-per-second is hard to forecast against character-based product metrics; the per-character equivalent ends up ~2.5x Sarvam.</li>
+    <li><b>India compliance posture is partner-mediated</b>, not native. Fine for SaaS, awkward for government.</li>
+  </ul>
+
+  <!-- EDGE CASES -->
+  <h2><span class="num">04</span>Edge cases worth stress-testing</h2>
+  <p class="lead">These are the inputs that separate "sounds good in a demo" from "doesn't embarrass us in production." Each row is a single test prompt and the predicted-behavior delta between the two providers. Run these against both before signing off.</p>
+
+  <ul class="cases">
+    <li>
+      <div class="case-name">Schwa-final Hindi nouns<span class="desc">"रमेश", "नमस्ते"</span></div>
+      <div class="case-prov"><span class="ph">Sarvam</span>LLM-based prosody should drop the final schwa correctly (/nəmsteː/ not /nəməsteː/). No public benchmark, but architecturally sound.</div>
+      <div class="case-prov"><span class="ph">Cartesia</span>Higher risk of inserted schwa or English-cadence stress. Watch for "Ra-MESH-uh" failure mode.</div>
+    </li>
+    <li>
+      <div class="case-name">Code-mix, English-dominant<span class="desc">"Aaj meeting hai at 3pm with the team"</span></div>
+      <div class="case-prov"><span class="ph">Sarvam</span>Single-pass should keep both registers; risk: Hindi tokens may sound under-articulated when surrounded by English.</div>
+      <div class="case-prov"><span class="ph">Cartesia</span>Likely strongest case — English-accent Hindi tokens may even sound natural. The flow advantage is real here.</div>
+    </li>
+    <li>
+      <div class="case-name">Code-mix, Hindi-dominant<span class="desc">"मेरा doctor 5 बजे available है"</span></div>
+      <div class="case-prov"><span class="ph">Sarvam</span>Strong — Hindi prosody preserved, English tokens pronounced in Indian-English register.</div>
+      <div class="case-prov"><span class="ph">Cartesia</span>Likely weakest case — English voice "switches off" English fluency to attempt Hindi, then back. Audible seam.</div>
+    </li>
+    <li>
+      <div class="case-name">PM jargon &amp; product names<span class="desc">"north-star metric", "RICE prioritization", "Figma", "Razorpay", "Swiggy"</span></div>
+      <div class="case-prov"><span class="ph">Sarvam</span>Indian-English voices pronounce Indian company names naturally ("Swiggy", "Razorpay"). Acronyms like "RICE", "MVP", "PMF" are an open question.</div>
+      <div class="case-prov"><span class="ph">Cartesia</span>Likely stronger on English-origin PM jargon ("OKR", "north-star"); risk of mispronouncing Indian brand names common in PM interview contexts.</div>
+    </li>
+    <li>
+      <div class="case-name">Numbers, dates, currency<span class="desc">"₹1,25,000 तक", "15 अगस्त 2025"</span></div>
+      <div class="case-prov"><span class="ph">Sarvam</span>Designed for Indian numbering ("lakh"); should read "एक लाख पच्चीस हज़ार" correctly.</div>
+      <div class="case-prov"><span class="ph">Cartesia</span>Documented MOS drop on numeric sentences. May read "1,25,000" as "one hundred twenty-five thousand" — wrong register.</div>
+    </li>
+    <li>
+      <div class="case-name">Long-form interviewer turns<span class="desc">A 90-second case prompt or scenario setup</span></div>
+      <div class="case-prov"><span class="ph">Sarvam</span>1500-char cap forces client-side chunking. Stability claimed; cross-chunk prosody continuity is the risk that breaks "interviewer feels real."</div>
+      <div class="case-prov"><span class="ph">Cartesia</span>Same 1500-char cap is applied in your pipeline (artificial). Native Cartesia limit is higher — you're under-using it for the exact case where Cartesia might shine (45s+ smooth narration).</div>
+    </li>
+    <li>
+      <div class="case-name">Network drop mid-utterance<span class="desc">Wi-Fi flap on a tier-2-city user's phone</span></div>
+      <div class="case-prov"><span class="ph">Sarvam</span>No server-side retry in route handler. Client state machine handles network-drop, but a degraded response will surface the failure to the user.</div>
+      <div class="case-prov"><span class="ph">Cartesia</span>Same — single binary blob makes partial-stream recovery harder. Consider buffered playback.</div>
+    </li>
+    <li>
+      <div class="case-name">Provider 5xx<span class="desc">Upstream outage</span></div>
+      <div class="case-prov"><span class="ph">Sarvam</span>Returns 502 to client; no fallback to Cartesia configured.</div>
+      <div class="case-prov"><span class="ph">Cartesia</span>Symmetric — same failure mode. The dual-provider integration exists but isn't used as a failover today.</div>
+    </li>
+  </ul>
+
+  <!-- RECOMMENDATIONS -->
+  <h2><span class="num">05</span>Recommendations for the bakeoff</h2>
+
+  <div class="rec">
+    <div class="pri">1</div>
+    <div class="body">
+      <b>Upgrade both models before benchmarking.</b>
+      <span>Move Sarvam from <code>bulbul:v2</code> → <code>v3</code>, and Cartesia from <code>sonic-2</code> → <code>sonic-3.5</code>. Any data collected on the current versions is already historically biased — and given Bulbul V3's reported jump on telephony, the gap to Cartesia is likely larger than the v2 codebase suggests.</span>
+    </div>
+  </div>
+  <div class="rec">
+    <div class="pri">2</div>
+    <div class="body">
+      <b>Make the comparison apples-to-apples.</b>
+      <span>Match voice gender / persona between providers (Sarvam <code>arjun</code> ↔ Cartesia <code>Kiefer</code>, or pick comparable female voices). Set Cartesia ASR locale to <code>hi-IN</code> or whatever fits — or accept that Ink-Whisper is out and use Saaras for both. Lift the 1500-char cap for Cartesia in <code>synthesize/route.ts:70</code> and measure long-form separately.</span>
+    </div>
+  </div>
+  <div class="rec">
+    <div class="pri">3</div>
+    <div class="body">
+      <b>Measure TTFB yourself.</b>
+      <span>Neither provider publishes a reproducible India-region TTFB number. Add a 30-line latency-probe script (<code>tests/voice-latency.spec.ts</code>) hitting both providers from Vercel edge for the same prompt, 100 trials each, at three text lengths (50 / 250 / 1000 chars). This is your honest data.</span>
+    </div>
+  </div>
+  <div class="rec">
+    <div class="pri">4</div>
+    <div class="body">
+      <b>Run a small PM-candidate listener panel.</b>
+      <span>5 target users (PM candidates, mix of Indian and international backgrounds) × 8 prompts (the edge-case list above) × 2 providers = 80 ratings. Pairwise A/B, ±3 scale, with one open question: "would you do a 30-minute mock interview with this voice?" This is the cheapest credible quality signal you can produce, and the "would you sit through 30 min" question is the only one that maps to the actual product.</span>
+    </div>
+  </div>
+  <div class="rec">
+    <div class="pri">5</div>
+    <div class="body">
+      <b>Decide the architectural question, not just the model question.</b>
+      <span>The real choice isn't "which model sounds better" — it's "does the product split TTS and ASR providers?" If yes, you keep Saaras + can swap TTS by region/persona/cost. If no, Sarvam is the safer default for an Indic-first product. Write this down in the V1 plan before bakeoff so the data settles a defined question.</span>
+    </div>
+  </div>
+  <div class="rec">
+    <div class="pri">6</div>
+    <div class="body">
+      <b>Build the fallback you don't have.</b>
+      <span>Right now a Sarvam 502 ends the session. The two-provider integration is most of the way there — wire one as automatic failover with a 2.5s timeout in the edge route, then surface the fact ("switched to backup voice") in the UI. Costs ~30 lines and demos resilience in a portfolio review.</span>
+    </div>
+  </div>
+
+  <!-- VERDICT -->
+  <h2><span class="num">06</span>Verdict for Mockingbird</h2>
+  <p class="lead">For a voice-based PM interview practice app, primarily English with Indian-candidate audience, where the interviewer voice has to feel credible enough that a candidate will sit through a 30–60 minute session and want to come back:</p>
+  <div class="callout">
+    <b>Primary: Sarvam Bulbul V3 (Indian-English voice).</b> The cultural-resonance argument is product-defining for Mockingbird — an Indian PM candidate hearing a subtly Indian interviewer voice <em>feels</em> different from a generic American voice, and that feeling determines retention. Saaras V3 for ASR is also the right call: PM candidates code-switch into Hindi when they're nervous, and only Saaras handles that without dropping tokens. <b>Secondary: Cartesia Sonic-3.5</b> as an opt-in "American interviewer" voice (FAANG-style mock prep is a real use case), and as the latency-optimized choice when conversational interruption-tolerance matters more than accent.
+  </div>
+  <p>The reason to <em>also</em> run Cartesia is not that you might switch — it's that giving users a voice picker ("Indian interviewer" / "American interviewer") is a tiny feature with disproportionate signal: it tells candidates the product understands their context, generates two natural marketing screenshots, and gives you instrumented dual-provider latency / cost data for free. Cost: about 30 lines of code on top of what's already integrated.</p>
+
+  <!-- SOURCES -->
+  <footer>
+    <h4>Sources & references</h4>
+    <ul>
+      <li><a href="https://www.sarvam.ai/blogs/bulbul-v3">Bulbul V3 technical blog — Sarvam AI</a></li>
+      <li><a href="https://www.sarvam.ai/blogs/asr">Saaras V3 ASR blog — Sarvam AI</a></li>
+      <li><a href="https://www.sarvam.ai/blogs/evaluating-indian-language-asr">Indic ASR evaluation beyond WER — Sarvam AI</a></li>
+      <li><a href="https://www.sarvam.ai/api-pricing">Sarvam API pricing</a></li>
+      <li><a href="https://cartesia.ai/india">Cartesia India / Hinglish landing page</a></li>
+      <li><a href="https://cartesia.ai/regions/india">Cartesia: India region</a></li>
+      <li><a href="https://docs.cartesia.ai/build-with-cartesia/tts-models/latest">Sonic-3.5 documentation — Cartesia</a></li>
+      <li><a href="https://cartesia.ai/blog/introducing-ink-speech-to-text">Introducing Ink STT — Cartesia blog</a></li>
+      <li><a href="https://cartesia.ai/pricing">Cartesia pricing</a></li>
+      <li><a href="https://smallest.ai/blog/tts-benchmark-2025-smallestai-vs-cartesia-report">TTS benchmark 2025 — Smallest.ai vs Cartesia (MOS + latency data)</a></li>
+      <li><a href="https://arxiv.org/abs/2604.19151">Voice of India benchmark — arXiv 2604.19151</a></li>
+      <li><a href="https://arxiv.org/abs/2604.21481">Large-scale pairwise TTS evaluation for Indic — arXiv 2604.21481</a></li>
+      <li><a href="https://www.bloomberg.com/news/articles/2026-04-02/india-ai-startup-sarvam-raises-funds-at-1-5-billion-valuation">Sarvam $300–350M raise at $1.5B valuation — Bloomberg, Apr 2026</a></li>
+      <li><a href="https://www.siliconindia.com/news/startups/blue-machines-ai-and-cartesia-launch-indiaresident-voice-ai-solutions-nid-239503-cid-19.html">Cartesia × Blue Machines AI India partnership — SiliconIndia, Feb 2026</a></li>
+      <li>Internal codebase: <code>app/api/voice/synthesize/route.ts</code>, <code>app/api/voice/transcribe/route.ts</code>, <code>lib/voice/index.ts</code></li>
+      <li>Internal plan: <code>docs/plans/2026-05-11-001-feat-pm-interview-voice-agent-plan.md</code></li>
+    </ul>
+    <p style="margin-top:1.5rem; font-size:0.8rem;">Pre-bakeoff draft · v0.1 · Generated for review, not publication. Numerical claims marked as "claimed" rely on first-party vendor benchmarks unless an arXiv or independent citation is given alongside.</p>
+  </footer>
+
+</div>
+</body>
+</html>

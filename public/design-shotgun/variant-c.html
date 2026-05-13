@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Variant C — Backstage Quiet · Mockingbird prep</title>
+<meta name="viewport" content="width=1440" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="./tailwind.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: "#F7F4ED",
+          ink:   "#1A1612",
+          coral: "#E85D3B",
+          mute:  "#6B5F50",
+          tan:   "#EDE5D6",
+        },
+        fontFamily: {
+          display: ["'Instrument Serif'", "serif"],
+          sans:    ["'Inter'", "system-ui", "sans-serif"],
+          mono:    ["'JetBrains Mono'", "ui-monospace", "monospace"],
+        },
+      },
+    },
+  };
+</script>
+<style>
+  html, body { background: #F7F4ED; color: #1A1612; }
+  body {
+    background-image:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(232,93,59,0.045), transparent 65%);
+    background-attachment: fixed;
+    font-feature-settings: "ss01","ss02","cv11";
+  }
+  .field-line {
+    border: 0;
+    border-bottom: 1px solid rgba(26,22,18,0.18);
+    background: transparent;
+    padding: 14px 0;
+    width: 100%;
+    font: inherit;
+    color: #1A1612;
+    outline: none;
+    font-size: 15px;
+  }
+  .field-line:focus { border-bottom-color: #1A1612; }
+  .field-line::placeholder { color: #6B5F50; font-style: italic; }
+  .text-link {
+    color: #6B5F50;
+    padding-bottom: 2px;
+    cursor: pointer;
+  }
+  .text-link[data-active="true"] {
+    color: #1A1612;
+    border-bottom: 1px solid #E85D3B;
+  }
+  .coral-cta {
+    background: #E85D3B;
+    color: #1A1612;
+    padding: 13px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    width: 100%;
+  }
+  .small-caps {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #6B5F50;
+  }
+</style>
+</head>
+<body class="font-sans">
+
+<!-- variant banner -->
+<header class="border-b border-ink/10 bg-cream/80 backdrop-blur sticky top-0 z-10">
+  <div class="mx-auto max-w-[1440px] px-8 py-3 flex items-center justify-between">
+    <div class="flex items-baseline gap-3">
+      <span class="font-display text-2xl tracking-tight">Variant C</span>
+      <span class="small-caps text-coral">Backstage Quiet</span>
+    </div>
+    <nav class="flex items-center gap-5 text-sm">
+      <a href="/design-shotgun/index.html" class="text-mute hover:text-ink">← All variants</a>
+      <a href="/design-shotgun/variant-a.html" class="text-mute hover:text-ink">A · Editorial Studio</a>
+      <a href="/design-shotgun/variant-b.html" class="text-mute hover:text-ink">B · Pre-flight Console</a>
+    </nav>
+  </div>
+</header>
+
+<main class="mx-auto max-w-[1440px] px-8 pt-16 pb-32">
+  <div class="grid grid-cols-2 gap-x-20">
+
+    <!-- ============================================== -->
+    <!-- LEFT HALF — Step 1: Quiet keys                 -->
+    <!-- ============================================== -->
+    <section class="max-w-[520px]">
+
+      <div class="small-caps mb-10">Step 1 of 2</div>
+
+      <h1 class="font-display text-[72px] leading-[0.95] tracking-tight text-ink mb-6">
+        Bring your keys.
+      </h1>
+
+      <p class="text-[16px] leading-relaxed text-mute mb-20 max-w-[420px]">
+        Keys live in your browser. We never see them.
+      </p>
+
+      <!-- Section 1: LLM -->
+      <div class="mb-24">
+        <div class="small-caps mb-5">Interviewer brain</div>
+        <div class="flex items-baseline gap-6 mb-2 text-[15px]">
+          <span class="text-link" data-active="true">Anthropic Claude</span>
+          <span class="text-link">OpenAI GPT</span>
+        </div>
+        <input class="field-line font-mono text-[13px]" placeholder="Paste your Anthropic key…" />
+        <p class="mt-3 text-[12px] text-mute">Spend lands on your account.</p>
+      </div>
+
+      <!-- Section 2: Voice -->
+      <div class="mb-16">
+        <div class="small-caps mb-5">
+          Voice for Alex <span class="italic normal-case tracking-normal text-mute"> · optional</span>
+        </div>
+        <div class="flex items-baseline gap-6 mb-2 text-[15px]">
+          <span class="text-link" data-active="true">Cartesia</span>
+          <span class="text-link">Sarvam</span>
+          <span class="text-link">ElevenLabs</span>
+        </div>
+        <input class="field-line font-mono text-[13px]" placeholder="Paste your Cartesia key, or skip…" />
+      </div>
+
+      <!-- footer -->
+      <div class="space-y-5 text-[12.5px] text-mute mb-12">
+        <p>Estimated <span class="font-mono text-ink">$0.18 – $0.42</span> per 30-minute session.</p>
+        <label class="flex items-center gap-2.5">
+          <input type="checkbox" />
+          <span>Remember on this device.</span>
+        </label>
+      </div>
+
+      <button class="coral-cta">Continue →</button>
+
+    </section>
+
+    <!-- ============================================== -->
+    <!-- RIGHT HALF — Step 2: One focal case            -->
+    <!-- ============================================== -->
+    <section class="max-w-[520px] mx-auto">
+
+      <div class="small-caps mb-10">Step 2 of 2</div>
+
+      <h1 class="font-display text-[72px] leading-[0.95] tracking-tight text-ink mb-6">
+        Pick your<br/>poison.
+      </h1>
+
+      <p class="text-[16px] leading-relaxed text-mute mb-24 max-w-[420px]">
+        You pick the type. We deal the question.
+      </p>
+
+      <!-- One focal "card" — but it's just editorial type, no border -->
+      <div class="mb-16">
+        <h2 class="font-display text-[46px] leading-[1.0] tracking-tight text-ink mb-2">
+          Product Design
+        </h2>
+        <p class="small-caps mb-6">5 questions in the bank</p>
+        <p class="text-[15px] leading-relaxed text-mute max-w-[460px] mb-6">
+          The bread-and-butter. Clarify, segment, prioritize, sketch a solution
+          out loud. Most common at Google, Meta, and almost every consumer PM
+          loop.
+        </p>
+        <div class="h-px w-12 bg-coral"></div>
+      </div>
+
+      <p class="text-[13px] text-mute italic mb-20 max-w-[420px]">
+        Strategy, Estimation, and Behavioral cases are forthcoming.
+      </p>
+
+      <!-- Mascot at the bottom, small, off to one side -->
+      <div class="flex items-end mb-12">
+        <img src="/branding/sitting.png" alt="Alex, waiting"
+             onerror="this.onerror=null;this.src='/branding/sleeping.png'"
+             class="w-[110px] opacity-90" />
+        <p class="ml-3 text-[12px] text-mute italic pb-3">
+          Alex is waiting.
+        </p>
+      </div>
+
+      <button class="coral-cta">Deal me a case →</button>
+
+      <p class="mt-6 text-[12px] text-mute">
+        <a href="#" class="hover:text-ink">Back to key entry</a>
+      </p>
+
+    </section>
+  </div>
+</main>
+
+<footer class="mx-auto max-w-[1440px] px-8 py-10 border-t border-ink/10 text-xs text-mute flex justify-between">
+  <span>Variant C · Backstage Quiet</span>
+  <span class="italic">Mockingbird design exploration · 2026-05-12</span>
+</footer>
+
+</body>
+</html>

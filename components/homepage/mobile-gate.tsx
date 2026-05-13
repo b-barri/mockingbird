@@ -39,8 +39,9 @@ export function MobileGate() {
         Mockingbird is built for desktop voice sessions.
       </h1>
       <p className="mt-5 max-w-sm text-sm leading-relaxed text-mute">
-        Open this link on a laptop or desktop to begin. Mobile-responsive
-        voice UX is on the roadmap but not in V1.
+        Open this link on a laptop or desktop to begin. Practising a 30-minute
+        case on a phone screen would, frankly, be unkind. Mobile is on the
+        roadmap — for now, find a bigger screen.
       </p>
       <div className="mt-10 w-full max-w-sm">
         <div className="overflow-hidden rounded-lg border border-ink/[0.1] bg-white text-left">

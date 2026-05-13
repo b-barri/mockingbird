@@ -28,7 +28,7 @@ export function DemoVideo({ src, poster }: DemoVideoProps) {
               Demo
             </div>
             <p className="font-display text-xl italic text-mute">
-              Demo video coming soon
+              Demo recording in the oven. Back in a tick.
             </p>
           </div>
         </div>
@@ -52,7 +52,7 @@ export function DemoVideo({ src, poster }: DemoVideoProps) {
       </video>
       {!playing && (
         <p className="mt-3 text-center text-xs italic text-mute">
-          ~3 min — operator running a Product Design case end-to-end
+          ~3 min · one real Product Design case, end to end, no edits
         </p>
       )}
     </section>

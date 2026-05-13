@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Session · Live interview — Variant B (Pre-flight Console)</title>
+<meta name="viewport" content="width=1440" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="./tailwind.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { cream: "#F7F4ED", ink: "#1A1612", coral: "#E85D3B", mute: "#6B5F50", tan: "#EDE5D6" },
+        fontFamily: {
+          display: ["'Instrument Serif'", "serif"],
+          sans: ["'Inter'", "system-ui", "sans-serif"],
+          mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
+        },
+        spacing: { section: "5rem" },
+      },
+    },
+  };
+</script>
+<style>
+  html, body { background: #F7F4ED; color: #1A1612; height: 100%; margin: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; font-feature-settings: "ss01","ss02","cv11"; overflow: hidden; }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .small-caps { font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+  .ascii-rule { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: rgba(26,22,18,0.45); letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; }
+  .panel-frame { background: #FFFFFF; border: 1px solid rgba(26,22,18,0.10); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+  .panel-header { padding: 14px 18px 10px; border-bottom: 1px solid rgba(26,22,18,0.06); flex-shrink: 0; }
+  .panel-body { flex: 1; overflow: auto; padding: 18px; }
+
+  /* === motion === */
+  @keyframes caret-blink { 0%,50% { opacity:1 } 51%,100% { opacity:0 } }
+  .caret { display: inline-block; color: #E85D3B; animation: caret-blink 1s steps(2,end) infinite; }
+  .caret-light { display: inline-block; color: rgba(247,244,237,0.85); animation: caret-blink 1s steps(2,end) infinite; }
+
+  @keyframes status-pulse { 0%,100% { transform: scale(1); opacity:1 } 50% { transform: scale(1.25); opacity:0.78 } }
+  .pulse-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #E85D3B; animation: status-pulse 3s ease-in-out infinite; box-shadow: 0 0 10px rgba(232,93,59,0.45); }
+  .pulse-dot-sm { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #E85D3B; animation: status-pulse 2.4s ease-in-out infinite; }
+
+  /* The orb: large, coral, breathing. Matches the homepage mini-orb but bigger. */
+  @keyframes orb-pulse { 0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(232,93,59,0.45), 0 0 60px rgba(232,93,59,0.30); } 50% { transform: scale(1.04); box-shadow: 0 0 0 18px rgba(232,93,59,0.0), 0 0 80px rgba(232,93,59,0.40); } }
+  @keyframes ring-expand {
+    0%   { transform: scale(0.9); opacity: 0.7; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+  .orb {
+    width: 140px; height: 140px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #F39073 0%, #E85D3B 40%, #A13319 90%);
+    animation: orb-pulse 3.5s ease-in-out infinite;
+    position: relative;
+  }
+  .orb::before, .orb::after {
+    content: ""; position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(232,93,59,0.45);
+    animation: ring-expand 2.8s ease-out infinite;
+    pointer-events: none;
+  }
+  .orb::after { animation-delay: 1.4s; }
+
+  /* Waveform mock for the listening state */
+  @keyframes wave-bar { 0%,100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
+  .wave-bar {
+    display: inline-block;
+    width: 3px; height: 22px;
+    background: #E85D3B;
+    margin: 0 2px;
+    border-radius: 2px;
+    transform-origin: center;
+    animation: wave-bar 0.85s ease-in-out infinite;
+  }
+  .wave-bar:nth-child(1) { animation-delay: 0s }
+  .wave-bar:nth-child(2) { animation-delay: 0.1s }
+  .wave-bar:nth-child(3) { animation-delay: 0.2s }
+  .wave-bar:nth-child(4) { animation-delay: 0.3s }
+  .wave-bar:nth-child(5) { animation-delay: 0.4s }
+  .wave-bar:nth-child(6) { animation-delay: 0.5s }
+  .wave-bar:nth-child(7) { animation-delay: 0.6s }
+
+  /* Transcript turn entries */
+  .turn { display: grid; grid-template-columns: 90px 56px 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px dashed rgba(26,22,18,0.10); align-items: start; }
+  .turn:last-child { border-bottom: 0; }
+  .turn .turn-speaker { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+  .turn .turn-speaker.alex { color: #E85D3B; }
+  .turn .turn-speaker.you { color: #1A1612; }
+  .turn .turn-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(26,22,18,0.40); }
+  .turn .turn-text { font-size: 13px; line-height: 1.55; color: #1A1612; }
+
+  /* Scratchpad pills */
+  .frame-pill { display: inline-flex; align-items: center; gap: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 7px; border-radius: 3px; background: #EDE5D6; color: #1A1612; border: 1px solid rgba(26,22,18,0.10); margin-right: 4px; margin-bottom: 4px; }
+  .frame-pill.hit { background: #1A1612; color: #F7F4ED; border-color: #1A1612; }
+  .frame-pill.hit .dot { background: #E85D3B; }
+  .frame-pill .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: rgba(26,22,18,0.20); }
+
+  .control-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 3px;
+    border: 1px solid rgba(26,22,18,0.18);
+    background: #F7F4ED;
+    color: #1A1612;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .control-btn:hover { border-color: #1A1612; }
+  .control-btn.danger { color: #B33B23; border-color: rgba(179,59,35,0.30); }
+  .control-btn.danger:hover { border-color: #B33B23; background: rgba(179,59,35,0.06); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .caret, .caret-light, .pulse-dot, .pulse-dot-sm, .orb, .orb::before, .orb::after, .wave-bar { animation: none; }
+  }
+</style>
+</head>
+<body class="font-sans flex flex-col h-screen">
+
+<!-- ============================================== -->
+<!-- TOP BAR                                          -->
+<!-- ============================================== -->
+<header class="border-b border-ink/10 bg-cream px-6 py-3 flex items-center justify-between flex-shrink-0">
+
+  <div class="flex items-center gap-6">
+    <div class="flex items-baseline gap-3">
+      <span class="pulse-dot"></span>
+      <span class="mono text-[13px] text-ink font-semibold tracking-wide">MOCKINGBIRD</span>
+    </div>
+
+    <div class="mono text-[11px] text-mute">
+      [SESSION]&nbsp;<span class="text-coral">LIVE</span>&nbsp;//&nbsp;product_design.friending_feature_v2
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <div class="mono text-[12px] text-mute flex items-center gap-1.5">
+      <span class="small-caps">elapsed</span>
+      <span class="text-ink tabular-nums">[ 08:42 ]</span>
+    </div>
+    <button class="control-btn">⏸ pause</button>
+    <a href="/design-shotgun/variant-b-summary.html" class="control-btn danger no-underline">▸ end_session</a>
+  </div>
+
+</header>
+
+<!-- ============================================== -->
+<!-- 3-PANEL LAYOUT                                   -->
+<!-- ============================================== -->
+<main class="flex-1 grid gap-3 p-3 overflow-hidden" style="grid-template-columns: 1fr 1.1fr 1.2fr;">
+
+  <!-- ============================================ -->
+  <!-- TRANSCRIPT PANEL                             -->
+  <!-- ============================================ -->
+  <section class="panel-frame">
+    <div class="panel-header">
+      <div class="ascii-rule mb-2">── TRANSCRIPT ──────────────────────────────────</div>
+      <div class="flex items-center justify-between">
+        <span class="small-caps text-mute">turns &middot; 11</span>
+        <span class="mono text-[10px] text-mute">// tap a turn to strike out</span>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <div class="turn">
+        <span class="turn-speaker alex">ALEX&nbsp;&nbsp;&rarr;</span>
+        <span class="turn-time">00:00</span>
+        <p class="turn-text">Hey. Today we're going to design a friending feature for a new social product. 30 minutes. Ready when you are.</p>
+      </div>
+
+      <div class="turn">
+        <span class="turn-speaker you">YOU&nbsp;&nbsp;&nbsp;&rarr;</span>
+        <span class="turn-time">00:18</span>
+        <p class="turn-text">Sure. Let me start by clarifying what we're calling a "social product" — is this a new platform we're launching, or are we adding friending to an existing one?</p>
+      </div>
+
+      <div class="turn">
+        <span class="turn-speaker alex">ALEX&nbsp;&nbsp;&rarr;</span>
+        <span class="turn-time">00:34</span>
+        <p class="turn-text">Good question. Existing platform — a short-form video app with about 80M MAU, currently focused on consumption. No friending today, just follows.</p>
+      </div>
+
+      <div class="turn">
+        <span class="turn-speaker you">YOU&nbsp;&nbsp;&nbsp;&rarr;</span>
+        <span class="turn-time">01:02</span>
+        <p class="turn-text">Got it. Before I jump to segments — what's the strategic intent? Engagement lift? Retention? New social graph asset for future products?</p>
+      </div>
+
+      <div class="turn">
+        <span class="turn-speaker alex">ALEX&nbsp;&nbsp;&rarr;</span>
+        <span class="turn-time">01:24</span>
+        <p class="turn-text">Retention — we're seeing 30-day cohort dropoff that follow-only doesn't fix. Tighter ties might.</p>
+      </div>
+
+      <div class="turn">
+        <span class="turn-speaker you">YOU&nbsp;&nbsp;&nbsp;&rarr;</span>
+        <span class="turn-time">02:15</span>
+        <p class="turn-text">Okay. Three segments I want to consider: creators with existing audiences, casual viewers with no social graph elsewhere, and migrators bringing graphs from other apps...</p>
+      </div>
+
+      <div class="turn">
+        <span class="turn-speaker alex">ALEX&nbsp;&nbsp;&rarr;</span>
+        <span class="turn-time">03:48</span>
+        <p class="turn-text">Walk me through your segments more carefully — who's the highest-leverage one for the retention goal we just established?</p>
+      </div>
+
+      <!-- last turn — current focus -->
+      <div class="turn" style="border-bottom: 1px solid #E85D3B; padding-bottom: 12px;">
+        <span class="turn-speaker you">YOU&nbsp;&nbsp;&nbsp;&rarr;</span>
+        <span class="turn-time">04:21</span>
+        <p class="turn-text"><span class="text-mute italic">[transcribing&hellip;]</span> <span class="caret">_</span></p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- VOICE STAGE PANEL — center of attention      -->
+  <!-- ============================================ -->
+  <section class="panel-frame">
+    <div class="panel-header">
+      <div class="ascii-rule mb-2">── VOICE STAGE ─────────────────────────────────</div>
+      <div class="flex items-center justify-between">
+        <span class="small-caps text-mute">alex &middot; in character</span>
+        <span class="mono text-[10px] text-coral flex items-center gap-1.5">
+          <span class="pulse-dot-sm"></span> LISTENING<span class="caret">_</span>
+        </span>
+      </div>
+    </div>
+    <div class="panel-body flex flex-col items-center justify-between" style="padding: 28px 24px 22px;">
+
+      <!-- Current question, big and serif -->
+      <div class="text-center mt-4">
+        <div class="mono text-[10px] text-mute mb-3 tracking-wider">CURRENT QUESTION &middot; 03:48</div>
+        <p class="font-display text-[32px] leading-[1.15] tracking-tight text-ink max-w-[420px]">
+          &ldquo;Walk me through your segments more carefully &mdash; who&rsquo;s the highest-leverage one for the retention goal we just established?&rdquo;
+        </p>
+      </div>
+
+      <!-- Orb + waveform -->
+      <div class="flex flex-col items-center my-6">
+        <div class="orb mb-6"></div>
+
+        <!-- waveform (only visible when LISTENING) -->
+        <div class="flex items-center justify-center" aria-label="Audio waveform, live">
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+        </div>
+      </div>
+
+      <!-- Bottom controls: mic / text input toggle -->
+      <div class="w-full">
+        <div class="ascii-rule mb-3">── INPUT ───────────────────────────────────────</div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <button class="control-btn" data-active="true" style="background:#1A1612;color:#F7F4ED;border-color:#1A1612;">
+            <span style="color:#E85D3B">●</span> voice
+          </button>
+          <button class="control-btn">text</button>
+          <span class="flex-1"></span>
+          <span class="mono text-[10px] text-mute">[hold space to talk]</span>
+        </div>
+
+        <button class="w-full rounded-md py-3 mono text-[12px] font-semibold flex items-center justify-center gap-2"
+                style="background:#E85D3B;color:#1A1612;">
+          🎙  HOLD TO TALK
+        </button>
+
+        <p class="mono text-[10px] text-mute mt-3 text-center">
+          // release to send. transcription happens on-device first.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SCRATCHPAD PANEL                             -->
+  <!-- ============================================ -->
+  <section class="panel-frame">
+    <div class="panel-header">
+      <div class="ascii-rule mb-2">── SCRATCHPAD ──────────────────────────────────</div>
+      <div class="flex items-center justify-between">
+        <span class="small-caps text-mute">your notes</span>
+        <span class="mono text-[10px] text-mute">[ ⌃ K to collapse ]</span>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <!-- Auto-detected frameworks -->
+      <div class="mb-4 pb-4 border-b border-ink/10">
+        <div class="mono text-[10px] text-mute mb-2">// frameworks alex heard so far</div>
+        <span class="frame-pill hit"><span class="dot"></span>CIRCLES</span>
+        <span class="frame-pill"><span class="dot"></span>AARM</span>
+        <span class="frame-pill"><span class="dot"></span>JTBD</span>
+        <span class="frame-pill"><span class="dot"></span>GOAL→METRIC</span>
+      </div>
+
+      <!-- Note area -->
+      <div class="mono text-[12.5px] leading-[1.7] text-ink space-y-3">
+        <div>
+          <span class="text-coral"># segments</span><br/>
+          - creators w/ audiences (retention via reciprocity?)<br/>
+          - casual viewers (no social graph yet — ripest)<br/>
+          - migrators (cold-start fix)
+        </div>
+
+        <div>
+          <span class="text-coral"># goal</span><br/>
+          retention &mdash; 30d cohort dropoff<br/>
+          &raquo; tie strength &gt; follow count
+        </div>
+
+        <div>
+          <span class="text-coral"># risks</span><br/>
+          - friend req anxiety<br/>
+          - migration of graph from competitors (legal?)
+        </div>
+
+        <div class="text-mute italic">
+          <span class="caret">_</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================================== -->
+<!-- BOTTOM STATUS BAR                                -->
+<!-- ============================================== -->
+<footer class="border-t border-ink/10 bg-cream px-6 py-2 flex items-center justify-between mono text-[10.5px] text-mute flex-shrink-0">
+  <div class="flex items-center gap-5">
+    <span><span class="text-coral">●</span> ANTHROPIC&nbsp;//&nbsp;claude-sonnet-4-6</span>
+    <span><span class="text-coral">●</span> CARTESIA&nbsp;//&nbsp;sonic-2</span>
+    <span class="text-mute">spend so far <span class="text-ink tabular-nums">$0.18</span></span>
+  </div>
+  <div class="flex items-center gap-5">
+    <a href="/design-shotgun/variant-b-step2.html" class="hover:text-ink">$ cd ../case-select</a>
+    <span>&middot;</span>
+    <a href="/design-shotgun/index.html" class="hover:text-ink">all variants</a>
+  </div>
+</footer>
+
+</body>
+</html>

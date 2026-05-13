@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
@@ -32,6 +33,21 @@ const CARTESIA_OUTPUT_SAMPLE_RATE = 24000;
 const TTS_MAX_CHARS = SARVAM_BULBUL_V2_MAX_CHARS;
 
 export async function POST(request: Request): Promise<Response> {
+  const rl = await rateLimit(request, "voiceSynthesize");
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: `Too many requests — try again in ${rl.retryAfter}s.` },
+      {
+        status: 429,
+        headers: {
+          "retry-after": String(rl.retryAfter),
+          "x-ratelimit-limit": String(rl.limit),
+          "x-ratelimit-remaining": "0",
+        },
+      }
+    );
+  }
+
   const voiceKey = request.headers.get("x-voice-key");
   if (!voiceKey) {
     return NextResponse.json(

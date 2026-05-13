@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CostEstimate } from "@/components/onboarding/cost-estimate";
@@ -8,10 +9,12 @@ import { checkFormat } from "@/lib/auth/key-validation";
 import { setKey } from "@/lib/auth/key-storage";
 
 type LlmChoice = "anthropic" | "openai";
-type VoiceChoice = "cartesia" | "sarvam" | "elevenlabs";
+type VoiceChoice = "cartesia" | "sarvam";
 
 // F1 step 3 → step 4: key entry, format validation, synchronous ping per
 // provider via /api/validate-key (R6a), then navigate to /onboarding/case-select.
+// Pre-flight Console direction: tan panels with ASCII section dividers, mono
+// labels + status dots, ember_keys banner above the form.
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -30,12 +33,9 @@ export default function OnboardingPage() {
 
     // V1 preview state: voice adapters in U2 are stubs, so the voice key is
     // optional during the scaffold phase. The LLM key is required because
-    // /api/interview is a real Anthropic streaming proxy. When voice
-    // adapters ship full implementations during the V0 bakeoff, this
-    // optional-voice-key branch should tighten back to "required."
+    // /api/interview is a real Anthropic streaming proxy.
     const voiceKeyProvided = voiceKey.trim().length > 0;
 
-    // Pre-flight format check (LLM always; voice only if user provided one)
     const llmFormat = checkFormat(llm, llmKey);
     const voiceFormat = voiceKeyProvided ? checkFormat(voice, voiceKey) : { ok: true };
     if (!llmFormat.ok || !voiceFormat.ok) {
@@ -47,7 +47,6 @@ export default function OnboardingPage() {
       return;
     }
 
-    // Synchronous ping validation per R6a (skipped for unprovided voice key)
     const [llmResp, voiceResp] = await Promise.all([
       pingValidate(llm, llmKey),
       voiceKeyProvided
@@ -63,117 +62,202 @@ export default function OnboardingPage() {
       return;
     }
 
-    // Persist + navigate
     setKey("llm", llmKey, { remember });
     if (voiceKeyProvided) setKey(voice, voiceKey, { remember });
     router.push(`/onboarding/case-select?llm=${llm}&voice=${voice}`);
   }
 
-  return (
-    <main className="mx-auto max-w-xl px-8 py-section">
-      <header className="mb-10 text-center">
-        <div className="mb-4 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-coral">
-          <span className="h-1.5 w-1.5 rounded-full bg-coral" /> Onboarding · step 1 of 2
-        </div>
-        <h1 className="font-display text-4xl tracking-tight text-ink">
-          Bring your API keys.
-        </h1>
-        <p className="mt-3 text-sm leading-relaxed text-mute">
-          Mockingbird never holds your keys. They live in your browser. Pick
-          a model, paste your LLM key, and we'll verify it before starting
-          your case. The voice provider key is optional during V1 preview.
-        </p>
-      </header>
+  const llmReady = llmKey.trim().length > 0;
+  const voiceReady = voiceKey.trim().length > 0;
 
-      <form onSubmit={handleStart} className="grid gap-7">
-        {/* LLM choice */}
-        <fieldset>
-          <legend className="mb-2 text-sm font-semibold text-ink">
-            Choose an interviewer model
-          </legend>
-          <div className="mb-3 flex gap-2">
+  return (
+    <main className="mx-auto max-w-3xl px-8 pt-16 pb-section">
+      <div className="mb-4 font-mono text-[11px] tracking-wide text-coral">
+        [STEP 1/2]&nbsp;&nbsp;ONBOARDING · BYO_KEYS
+      </div>
+
+      <h1 className="mb-3 font-display text-5xl leading-[1.05] tracking-tight text-ink">
+        Bring your keys.
+        <br />
+        We&apos;ll bring the interviewer.
+      </h1>
+
+      <p className="mb-10 max-w-[520px] font-mono text-[14px] leading-relaxed text-mute">
+        // keys live in your browser. validated synchronously before any
+        tokens get spent.
+      </p>
+
+      {/* Prominent banner: Ember holding the keys. Mirrors the case-select
+          page's choose_option banner so the two onboarding steps parallel. */}
+      <div className="brand-image-glow mb-12">
+        <Image
+          src="/branding/ember_keys.png"
+          alt="Ember holding the keys, ready for the candidate"
+          width={1672}
+          height={941}
+          priority
+          className="w-full rounded-2xl shadow-[0_24px_50px_-22px_rgba(26,22,18,0.40)] ring-1 ring-ink/[0.08]"
+        />
+      </div>
+
+      <form onSubmit={handleStart} className="space-y-5">
+        {/* LLM panel */}
+        <fieldset className="pf-panel p-6">
+          <legend className="sr-only">Pick your interviewer&apos;s brain</legend>
+          <div className="ascii-rule mb-4">
+            ── LLM ──────────────────────────────────────────
+          </div>
+
+          <div className="mb-4 flex gap-2">
             {(["anthropic", "openai"] as LlmChoice[]).map((p) => (
               <button
                 type="button"
                 key={p}
                 onClick={() => setLlm(p)}
                 data-active={llm === p}
-                className="flex-1 rounded-lg border px-4 py-2 text-sm font-medium data-[active=false]:border-ink/[0.12] data-[active=true]:border-ink data-[active=true]:bg-ink data-[active=true]:text-cream"
+                className="inline-flex items-center gap-2 rounded-[3px] border px-3 py-[7px] font-mono text-[12px] data-[active=false]:border-ink/20 data-[active=false]:bg-cream data-[active=false]:text-ink data-[active=true]:border-ink data-[active=true]:bg-ink data-[active=true]:text-cream"
               >
-                {p === "anthropic" ? "Anthropic Claude" : "OpenAI GPT"}
+                <span
+                  className="inline-block h-[6px] w-[6px] rounded-full"
+                  style={{
+                    backgroundColor:
+                      llm === p ? "#E85D3B" : "rgba(26,22,18,0.30)",
+                  }}
+                />
+                {p}
               </button>
             ))}
           </div>
-          <KeyInput
-            provider={llm}
-            label={`${llm === "anthropic" ? "Anthropic" : "OpenAI"} API key`}
-            description="Used to power the interviewer's voice and reasoning."
-            value={llmKey}
-            onChange={setLlmKey}
-            inlineError={errors[llm]}
-          />
+
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <KeyInput
+                provider={llm}
+                label={`${llm === "anthropic" ? "Anthropic" : "OpenAI"} API key`}
+                description="Powers the interviewer's brain. Spend lands on your account, not ours."
+                value={llmKey}
+                onChange={setLlmKey}
+                inlineError={errors[llm]}
+              />
+            </div>
+          </div>
+          <KeyStatus ready={llmReady} className="mt-2" />
         </fieldset>
 
-        {/* Voice choice */}
-        <fieldset>
-          <legend className="mb-2 text-sm font-semibold text-ink">
-            Choose a voice provider{" "}
-            <span className="ml-1 rounded bg-cream px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-mute">
-              Optional in V1 preview
-            </span>
-          </legend>
-          <p className="mb-3 text-xs leading-relaxed text-mute">
-            Voice adapters are stubs in V1. You can skip this field to test
-            the LLM-only flow with seeded session content; real voice ships
-            after the V0 provider bakeoff.
+        {/* Voice panel */}
+        <fieldset className="pf-panel p-6">
+          <legend className="sr-only">Pick a voice for Alex</legend>
+          <div className="ascii-rule mb-4">
+            ── VOICE ──────────────────────────── [OPTIONAL]
+          </div>
+
+          <p className="mb-3 font-mono text-[11px] text-mute">
+            // voice adapters are stubs in V1. skip to run text-only — alex
+            grows actual vocal cords after the V0 bakeoff.
           </p>
-          <div className="mb-3 flex gap-2">
-            {(["cartesia", "sarvam", "elevenlabs"] as VoiceChoice[]).map((p) => (
+
+          <div className="mb-4 flex gap-2">
+            {(["cartesia", "sarvam"] as VoiceChoice[]).map((p) => (
               <button
                 type="button"
                 key={p}
                 onClick={() => setVoice(p)}
                 data-active={voice === p}
-                className="flex-1 rounded-lg border px-4 py-2 text-sm font-medium data-[active=false]:border-ink/[0.12] data-[active=true]:border-ink data-[active=true]:bg-ink data-[active=true]:text-cream"
+                className="inline-flex items-center gap-2 rounded-[3px] border px-3 py-[7px] font-mono text-[12px] data-[active=false]:border-ink/20 data-[active=false]:bg-cream data-[active=false]:text-ink data-[active=true]:border-ink data-[active=true]:bg-ink data-[active=true]:text-cream"
               >
-                {p.charAt(0).toUpperCase() + p.slice(1)}
+                <span
+                  className="inline-block h-[6px] w-[6px] rounded-full"
+                  style={{
+                    backgroundColor:
+                      voice === p ? "#E85D3B" : "rgba(26,22,18,0.30)",
+                  }}
+                />
+                {p}
               </button>
             ))}
           </div>
+
           <KeyInput
             provider={voice}
             label={`${voice.charAt(0).toUpperCase() + voice.slice(1)} API key`}
-            description="Synthesizes the interviewer's voice."
+            description="Gives Alex a mouth. Skip to run text-only — Alex won't be offended."
             value={voiceKey}
             onChange={setVoiceKey}
             inlineError={errors[voice]}
           />
+          <KeyStatus
+            ready={voiceReady}
+            pendingLabel="○ OPTIONAL"
+            className="mt-2"
+          />
         </fieldset>
 
-        <CostEstimate llmProvider={llm} voiceProvider={voice} />
-
-        <label className="flex items-start gap-2.5 text-xs text-mute">
-          <input
-            type="checkbox"
-            checked={remember}
-            onChange={(e) => setRemember(e.target.checked)}
-            className="mt-0.5"
-          />
-          <span>
-            Remember keys on this device. Stored in localStorage protected by
-            the CSP header set in <code className="font-mono text-[11px]">next.config.ts</code>. Uncheck to keep keys in session storage only.
-          </span>
-        </label>
+        {/* Budget panel: cost estimate + remember toggle */}
+        <div className="pf-panel space-y-4 p-6">
+          <div className="ascii-rule">
+            ── BUDGET ───────────────────────────────────────
+          </div>
+          <CostEstimate llmProvider={llm} voiceProvider={voice} />
+          <label className="flex items-start gap-2.5 border-t border-ink/10 pt-3 font-mono text-[11px] text-ink">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              [&nbsp;]&nbsp;PERSIST_KEYS&nbsp;&nbsp;
+              <span className="text-mute">
+                // remember on this device. Uncheck on a shared laptop.
+              </span>
+            </span>
+          </label>
+        </div>
 
         <button
           type="submit"
           disabled={validating || !llmKey}
-          className="rounded-lg bg-ink py-3 text-sm font-semibold text-cream transition-colors hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full rounded-[3px] bg-ink px-5 py-3.5 text-left font-mono text-[13px] font-medium text-cream transition-colors hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {validating ? "Validating…" : "Continue to case selection →"}
+          <span className="mr-2 text-coral">▸</span>
+          {validating
+            ? "Pinging your provider…"
+            : "Continue → /onboarding/case-select"}
+          {!validating && (
+            <span className="animate-caret-blink text-cream/85" aria-hidden>
+              _
+            </span>
+          )}
         </button>
       </form>
     </main>
+  );
+}
+
+// Mono status dot for a key field — pulsing coral READY when set, dim PENDING when empty.
+function KeyStatus({
+  ready,
+  pendingLabel = "○ PENDING",
+  className = "",
+}: {
+  ready: boolean;
+  pendingLabel?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-2 font-mono text-[11px] ${className}`}
+      data-testid={ready ? "key-status-ready" : "key-status-pending"}
+    >
+      {ready ? (
+        <>
+          <span className="pulse-dot" />
+          <span className="text-coral">READY</span>
+        </>
+      ) : (
+        <span className="text-mute">{pendingLabel}</span>
+      )}
+    </div>
   );
 }
 

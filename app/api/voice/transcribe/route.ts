@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
@@ -16,7 +17,39 @@ export const runtime = "edge";
 
 const CARTESIA_VERSION = "2025-04-16";
 
+// Audit H3: cap audio upload size. Edge has a ~4.5MB hard limit anyway,
+// but rejecting at the content-length header avoids parsing megabytes of
+// junk that will fail downstream — and surfaces a clean 413 instead of a
+// vague 500 from formData() blowing up.
+const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
+
 export async function POST(request: Request): Promise<Response> {
+  const rl = await rateLimit(request, "voiceTranscribe");
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: `Too many requests — try again in ${rl.retryAfter}s.` },
+      {
+        status: 429,
+        headers: {
+          "retry-after": String(rl.retryAfter),
+          "x-ratelimit-limit": String(rl.limit),
+          "x-ratelimit-remaining": "0",
+        },
+      }
+    );
+  }
+
+  const contentLength = request.headers.get("content-length");
+  if (contentLength) {
+    const declared = Number.parseInt(contentLength, 10);
+    if (Number.isFinite(declared) && declared > MAX_AUDIO_BYTES) {
+      return NextResponse.json(
+        { error: `Audio too large (max ${MAX_AUDIO_BYTES} bytes)` },
+        { status: 413 }
+      );
+    }
+  }
+
   const voiceKey = request.headers.get("x-voice-key");
   if (!voiceKey) {
     return NextResponse.json(

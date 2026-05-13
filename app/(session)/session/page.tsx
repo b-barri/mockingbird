@@ -11,7 +11,12 @@ import {
   useState,
 } from "react";
 import { ThreePanel } from "@/components/session/three-panel";
-import { getKey } from "@/lib/auth/key-storage";
+import { getKey, setKey, type KeyProvider } from "@/lib/auth/key-storage";
+import {
+  checkFormat,
+  providerConsoleUrl,
+  providerLabel,
+} from "@/lib/auth/key-validation";
 import {
   getCaseById,
   pickRandomCase,
@@ -137,9 +142,35 @@ function SessionInner() {
     voiceAvailable ? "voice" : "text"
   );
   const voiceModeActive = inputMode === "voice";
+
+  // Mid-session voice-key prompt. When a candidate without a voice key
+  // tries to switch to voice mode, instead of silently dropping the click
+  // (the old behavior hid the toggle entirely), we open a small modal so
+  // they can paste a key without losing session state.
+  const [voiceKeyPromptOpen, setVoiceKeyPromptOpen] = useState(false);
+
   const toggleInputMode = useCallback(() => {
-    setInputMode((m) => (m === "voice" ? "text" : "voice"));
-  }, []);
+    setInputMode((m) => {
+      // text → voice requires a voice key. If we don't have one yet, open
+      // the prompt and stay in text mode; the prompt's confirm handler will
+      // flip the mode once a valid key is stored.
+      if (m === "text" && !voiceAvailable) {
+        setVoiceKeyPromptOpen(true);
+        return m;
+      }
+      return m === "voice" ? "text" : "voice";
+    });
+  }, [voiceAvailable]);
+
+  const handleVoiceKeySubmitted = useCallback(
+    (key: string) => {
+      setKey(voiceProvider as KeyProvider, key);
+      setVoiceKey(key);
+      setVoiceKeyPromptOpen(false);
+      setInputMode("voice");
+    },
+    [voiceProvider]
+  );
 
   // currentQuestion = latest non-stricken AI turn. Updates live as the LLM
   // stream fills the turn via TRANSCRIPT_PARTIAL. Undefined while idle so
@@ -632,21 +663,30 @@ function SessionInner() {
   void isPlaying;
 
   return (
-    <ThreePanel
-      session={session}
-      dispatch={dispatch as (action: SessionAction) => void}
-      caseTitle={caseTemplate.title}
-      currentQuestion={currentQuestion}
-      onEndSession={handleEndSession}
-      onStartInterview={handleStartInterview}
-      onSubmitTurn={voiceModeActive ? undefined : handleSubmitTurn}
-      onVoiceBlob={voiceModeActive ? handleVoiceBlob : undefined}
-      onMicError={voiceModeActive ? handleMicError : undefined}
-      onErrorAction={handleErrorAction}
-      voiceProvider={voiceProvider}
-      inputMode={inputMode}
-      onToggleInputMode={voiceAvailable ? toggleInputMode : undefined}
-    />
+    <>
+      <ThreePanel
+        session={session}
+        dispatch={dispatch as (action: SessionAction) => void}
+        caseTitle={caseTemplate.title}
+        currentQuestion={currentQuestion}
+        onEndSession={handleEndSession}
+        onStartInterview={handleStartInterview}
+        onSubmitTurn={voiceModeActive ? undefined : handleSubmitTurn}
+        onVoiceBlob={voiceModeActive ? handleVoiceBlob : undefined}
+        onMicError={voiceModeActive ? handleMicError : undefined}
+        onErrorAction={handleErrorAction}
+        voiceProvider={voiceProvider}
+        inputMode={inputMode}
+        onToggleInputMode={toggleInputMode}
+      />
+      {voiceKeyPromptOpen && (
+        <VoiceKeyPrompt
+          provider={voiceProvider}
+          onCancel={() => setVoiceKeyPromptOpen(false)}
+          onSubmit={handleVoiceKeySubmitted}
+        />
+      )}
+    </>
   );
 }
 
@@ -670,6 +710,109 @@ interface StreamEvent {
 
 function newTurnId(prefix: "user" | "ai"): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+/**
+ * Lightweight inline modal that asks the candidate for a voice provider key
+ * mid-session. Rendered when the toggle flips to "voice" but no key is
+ * configured yet. Stays out of components/onboarding/ because it's
+ * session-specific (no "remember me" toggle, no validation ping, no
+ * provider-picking) — pasting and confirming is the entire flow.
+ */
+function VoiceKeyPrompt({
+  provider,
+  onSubmit,
+  onCancel,
+}: {
+  provider: string;
+  onSubmit: (key: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState("");
+  const label = providerLabel(provider);
+  const consoleUrl = providerConsoleUrl(provider);
+  const trimmed = value.trim();
+  const formatCheck = trimmed ? checkFormat(provider, trimmed) : { ok: true };
+  const canSubmit = trimmed.length > 0 && formatCheck.ok;
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit) return;
+    onSubmit(trimmed);
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="voice-key-prompt-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
+      onClick={onCancel}
+    >
+      <form
+        onSubmit={handleSubmit}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-xl border border-ink/[0.10] bg-cream p-6 shadow-xl"
+      >
+        <div className="mb-2 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-coral">
+          <span className="pulse-dot" />
+          enable voice
+        </div>
+        <h2
+          id="voice-key-prompt-title"
+          className="mb-2 font-display text-2xl tracking-tight text-ink"
+        >
+          Paste your {label} API key
+        </h2>
+        <p className="mb-4 text-sm leading-relaxed text-mute">
+          Voice mode runs speech-to-text and text-to-speech through {label}.
+          The key stays in your browser — we never store it server-side.
+          {consoleUrl && (
+            <>
+              {" "}
+              <a
+                href={`https://${consoleUrl}`}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-coral underline-offset-2 hover:underline"
+              >
+                Get a key ↗
+              </a>
+            </>
+          )}
+        </p>
+        <input
+          type="password"
+          autoFocus
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={`${label} API key`}
+          data-testid="voice-key-prompt-input"
+          className="w-full rounded-md border border-ink/[0.18] bg-white px-3 py-2 font-mono text-sm text-ink placeholder:text-mute/60 focus:border-ink/50 focus:outline-none"
+        />
+        {trimmed && !formatCheck.ok && (
+          <p className="mt-2 text-xs text-red-700">{formatCheck.reason}</p>
+        )}
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-md border border-ink/20 bg-cream px-4 py-2 font-mono text-[12px] text-ink hover:border-ink"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            data-testid="voice-key-prompt-submit"
+            className="rounded-md bg-ink px-4 py-2 font-mono text-[12px] text-cream hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Enable voice
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 }
 
 export default function SessionPage() {
