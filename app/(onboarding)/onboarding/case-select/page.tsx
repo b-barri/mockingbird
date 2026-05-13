@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -11,9 +12,7 @@ import {
 // F1 step 4 → step 6: case-TYPE selection then session start. Real PM
 // interviews don't show candidates the bank of possible cases — you pick
 // the case TYPE you want to practice, and a specific question is assigned
-// at random when the session begins. Empty-state copy when zero cases are
-// configured. useSearchParams requires a Suspense boundary at prerender
-// time in Next.js 15.
+// at random when the session begins.
 
 interface CaseType {
   readonly id: "product-design" | "strategy" | "estimation" | "behavioral";
@@ -21,6 +20,8 @@ interface CaseType {
   readonly description: string;
   readonly bankSize: number;
   readonly available: boolean;
+  readonly difficulty: number;
+  readonly timeEstMin: number;
 }
 
 const CASE_TYPES: ReadonlyArray<CaseType> = [
@@ -28,35 +29,47 @@ const CASE_TYPES: ReadonlyArray<CaseType> = [
     id: "product-design",
     title: "Product Design",
     description:
-      "User-centric design cases. Clarify, segment, prioritize, prototype. Most common at Google, Meta, and most consumer companies.",
+      "The bread-and-butter. Clarify, segment, prioritize, sketch a solution out loud.",
     bankSize: PRODUCT_DESIGN_CASES.length,
     available: true,
+    difficulty: 3,
+    timeEstMin: 30,
   },
   {
     id: "strategy",
     title: "Strategy",
     description:
-      "Market entry, competitive response, expansion bets. Common in second rounds.",
+      "Market entry, competitive response, big-bet framing.",
     bankSize: 0,
     available: false,
+    difficulty: 4,
+    timeEstMin: 45,
   },
   {
     id: "estimation",
     title: "Estimation",
     description:
-      "Market sizing, back-of-the-envelope math. Sometimes folded into design rounds.",
+      "Market sizing and back-of-the-envelope math.",
     bankSize: 0,
     available: false,
+    difficulty: 2,
+    timeEstMin: 25,
   },
   {
     id: "behavioral",
     title: "Behavioral",
     description:
-      "Past-projects, leadership scenarios, conflict navigation. Saved for V2.",
+      "Past projects, leadership stories, the conflict you navigated.",
     bankSize: 0,
     available: false,
+    difficulty: 2,
+    timeEstMin: 30,
   },
 ];
+
+function stars(n: number) {
+  return "★".repeat(n) + "☆".repeat(5 - n);
+}
 
 function CaseSelectInner() {
   const router = useRouter();
@@ -90,27 +103,41 @@ function CaseSelectInner() {
   }
 
   function startCase() {
-    // V1 only has product-design cases; the typed selector is forward-compat.
     const picked = pickRandomCase();
     router.push(`/session?case=${picked.id}&llm=${llm}&voice=${voice}`);
   }
 
+  const selected = CASE_TYPES.find((t) => t.id === selectedType);
+
   return (
     <>
-      <header className="mb-10">
-        <div className="mb-4 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-coral">
-          <span className="h-1.5 w-1.5 rounded-full bg-coral" /> Onboarding · step 2 of 2
-        </div>
-        <h1 className="font-display text-4xl tracking-tight text-ink">
-          Pick a case type.
-        </h1>
-        <p className="mt-3 text-sm leading-relaxed text-mute">
-          Like a real interview — you pick the type, the question is dealt at
-          random when you start. No previewing the bank.
-        </p>
-      </header>
+      <div className="mb-4 font-mono text-[11px] tracking-wide text-coral">
+        [STEP 2/2]&nbsp;&nbsp;DRAFT_CASE_TYPE
+      </div>
 
-      <div className="grid gap-3" role="radiogroup" aria-label="Case type">
+      <h1 className="mb-3 font-display text-5xl leading-[1.0] tracking-tight text-ink md:text-6xl">
+        Pick your poison.
+      </h1>
+      <p className="mb-10 font-mono text-[13px] leading-relaxed text-mute">
+        // you pick the type. we deal the question. no peeking at the bank.
+      </p>
+
+      <div className="brand-image-glow mb-12">
+        <Image
+          src="/branding/choose_option.png"
+          alt="Ember considering which case to pick"
+          width={1914}
+          height={822}
+          priority
+          className="w-full rounded-2xl shadow-[0_24px_50px_-22px_rgba(26,22,18,0.40)] ring-1 ring-ink/[0.08]"
+        />
+      </div>
+
+      <div className="ascii-rule mb-6">
+        ── BANK ─────────────────────────────────────────────────────────
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2" role="radiogroup" aria-label="Case type">
         {CASE_TYPES.map((t) => {
           const isSelected = selectedType === t.id;
           const isDisabled = !t.available;
@@ -125,41 +152,66 @@ function CaseSelectInner() {
               onClick={() => !isDisabled && setSelectedType(t.id)}
               data-testid={`case-type-${t.id}`}
               data-selected={isSelected}
-              className="group rounded-xl border bg-white p-5 text-left transition-colors data-[selected=true]:border-ink data-[selected=true]:ring-1 data-[selected=true]:ring-ink data-[selected=false]:border-ink/[0.08] hover:data-[selected=false]:border-ink/[0.22] disabled:cursor-not-allowed disabled:opacity-50"
+              className="pf-panel relative rounded-md p-5 text-left transition-shadow disabled:cursor-not-allowed disabled:opacity-55 data-[selected=true]:bg-cream data-[selected=true]:border-transparent data-[selected=true]:shadow-[inset_0_0_0_2px_#E85D3B]"
             >
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl tracking-tight text-ink">
+              <div className="flex items-start justify-between">
+                <h2 className="font-display text-2xl leading-tight tracking-tight text-ink">
                   {t.title}
                 </h2>
-                {!t.available && (
-                  <span className="rounded bg-cream px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-mute">
-                    Coming in V2
+                {isSelected && !isDisabled && (
+                  <span className="font-mono text-[10px] font-semibold text-coral">
+                    SELECTED
                   </span>
                 )}
-                {t.available && (
-                  <span className="text-xs text-mute">
-                    {t.bankSize} questions in bank
+                {isDisabled && (
+                  <span className="font-mono text-[10px] text-mute">
+                    COOKING
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm text-mute">{t.description}</p>
+              <p className="mt-2 text-[13px] leading-relaxed text-mute">
+                {t.description}
+              </p>
+              <div className="mt-3 border-t border-dashed border-ink/15 pt-3 font-mono text-[11px] leading-relaxed text-mute">
+                <div>DIFFICULTY {stars(t.difficulty)}</div>
+                <div>BANK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{t.bankSize} questions</div>
+                <div>TIME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~{t.timeEstMin} min</div>
+                <div>
+                  STATUS&nbsp;&nbsp;&nbsp;&nbsp;
+                  <span className={isDisabled ? "text-mute" : "text-coral"}>
+                    {isDisabled ? "COOKING · V2" : "LIVE"}
+                  </span>
+                </div>
+              </div>
             </button>
           );
         })}
       </div>
 
+      <p className="mt-10 mb-2 font-mono text-[11px] text-mute">
+        // ready? hit it.
+      </p>
       <button
         type="button"
         onClick={startCase}
         data-testid="start-case"
-        className="mt-8 w-full rounded-lg bg-ink py-3 text-sm font-semibold text-cream transition-colors hover:bg-ink/85"
+        className="group flex w-full items-center justify-between gap-4 rounded-[3px] bg-ink px-5 py-4 text-left font-mono text-[13px] font-medium text-cream shadow-[0_4px_14px_-4px_rgba(232,93,59,0.4)] ring-1 ring-coral/30 transition-all hover:bg-coral hover:shadow-[0_6px_18px_-4px_rgba(232,93,59,0.6)] hover:ring-2 hover:ring-coral/60 focus-visible:bg-coral focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral/70"
       >
-        Deal me a {CASE_TYPES.find((t) => t.id === selectedType)?.title} case →
+        <span className="flex-1 truncate">
+          <span className="mr-2 text-coral transition-colors group-hover:text-cream">▸</span>
+          deal_random_case --type {selected?.id}
+          <span className="animate-caret-blink text-cream/85" aria-hidden>
+            _
+          </span>
+        </span>
+        <span className="shrink-0 text-[11px] uppercase tracking-wider text-cream/60 transition-colors group-hover:text-cream">
+          Press ↵ to deal&nbsp;→
+        </span>
       </button>
 
-      <p className="mt-6 text-center text-xs text-mute">
+      <p className="mt-5 font-mono text-[11px] text-mute">
         <Link href="/onboarding" className="hover:text-ink">
-          ← Back to key entry
+          $ cd ../onboarding
         </Link>
       </p>
     </>
@@ -168,7 +220,7 @@ function CaseSelectInner() {
 
 export default function CaseSelectPage() {
   return (
-    <main className="mx-auto max-w-2xl px-8 py-section">
+    <main className="mx-auto max-w-4xl px-8 pt-16 pb-section">
       <Suspense
         fallback={
           <div className="py-section text-center text-sm text-mute">
