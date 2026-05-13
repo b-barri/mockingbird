@@ -1,6 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Orb } from "./orb";
 import { useMicCapture, type MicErrorKind } from "@/lib/voice/mic-capture";
@@ -132,7 +133,7 @@ export function VoiceStage({
       <div
         data-testid="voice-stage-idle"
         data-state="idle"
-        className="flex h-full flex-col items-center justify-center gap-7 p-8 text-center"
+        className="relative flex h-full flex-col items-center justify-center gap-7 p-8 text-center"
       >
         <Orb state="idle" />
         <div>
@@ -157,6 +158,20 @@ export function VoiceStage({
         >
           Start the mock →
         </button>
+
+        {/* Sleeping Ember in the bottom-right corner — purely decorative.
+            Alex isn't working yet, so Ember is napping until the candidate
+            hits start. Pointer-events disabled so the mascot can't be
+            clicked instead of the CTA. */}
+        <Image
+          src="/branding/sleeping.png"
+          alt="Ember the mascot, sleeping while waiting for the session to start"
+          width={1915}
+          height={821}
+          priority
+          data-testid="ember-sleeping"
+          className="pointer-events-none absolute bottom-3 right-3 w-44 opacity-90 select-none md:w-56"
+        />
       </div>
     );
   }
@@ -215,11 +230,12 @@ export function VoiceStage({
       data-state={state}
       className="flex h-full flex-col gap-4 overflow-hidden p-6"
     >
-      {/* Input-mode toggle — segmented pill, always visible at the top of
-          the stage when the candidate has a voice key configured. Switching
-          mid-session takes effect on the next listening turn. Hidden for
-          text-only candidates (no onToggleInputMode means no voice key was
-          configured at onboarding, so there's nothing to switch to). */}
+      {/* Input-mode toggle — segmented pill at the top of the stage.
+          Always visible when the parent provides a handler; the session
+          page wraps the handler so clicking "Voice" without a configured
+          voice key opens a mid-session key prompt instead of silently
+          dropping the click. Switching takes effect on the next listening
+          turn. */}
       {onToggleInputMode && (
         <div
           data-testid="toggle-input-mode"
