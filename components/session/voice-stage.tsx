@@ -1,7 +1,6 @@
 "use client";
 
 import { clsx } from "clsx";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Orb } from "./orb";
 import { useMicCapture, type MicErrorKind } from "@/lib/voice/mic-capture";
@@ -133,7 +132,7 @@ export function VoiceStage({
       <div
         data-testid="voice-stage-idle"
         data-state="idle"
-        className="relative flex h-full flex-col items-center justify-center gap-7 p-8 text-center"
+        className="flex h-full flex-col items-center justify-center gap-7 p-8 text-center"
       >
         <Orb state="idle" />
         <div>
@@ -159,19 +158,13 @@ export function VoiceStage({
           Start the mock →
         </button>
 
-        {/* Sleeping Ember in the bottom-right corner — purely decorative.
-            Alex isn't working yet, so Ember is napping until the candidate
-            hits start. Pointer-events disabled so the mascot can't be
-            clicked instead of the CTA. */}
-        <Image
-          src="/branding/sleeping.png"
-          alt="Ember the mascot, sleeping while waiting for the session to start"
-          width={1915}
-          height={821}
-          priority
-          data-testid="ember-sleeping"
-          className="pointer-events-none absolute bottom-3 right-3 w-44 opacity-90 select-none md:w-56"
-        />
+        {/*
+          Sleeping Ember lives on the persistent <Mascot> component (see
+          three-panel.tsx) — Mascot.frameFor returns "sleeping" while the
+          session is in idle state, then transitions to "blinking" once
+          the candidate starts. Keeping the mascot in one place ensures
+          smooth state transitions in the same viewport corner.
+        */}
       </div>
     );
   }
