@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { getKey } from "@/lib/auth/key-storage";
+import { useEffect, useState } from "react";
+import { getKey, setKey, hasKey } from "@/lib/auth/key-storage";
 import { saveBrief } from "@/lib/screen/brief-store";
 import type { Brief } from "@/lib/screen/brief";
 
@@ -54,6 +54,13 @@ export function PrepForm() {
   const [errors, setErrors] = useState<PrepErrors>({});
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Inline key capture so /screen is self-contained (no onboarding detour).
+  const [keyPresent, setKeyPresent] = useState(true);
+  const [inlineKey, setInlineKey] = useState("");
+
+  useEffect(() => {
+    setKeyPresent(hasKey("llm"));
+  }, []);
 
   function set<K extends keyof PrepInputs>(key: K, value: string) {
     setInputs((prev) => ({ ...prev, [key]: value }));
@@ -66,11 +73,14 @@ export function PrepForm() {
     setErrors(errs);
     if (!ok) return;
 
-    const apiKey = getKey("llm");
+    // Use a stored key if present, otherwise the one entered inline here.
+    const apiKey = getKey("llm") || inlineKey.trim();
     if (!apiKey) {
-      setSubmitErr("No LLM key found — set one on the onboarding screen first.");
+      setSubmitErr("Enter your Anthropic API key above to run the research.");
       return;
     }
+    // Persist the inline key for this tab so re-runs don't re-prompt.
+    if (!getKey("llm")) setKey("llm", apiKey);
 
     setBusy(true);
     try {
@@ -106,6 +116,25 @@ export function PrepForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {!keyPresent && (
+        <fieldset className="pf-panel space-y-3 p-4 sm:p-6">
+          <legend className="sr-only">Anthropic API key</legend>
+          <div className="ascii-rule mb-1">── ANTHROPIC_KEY ─────────────────────────────────</div>
+          <p className="font-mono text-[11px] text-mute">
+            // research runs on your key (pass-through, never stored server-side).
+            stays in this browser.
+          </p>
+          <input
+            id="anthropic-key"
+            type="password"
+            value={inlineKey}
+            placeholder="sk-ant-…"
+            onChange={(e) => setInlineKey(e.target.value)}
+            className="w-full rounded-[3px] border border-ink/20 bg-cream px-3 py-2 font-mono text-[13px] text-ink placeholder:text-mute focus:border-ink focus:outline-none"
+          />
+        </fieldset>
+      )}
+
       <fieldset className="pf-panel space-y-4 p-4 sm:p-6">
         <legend className="sr-only">Where are you interviewing?</legend>
         <div className="ascii-rule mb-1">── TARGET ───────────────────────────────────────</div>
