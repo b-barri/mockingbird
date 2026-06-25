@@ -13,6 +13,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./"),
+      // `server-only` is a Next build-time guard with no runtime behavior;
+      // stub it so server modules (rate-limit, research) are testable.
+      "server-only": path.resolve(__dirname, "./test/stubs/server-only.ts"),
     },
   },
 });

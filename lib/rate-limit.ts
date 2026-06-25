@@ -35,6 +35,9 @@ const BUCKETS = {
   validateKey: { requests: 5, window: "1 m" },
   interview: { requests: 20, window: "1 m" },
   summary: { requests: 10, window: "1 m" },
+  // Research fans out to an external fetch + a buffered LLM call. A real user
+  // generates a handful of briefs; 8/min caps a flood without friction.
+  research: { requests: 8, window: "1 m" },
   voiceTranscribe: { requests: 30, window: "1 m" },
   voiceSynthesize: { requests: 30, window: "1 m" },
   telemetry: { requests: 60, window: "1 m" },
