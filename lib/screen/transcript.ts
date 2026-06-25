@@ -24,6 +24,47 @@ export interface TranscriptEntry {
 }
 
 /**
+ * Parse Ringg's transcript into provider-neutral TranscriptEntry[].
+ *
+ * Ringg delivers the transcript in the `transcription_url` field of
+ * GET /calling/call-details (and in the completion webhook). The name is a
+ * double misnomer: it is NOT a URL, and it is NOT a parsed array — it is a
+ * JSON-*stringified* array of turn objects, each keyed by either `bot` (the
+ * interviewer) or `user` (the candidate), plus message_id/timestamp noise:
+ *   "[{\"bot\":\"Hi…\",\"message_id\":\"…\"}, {\"user\":\"Hello\"}]"
+ *
+ * So the full pipeline from an API response is:
+ *   mapTranscriptToTurns(parseRinggTranscript(data.transcription_url))
+ *
+ * Defensive (matching this module's philosophy): never throws. A non-JSON
+ * string, null, or non-array yields []; entries lacking a string bot/user are
+ * skipped. `bot` → interviewer, `user` → candidate.
+ */
+export function parseRinggTranscript(raw: unknown): TranscriptEntry[] {
+  let arr: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(arr)) return [];
+
+  const entries: TranscriptEntry[] = [];
+  for (const item of arr) {
+    if (!item || typeof item !== "object") continue;
+    const obj = item as Record<string, unknown>;
+    if (typeof obj.bot === "string") {
+      entries.push({ speaker: "interviewer", text: obj.bot });
+    } else if (typeof obj.user === "string") {
+      entries.push({ speaker: "candidate", text: obj.user });
+    }
+  }
+  return entries;
+}
+
+/**
  * Map provider transcript entries into the app's `Turn[]` shape.
  *
  * - Empty / whitespace-only utterances are dropped (telephony noise).
