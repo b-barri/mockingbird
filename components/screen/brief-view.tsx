@@ -97,14 +97,6 @@ export function BriefView({ brief }: { brief: Brief }) {
           ))}
         </ul>
       </Section>
-
-      <div className="pf-panel p-4 sm:p-6">
-        <div className="ascii-rule mb-3">── MOCK_SCREEN ───────────────────────────</div>
-        <p className="font-mono text-[12px] text-mute">
-          // the live phone screen (Ringg) lands once telephony is wired. for now,
-          rehearse against this brief.
-        </p>
-      </div>
     </div>
   );
 }

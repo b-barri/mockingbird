@@ -16,23 +16,49 @@ import type { NextConfig } from "next";
 // untrusted HTML rendering anywhere) holds — see the security audit
 // notes. Tighten when adding more user-supplied content surfaces.
 const isDev = process.env.NODE_ENV !== "production";
+
+// The Ringg / DesiVocal web-call widget (screening simulator) loads its bundle
+// from jsdelivr, spins up audio workers (blob:), and opens data/audio
+// connections to Ringg's hosts. The strict policy below blocks all of that, so
+// in DEV we relax the relevant directives to let the live screen run locally.
+// Production keeps the strict policy UNCHANGED — when we deploy the call, scope
+// these allowances to the /screen route (per-route headers) rather than
+// loosening the whole app. (DX note: the widget forces script/style/connect/
+// worker/media allowances Ringg doesn't document — discovered empirically.)
+const CDN = "https://cdn.jsdelivr.net";
+
 const scriptSrc = isDev
-  ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
+  ? `script-src 'self' 'unsafe-eval' 'unsafe-inline' ${CDN} blob:`
   : "script-src 'self' 'unsafe-inline'";
+const styleSrc = isDev
+  ? `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${CDN}`
+  : "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com";
+const fontSrc = isDev
+  ? `font-src 'self' https://fonts.gstatic.com ${CDN} data:`
+  : "font-src 'self' https://fonts.gstatic.com";
+const mediaSrc = isDev ? "media-src 'self' blob: https:" : "media-src 'self' blob:";
+const workerSrc = isDev ? "worker-src 'self' blob:" : "worker-src 'self'";
+// Ringg's widget media/data hosts aren't documented; allow https:/wss: in DEV
+// so the call connects regardless of which realtime host it uses. Tighten to
+// specific Ringg hosts once observed in the network panel.
+const connectSrc = isDev
+  ? "connect-src 'self' https: wss:"
+  : "connect-src 'self' https://api.anthropic.com https://api.openai.com";
 
 const cspDirectives = [
   "default-src 'self'",
   scriptSrc,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
+  styleSrc,
+  fontSrc,
   "img-src 'self' data: https:",
   // Sarvam Bulbul TTS audio is fetched server-side via /api/voice/synthesize
   // and replayed via blob: URLs in the browser, so media-src needs blob:.
-  "media-src 'self' blob:",
+  mediaSrc,
+  workerSrc,
   "frame-src 'self' https://www.youtube.com https://stream.mux.com",
   // connect-src 'self' covers /api/voice/* proxies; provider hosts are
   // contacted server-side from the Edge runtime, not the browser.
-  "connect-src 'self' https://api.anthropic.com https://api.openai.com",
+  connectSrc,
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
