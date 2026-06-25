@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BriefView } from "@/components/screen/brief-view";
+import { ScreenCall } from "@/components/screen/screen-call";
 import { loadBrief } from "@/lib/screen/brief-store";
 import type { Brief } from "@/lib/screen/brief";
 
@@ -48,7 +49,12 @@ export default function BriefPage() {
         </div>
       )}
 
-      {state === "ready" && brief && <BriefView brief={brief} />}
+      {state === "ready" && brief && (
+        <div className="space-y-8">
+          <BriefView brief={brief} />
+          <ScreenCall brief={brief} />
+        </div>
+      )}
     </main>
   );
 }
