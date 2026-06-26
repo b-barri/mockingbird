@@ -2,14 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getKey, setKey, hasKey } from "@/lib/auth/key-storage";
+import { getKey, setKey, hasKey, clearKey } from "@/lib/auth/key-storage";
 import { saveBrief } from "@/lib/screen/brief-store";
 import type { Brief } from "@/lib/screen/brief";
 
-// U1: screening-prep input form. Collects company, URL, role, JD; validates;
+// Screening-prep input form. Collects company, URL, role, and JD; validates;
 // calls /api/research with the BYO LLM key; stores the returned brief
-// client-side; navigates to the brief view. Mirrors the onboarding page's
-// console aesthetic (.pf-panel, .ascii-rule, mono labels, coral accents).
+// client-side; navigates to the brief view.
 
 export interface PrepInputs {
   company: string;
@@ -73,14 +72,22 @@ export function PrepForm() {
     setErrors(errs);
     if (!ok) return;
 
-    // Use a stored key if present, otherwise the one entered inline here.
-    const apiKey = getKey("llm") || inlineKey.trim();
+    // Anthropic keys are pure printable ASCII. Copy-paste frequently smuggles
+    // in non-ASCII artifacts (smart quotes, non-breaking spaces, zero-width
+    // chars) that make fetch throw "non ISO-8859-1 code point" while building
+    // the header. Strip anything outside printable ASCII so the request never
+    // crashes on the key. A freshly typed key wins so a stale/bad stored one
+    // can always be replaced.
+    const sanitize = (s: string) => s.replace(/[^\x20-\x7E]/g, "").trim();
+    const typed = sanitize(inlineKey);
+    const apiKey = typed || sanitize(getKey("llm") ?? "");
     if (!apiKey) {
       setSubmitErr("Enter your Anthropic API key above to run the research.");
       return;
     }
-    // Persist the inline key for this tab so re-runs don't re-prompt.
-    if (!getKey("llm")) setKey("llm", apiKey);
+    // Persist a freshly typed key (replacing any stored one) so re-runs in
+    // this tab don't re-prompt.
+    if (typed) setKey("llm", apiKey);
 
     setBusy(true);
     try {
@@ -96,9 +103,22 @@ export function PrepForm() {
       });
       const data = (await res.json()) as Brief | { error: string };
       if (!res.ok || "error" in data) {
-        setSubmitErr(
-          "error" in data ? data.error : `Research failed (${res.status}).`
-        );
+        const rawError = "error" in data ? data.error : "";
+        // A 401 / auth error means the Anthropic key was rejected. A bad key
+        // may be sitting in storage (which hides the key field), so clear it
+        // and re-reveal the field so the user can paste a valid one.
+        const isAuthError =
+          res.status === 401 || /invalid x-api-key|authentication/i.test(rawError);
+        if (isAuthError) {
+          clearKey("llm");
+          setKeyPresent(false);
+          setInlineKey("");
+          setSubmitErr(
+            "Anthropic rejected that API key. Paste a valid key above and try again."
+          );
+          return;
+        }
+        setSubmitErr(rawError || `Research failed (${res.status}).`);
         return;
       }
       saveBrief(data);
@@ -116,37 +136,57 @@ export function PrepForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {!keyPresent && (
-        <fieldset className="pf-panel space-y-3 p-4 sm:p-6">
-          <legend className="sr-only">Anthropic API key</legend>
-          <div className="ascii-rule mb-1">── ANTHROPIC_KEY ─────────────────────────────────</div>
-          <p className="font-mono text-[11px] text-mute">
-            // research runs on your key (pass-through, never stored server-side).
-            stays in this browser.
+      <fieldset className="pf-panel space-y-3 p-4 sm:p-6">
+        <legend className="sr-only">Anthropic API key</legend>
+        <div className="ascii-rule mb-1">Anthropic key</div>
+        {keyPresent ? (
+          <p className="flex items-center gap-2 text-[12px] text-mute">
+            <span className="pf-status-dot is-live" />
+            <span className="text-coral">Key on file.</span> Saved in this browser.
+            Leave blank to reuse it, or paste a new one to replace it.
           </p>
-          <input
-            id="anthropic-key"
-            type="password"
-            value={inlineKey}
-            placeholder="sk-ant-…"
-            onChange={(e) => setInlineKey(e.target.value)}
-            className="w-full rounded-[3px] border border-ink/20 bg-cream px-3 py-2 font-mono text-[13px] text-ink placeholder:text-mute focus:border-ink focus:outline-none"
-          />
-        </fieldset>
-      )}
+        ) : (
+          <p className="text-[12px] leading-relaxed text-mute">
+            Research runs on your key. It passes through to Anthropic and is
+            never stored on our servers. The key stays in this browser.
+          </p>
+        )}
+        <input
+          id="anthropic-key"
+          type="password"
+          value={inlineKey}
+          placeholder={keyPresent ? "Paste a new key to replace…" : "sk-ant-…"}
+          onChange={(e) => setInlineKey(e.target.value)}
+          className="pf-field"
+        />
+      </fieldset>
 
       <fieldset className="pf-panel space-y-4 p-4 sm:p-6">
         <legend className="sr-only">Where are you interviewing?</legend>
-        <div className="ascii-rule mb-1">── TARGET ───────────────────────────────────────</div>
+        <div className="ascii-rule mb-1">Where are you interviewing</div>
 
-        <Field
-          id="company"
-          label="Company"
-          placeholder="Fireflies.ai"
-          value={inputs.company}
-          onChange={(v) => set("company", v)}
-          error={errors.company}
-        />
+        <div>
+          <Field
+            id="company"
+            label="Company"
+            placeholder="Stripe"
+            value={inputs.company}
+            onChange={(v) => set("company", v)}
+            error={errors.company}
+          />
+          <div className="mt-2 flex flex-wrap gap-2">
+            {["Stripe", "Notion", "Linear"].map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => set("company", c)}
+                className="rounded-[6px] border border-white/10 px-2.5 py-1 text-[12px] text-mute transition-colors duration-quick hover:border-coral hover:text-ink"
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
         <Field
           id="role"
           label="Role"
@@ -168,27 +208,27 @@ export function PrepForm() {
 
       <fieldset className="pf-panel space-y-3 p-4 sm:p-6">
         <legend className="sr-only">Job description</legend>
-        <div className="ascii-rule mb-1">── JOB_DESCRIPTION ───────────────────────────────</div>
-        <label htmlFor="jd" className="block font-mono text-[12px] text-ink">
-          Paste the JD
+        <div className="ascii-rule mb-1">Job description</div>
+        <label htmlFor="jd" className="block text-[13px] font-medium text-ink">
+          Paste the job description
         </label>
         <textarea
           id="jd"
           rows={8}
           value={inputs.jobDescription}
           onChange={(e) => set("jobDescription", e.target.value)}
-          placeholder="Paste the full job description here…"
-          className="w-full rounded-[3px] border border-ink/20 bg-cream px-3 py-2 font-mono text-[13px] text-ink placeholder:text-mute focus:border-ink focus:outline-none"
+          placeholder="Paste the full job description here. The more detail, the sharper the questions."
+          className="pf-field resize-none"
         />
         {errors.jobDescription && (
-          <p className="font-mono text-[11px] text-coral">{errors.jobDescription}</p>
+          <p className="text-[12px] text-coral">{errors.jobDescription}</p>
         )}
       </fieldset>
 
       {submitErr && (
         <p
           role="alert"
-          className="rounded-[3px] border border-coral/40 bg-coral/5 px-3 py-2 font-mono text-[12px] text-coral"
+          className="rounded-[8px] border border-coral/40 bg-coral/[0.08] px-3 py-2 text-[13px] text-coral"
         >
           {submitErr}
         </p>
@@ -197,10 +237,10 @@ export function PrepForm() {
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-[3px] bg-ink px-5 py-3.5 text-left font-mono text-[13px] font-medium text-cream transition-colors hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-40"
+        className="pf-exec-btn w-full justify-start disabled:cursor-not-allowed disabled:opacity-40"
       >
-        <span className="mr-2 text-coral">▸</span>
-        {busy ? "Researching the company…" : "Research & build my prep brief"}
+        {busy ? "Researching the company…" : "Build my brief"}
+        {!busy && <span className="kbd ml-auto">⌘ ↵</span>}
       </button>
     </form>
   );
@@ -225,9 +265,9 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block font-mono text-[12px] text-ink">
+      <label htmlFor={id} className="block text-[13px] font-medium text-ink">
         {label}
-        {optional && <span className="ml-2 text-mute">[optional]</span>}
+        {optional && <span className="ml-2 font-normal text-ink-faint">(optional)</span>}
       </label>
       <input
         id={id}
@@ -235,9 +275,9 @@ function Field({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-[3px] border border-ink/20 bg-cream px-3 py-2 font-mono text-[13px] text-ink placeholder:text-mute focus:border-ink focus:outline-none"
+        className="pf-field mt-1.5"
       />
-      {error && <p className="mt-1 font-mono text-[11px] text-coral">{error}</p>}
+      {error && <p className="mt-1 text-[12px] text-coral">{error}</p>}
     </div>
   );
 }

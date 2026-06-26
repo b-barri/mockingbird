@@ -8,10 +8,10 @@ describe("FeatureBlocks (R2 reading order discipline)", () => {
   });
 
   it("R2 reading order: voice → BYO key → framework probes → multi-provider", () => {
-    expect(FEATURE_BLOCKS[0].title).toMatch(/voice-native/i);
-    expect(FEATURE_BLOCKS[1].title).toMatch(/bring your own|byo/i);
-    expect(FEATURE_BLOCKS[2].title).toMatch(/framework-aware/i);
-    expect(FEATURE_BLOCKS[3].title).toMatch(/multi-provider/i);
+    expect(FEATURE_BLOCKS[0].title).toMatch(/spoken|voice/i);
+    expect(FEATURE_BLOCKS[1].title).toMatch(/keys|account/i);
+    expect(FEATURE_BLOCKS[2].title).toMatch(/framework/i);
+    expect(FEATURE_BLOCKS[3].title).toMatch(/voices|pick/i);
   });
 
   it("each block's body copy is under 60 words (R2 discipline)", () => {

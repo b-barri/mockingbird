@@ -14,10 +14,10 @@ import {
   loadCompletedSession,
 } from "@/lib/voice/session-store";
 
-// R16 + R16a + 2026-05-13 amendment: post-session summary route. Reads the
-// completed session from sessionStorage (saved by the session page on End),
-// POSTs transcript to /api/summary, awaits the buffered structured JSON
-// response, hands it to the card.
+// Post-session summary route. It reads the completed session from
+// sessionStorage (saved by the session page when you end the call), posts the
+// transcript to /api/summary, waits for the buffered structured JSON response,
+// and hands it to the card.
 
 export default function SummaryPage() {
   const params = useParams<{ id: string }>();
@@ -37,7 +37,7 @@ export default function SummaryPage() {
     async function run() {
       const session = loadCompletedSession(id);
       if (!session) {
-        setError(`No session found with id ${id}.`);
+        setError(`No saved session found for id ${id}.`);
         setCaseTitle("Session not found");
         setLoading(false);
         return;
@@ -50,7 +50,7 @@ export default function SummaryPage() {
 
       const llmKey = getKey("llm");
       if (!llmKey) {
-        setError("LLM key not found in browser storage.");
+        setError("No LLM key found in your browser. Add it again to generate the summary.");
         setLoading(false);
         return;
       }
@@ -73,7 +73,7 @@ export default function SummaryPage() {
           | { error: string };
         if (!response.ok || "error" in data) {
           const message =
-            "error" in data ? data.error : `Summary service returned ${response.status}.`;
+            "error" in data ? data.error : `The summary service returned ${response.status}.`;
           setError(message);
           setLoading(false);
           return;
@@ -83,7 +83,7 @@ export default function SummaryPage() {
       } catch (err) {
         if (cancelled) return;
         setError(
-          err instanceof Error ? err.message : "Could not reach the summary service."
+          err instanceof Error ? err.message : "Could not reach the summary service. Check your connection and run it again."
         );
         setLoading(false);
       }
@@ -96,7 +96,7 @@ export default function SummaryPage() {
   }, [id]);
 
   return (
-    <main className="min-h-screen bg-cream px-4 py-section sm:px-6 lg:px-8">
+    <main className="px-4 py-section sm:px-6 lg:px-8">
       <SummaryCard
         sessionId={id}
         caseTitle={caseTitle}

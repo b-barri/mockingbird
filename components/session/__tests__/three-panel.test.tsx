@@ -180,9 +180,10 @@ describe("ThreePanel — R7 + R8 layout", () => {
       // Text input visible before pause
       expect(screen.getByTestId("turn-input")).toBeInTheDocument();
       await userEvent.click(screen.getByTestId("pause-toggle"));
-      // Text input gone, paused copy visible
+      // Text input gone, paused copy visible (header status + voice stage both
+      // now reflect the paused state, so more than one match is expected).
       expect(screen.queryByTestId("turn-input")).toBeNull();
-      expect(screen.getByText(/Paused/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Paused/i).length).toBeGreaterThanOrEqual(1);
     });
 
   });

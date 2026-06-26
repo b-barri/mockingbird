@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CostEstimate } from "@/components/onboarding/cost-estimate";
 import { KeyInput } from "@/components/onboarding/key-input";
+import { AppContainer } from "@/components/shell/app-container";
 import { checkFormat } from "@/lib/auth/key-validation";
 import { setKey } from "@/lib/auth/key-storage";
 
@@ -13,8 +14,8 @@ type VoiceChoice = "cartesia" | "sarvam";
 
 // F1 step 3 → step 4: key entry, format validation, synchronous ping per
 // provider via /api/validate-key (R6a), then navigate to /onboarding/case-select.
-// Pre-flight Console direction: tan panels with ASCII section dividers, mono
-// labels + status dots, ember_keys banner above the form.
+// Linear direction: dark panels with quiet section labels, sentence-case copy,
+// status dots, and the Ember keys banner above the form.
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -71,24 +72,24 @@ export default function OnboardingPage() {
   const voiceReady = voiceKey.trim().length > 0;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-10 pb-section sm:px-6 sm:pt-14 lg:px-8 lg:pt-16">
-      <div className="mb-4 font-mono text-[11px] tracking-wide text-coral">
-        [STEP 1/2]&nbsp;&nbsp;ONBOARDING · BYO_KEYS
+    <AppContainer>
+      <div className="ascii-rule mb-4 text-coral">
+        Step 1 of 2 · Bring your own keys
       </div>
 
-      <h1 className="mb-3 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
+      <h1 className="mb-3 font-sans text-4xl font-semibold leading-[1.05] tracking-[-0.022em] text-ink sm:text-5xl">
         Bring your keys.
         <br />
         We&apos;ll bring the interviewer.
       </h1>
 
-      <p className="mb-8 max-w-[520px] font-mono text-[13px] leading-relaxed text-mute sm:mb-10 sm:text-[14px]">
-        // keys live in your browser. validated synchronously before any
+      <p className="mb-8 max-w-[520px] text-[14px] leading-relaxed text-ink-2 sm:mb-10">
+        Your keys stay in your browser. We check that they work before any
         tokens get spent.
       </p>
 
       {/* Prominent banner: Ember holding the keys. Mirrors the case-select
-          page's choose_option banner so the two onboarding steps parallel. */}
+          page's choose-option banner so the two onboarding steps parallel. */}
       <div className="brand-image-glow mb-10 sm:mb-12">
         <Image
           src="/branding/ember_keys.png"
@@ -96,17 +97,15 @@ export default function OnboardingPage() {
           width={1672}
           height={941}
           priority
-          className="w-full rounded-2xl shadow-[0_24px_50px_-22px_rgba(26,22,18,0.40)] ring-1 ring-ink/[0.08]"
+          className="w-full rounded-xl ring-1 ring-white/[0.08]"
         />
       </div>
 
       <form onSubmit={handleStart} className="space-y-5">
         {/* LLM panel */}
         <fieldset className="pf-panel p-4 sm:p-6">
-          <legend className="sr-only">Pick your interviewer&apos;s brain</legend>
-          <div className="ascii-rule mb-4">
-            ── LLM ──────────────────────────────────────────
-          </div>
+          <legend className="sr-only">Pick the interviewer&apos;s language model</legend>
+          <div className="ascii-rule mb-4">Language model</div>
 
           <div className="mb-4 flex gap-2">
             {(["anthropic", "openai"] as LlmChoice[]).map((p) => (
@@ -115,14 +114,12 @@ export default function OnboardingPage() {
                 key={p}
                 onClick={() => setLlm(p)}
                 data-active={llm === p}
-                className="inline-flex items-center gap-2 rounded-[3px] border px-3 py-[7px] font-mono text-[12px] data-[active=false]:border-ink/20 data-[active=false]:bg-cream data-[active=false]:text-ink data-[active=true]:border-ink data-[active=true]:bg-ink data-[active=true]:text-cream"
+                className="inline-flex items-center gap-2 rounded-[8px] border px-3 py-[7px] text-[12px] capitalize transition-colors duration-quick data-[active=false]:border-white/15 data-[active=false]:bg-white/[0.03] data-[active=false]:text-ink-2 data-[active=true]:border-coral/60 data-[active=true]:bg-coral/15 data-[active=true]:text-ink"
               >
                 <span
-                  className="inline-block h-[6px] w-[6px] rounded-full"
-                  style={{
-                    backgroundColor:
-                      llm === p ? "#E85D3B" : "rgba(26,22,18,0.30)",
-                  }}
+                  className={`inline-block h-[6px] w-[6px] rounded-full ${
+                    llm === p ? "bg-coral" : "bg-ink/30"
+                  }`}
                 />
                 {p}
               </button>
@@ -134,7 +131,7 @@ export default function OnboardingPage() {
               <KeyInput
                 provider={llm}
                 label={`${llm === "anthropic" ? "Anthropic" : "OpenAI"} API key`}
-                description="Powers the interviewer's brain. Spend lands on your account, not ours."
+                description="Runs the interviewer. Spend lands on your account, not ours."
                 value={llmKey}
                 onChange={setLlmKey}
                 inlineError={errors[llm]}
@@ -146,14 +143,12 @@ export default function OnboardingPage() {
 
         {/* Voice panel */}
         <fieldset className="pf-panel p-4 sm:p-6">
-          <legend className="sr-only">Pick a voice for Alex</legend>
-          <div className="ascii-rule mb-4">
-            ── VOICE ──────────────────────────── [OPTIONAL]
-          </div>
+          <legend className="sr-only">Pick a voice for the interviewer</legend>
+          <div className="ascii-rule mb-4">Voice (optional)</div>
 
-          <p className="mb-3 font-mono text-[11px] text-mute">
-            // voice adapters are stubs in V1. skip to run text-only — alex
-            grows actual vocal cords after the V0 bakeoff.
+          <p className="mb-3 text-[13px] leading-relaxed text-ink-2">
+            Voice adapters are stubs in V1. Skip this to run text-only. The
+            interviewer gets a real voice after the V0 bakeoff.
           </p>
 
           <div className="mb-4 flex gap-2">
@@ -163,14 +158,12 @@ export default function OnboardingPage() {
                 key={p}
                 onClick={() => setVoice(p)}
                 data-active={voice === p}
-                className="inline-flex items-center gap-2 rounded-[3px] border px-3 py-[7px] font-mono text-[12px] data-[active=false]:border-ink/20 data-[active=false]:bg-cream data-[active=false]:text-ink data-[active=true]:border-ink data-[active=true]:bg-ink data-[active=true]:text-cream"
+                className="inline-flex items-center gap-2 rounded-[8px] border px-3 py-[7px] text-[12px] capitalize transition-colors duration-quick data-[active=false]:border-white/15 data-[active=false]:bg-white/[0.03] data-[active=false]:text-ink-2 data-[active=true]:border-coral/60 data-[active=true]:bg-coral/15 data-[active=true]:text-ink"
               >
                 <span
-                  className="inline-block h-[6px] w-[6px] rounded-full"
-                  style={{
-                    backgroundColor:
-                      voice === p ? "#E85D3B" : "rgba(26,22,18,0.30)",
-                  }}
+                  className={`inline-block h-[6px] w-[6px] rounded-full ${
+                    voice === p ? "bg-coral" : "bg-ink/30"
+                  }`}
                 />
                 {p}
               </button>
@@ -180,35 +173,33 @@ export default function OnboardingPage() {
           <KeyInput
             provider={voice}
             label={`${voice.charAt(0).toUpperCase() + voice.slice(1)} API key`}
-            description="Gives Alex a mouth. Skip to run text-only — Alex won't be offended."
+            description="Gives the interviewer a voice. Skip to run text-only."
             value={voiceKey}
             onChange={setVoiceKey}
             inlineError={errors[voice]}
           />
           <KeyStatus
             ready={voiceReady}
-            pendingLabel="○ OPTIONAL"
+            pendingLabel="Optional"
             className="mt-2"
           />
         </fieldset>
 
         {/* Budget panel: cost estimate + remember toggle */}
         <div className="pf-panel space-y-4 p-4 sm:p-6">
-          <div className="ascii-rule">
-            ── BUDGET ───────────────────────────────────────
-          </div>
+          <div className="ascii-rule">Budget</div>
           <CostEstimate llmProvider={llm} voiceProvider={voice} />
-          <label className="flex items-start gap-2.5 border-t border-ink/10 pt-3 font-mono text-[11px] text-ink">
+          <label className="flex items-start gap-2.5 border-t border-white/[0.08] pt-3 text-[13px] text-ink">
             <input
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              className="mt-0.5"
+              className="mt-0.5 accent-coral"
             />
             <span>
-              [&nbsp;]&nbsp;PERSIST_KEYS&nbsp;&nbsp;
+              Remember my keys{" "}
               <span className="text-mute">
-                // remember on this device. Uncheck on a shared laptop.
+                on this device. Uncheck on a shared laptop.
               </span>
             </span>
           </label>
@@ -217,27 +208,21 @@ export default function OnboardingPage() {
         <button
           type="submit"
           disabled={validating || !llmKey}
-          className="w-full rounded-[3px] bg-ink px-5 py-3.5 text-left font-mono text-[13px] font-medium text-cream transition-colors hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-40"
+          className="pf-exec-btn w-full justify-start disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <span className="mr-2 text-coral">▸</span>
-          {validating
-            ? "Pinging your provider…"
-            : "Continue → /onboarding/case-select"}
-          {!validating && (
-            <span className="animate-caret-blink text-cream/85" aria-hidden>
-              _
-            </span>
-          )}
+          {validating ? "Checking your keys…" : "Continue to case select"}
+          {!validating && <span className="kbd ml-auto">⌘ ↵</span>}
         </button>
       </form>
-    </main>
+    </AppContainer>
   );
 }
 
-// Mono status dot for a key field — pulsing coral READY when set, dim PENDING when empty.
+// Status dot for a key field: a pulsing coral "Ready" when set, a quiet label
+// when empty.
 function KeyStatus({
   ready,
-  pendingLabel = "○ PENDING",
+  pendingLabel = "Pending",
   className = "",
 }: {
   ready: boolean;
@@ -246,13 +231,13 @@ function KeyStatus({
 }) {
   return (
     <div
-      className={`flex items-center gap-2 font-mono text-[11px] ${className}`}
+      className={`flex items-center gap-2 text-[12px] ${className}`}
       data-testid={ready ? "key-status-ready" : "key-status-pending"}
     >
       {ready ? (
         <>
           <span className="pulse-dot" />
-          <span className="text-coral">READY</span>
+          <span className="text-coral">Ready</span>
         </>
       ) : (
         <span className="text-mute">{pendingLabel}</span>

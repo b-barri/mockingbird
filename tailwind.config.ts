@@ -8,20 +8,43 @@ const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      // Linear-direction dark palette. Token NAMES are kept for migration
+      // leverage but their meaning is now inverted: `cream` is the near-black
+      // base, `ink` is the off-white foreground, `tan` is the panel surface.
+      // (Naming debt — rename to bg/fg/surface in the component sweep.)
+      // `coral` stays the single accent (Linear uses indigo here; we don't).
       colors: {
-        cream: "#F7F4ED",
-        ink: "#1A1612",
-        coral: "#E85D3B",
-        mute: "#6B5F50",
-        tan: "#EDE5D6",
+        cream: "#08090A", // base background (Linear near-black)
+        ink: "#F7F8F8", // primary foreground (off-white)
+        coral: "#E85D3B", // the single rationed accent — unchanged
+        mute: "#8A8F98", // muted gray — micro-labels, meta
+        tan: "#141517", // standard panel / card surface
+        // Dark surface ladder + foreground scale.
+        "surface-hover": "#1F2023", // hovered / featured panel (elevation step 2)
+        raised: "#18191B", // inputs, menus, popovers — relies on its border
+        "ink-2": "#9CA0A8", // secondary reading text where full ink is too bright
+        "ink-faint": "#5C5F66", // disabled / deselected
       },
       fontFamily: {
-        display: ["'Instrument Serif'", "serif"],
-        sans: ["'Inter'", "system-ui", "sans-serif"],
-        mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
+        display: ["var(--font-display)", "'Instrument Serif'", "serif"],
+        sans: ["var(--font-sans)", "'Inter'", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "'JetBrains Mono'", "ui-monospace", "monospace"],
       },
       spacing: {
         section: "5rem", // R4: minimum 80px vertical gap between sections
+      },
+      borderRadius: {
+        // Linear-direction ladder — softer than the old terminal sharpness.
+        tag: "6px",
+        control: "8px",
+        panel: "12px",
+      },
+      transitionDuration: {
+        // Fast, asymmetric motion (Linear-inspired). Brand motion lives in
+        // globals.css keyframes and is exempt from these.
+        quick: "100ms",
+        dismiss: "150ms",
+        regular: "180ms",
       },
       fontFeatureSettings: {
         ss: '"ss01", "ss02", "cv11"',

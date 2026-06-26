@@ -650,8 +650,8 @@ function SessionInner() {
 
   if (!keyChecked) {
     return (
-      <div className="flex h-screen items-center justify-center bg-cream text-sm text-mute">
-        Loading session…
+      <div className="flex h-screen items-center justify-center gap-2 bg-cream font-mono text-[12px] text-mute">
+        <span className="pulse-dot" /> Loading your session…
       </div>
     );
   }
@@ -746,27 +746,27 @@ function VoiceKeyPrompt({
       role="dialog"
       aria-modal="true"
       aria-labelledby="voice-key-prompt-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       onClick={onCancel}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-xl border border-ink/[0.10] bg-cream p-6 shadow-xl"
+        className="w-full max-w-md rounded-[12px] border border-white/[0.08] bg-tan p-6 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]"
       >
-        <div className="mb-2 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-coral">
+        <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-coral">
           <span className="pulse-dot" />
-          enable voice
+          Enable voice
         </div>
         <h2
           id="voice-key-prompt-title"
-          className="mb-2 font-display text-2xl tracking-tight text-ink"
+          className="mb-2 font-sans text-2xl font-semibold tracking-[-0.02em] text-ink"
         >
           Paste your {label} API key
         </h2>
-        <p className="mb-4 text-sm leading-relaxed text-mute">
+        <p className="mb-4 text-sm leading-relaxed text-ink-2">
           Voice mode runs speech-to-text and text-to-speech through {label}.
-          The key stays in your browser — we never store it server-side.
+          The key stays in your browser. We never store it on our servers.
           {consoleUrl && (
             <>
               {" "}
@@ -776,7 +776,7 @@ function VoiceKeyPrompt({
                 rel="noreferrer noopener"
                 className="text-coral underline-offset-2 hover:underline"
               >
-                Get a key ↗
+                Get a key
               </a>
             </>
           )}
@@ -788,24 +788,20 @@ function VoiceKeyPrompt({
           onChange={(e) => setValue(e.target.value)}
           placeholder={`${label} API key`}
           data-testid="voice-key-prompt-input"
-          className="w-full rounded-md border border-ink/[0.18] bg-white px-3 py-2 font-mono text-sm text-ink placeholder:text-mute/60 focus:border-ink/50 focus:outline-none"
+          className="pf-field"
         />
         {trimmed && !formatCheck.ok && (
-          <p className="mt-2 text-xs text-red-700">{formatCheck.reason}</p>
+          <p className="mt-2 text-[12px] text-coral">{formatCheck.reason}</p>
         )}
         <div className="mt-5 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-md border border-ink/20 bg-cream px-4 py-2 font-mono text-[12px] text-ink hover:border-ink"
-          >
+          <button type="button" onClick={onCancel} className="pf-btn-ghost">
             Cancel
           </button>
           <button
             type="submit"
             disabled={!canSubmit}
             data-testid="voice-key-prompt-submit"
-            className="rounded-md bg-ink px-4 py-2 font-mono text-[12px] text-cream hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-40"
+            className="pf-exec-btn disabled:cursor-not-allowed disabled:opacity-40"
           >
             Enable voice
           </button>
@@ -819,8 +815,8 @@ export default function SessionPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-screen items-center justify-center bg-cream text-sm text-mute">
-          Loading session…
+        <div className="flex h-screen items-center justify-center gap-2 bg-cream text-[13px] text-mute">
+          <span className="pulse-dot" /> Loading your session…
         </div>
       }
     >

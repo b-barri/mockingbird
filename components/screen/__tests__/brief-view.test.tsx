@@ -50,11 +50,11 @@ describe("BriefView", () => {
         brief={brief({ hasCompanySignal: false, companySignals: [] })}
       />
     );
-    expect(screen.getByRole("status")).toHaveTextContent(/no strong company-specific signal/i);
+    expect(screen.getByRole("status")).toHaveTextContent(/strong company-specific signal/i);
   });
 
   it("hides the signals section when there are no company signals", () => {
     render(<BriefView brief={brief({ companySignals: [] })} />);
-    expect(screen.queryByText(/SIGNALS_TO_HIT/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Signals to hit/)).not.toBeInTheDocument();
   });
 });

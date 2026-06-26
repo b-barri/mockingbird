@@ -46,9 +46,9 @@ function formatTimer(ms: number): string {
 }
 
 // Three-panel session screen layout. Implements R7 (three regions) and R8
-// (scratchpad collapsible, 2:3 ratio when collapsed). Voice stage + transcript
-// + scratchpad are siblings under a CSS grid that retargets columns based
-// on the scratchpadCollapsed flag on the session snapshot.
+// (scratchpad collapsible, 2:3 ratio when collapsed). The voice stage,
+// transcript, and scratchpad are siblings under a CSS grid that retargets
+// columns based on the scratchpadCollapsed flag on the session snapshot.
 export function ThreePanel({
   session,
   dispatch,
@@ -98,33 +98,42 @@ export function ThreePanel({
 
   return (
     <div className="flex min-h-screen flex-col bg-cream md:h-screen">
-      {/* TOP BAR — Pre-flight Console direction: pulse-dot brand, mono case
-          label, mono timer pill, mono control buttons. Wraps on mobile so
-          the case title gets its own line, keeping controls reachable. */}
-      <header className="flex flex-col gap-2 border-b border-ink/10 bg-cream px-4 py-3 sm:px-6 md:flex-row md:items-center md:justify-between md:gap-0">
+      {/* Top bar. Brand mark, case label with a live status dot, the elapsed
+          timer, and the session controls. Wraps on mobile so the case title
+          gets its own line, keeping controls reachable. */}
+      <header className="flex flex-col gap-2 border-b border-white/[0.08] bg-cream px-4 py-3 sm:px-6 md:flex-row md:items-center md:justify-between md:gap-0">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 md:gap-6">
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-center gap-2.5">
             <span className="pulse-dot" />
-            <span className="font-mono text-[13px] font-semibold tracking-wide text-ink">
-              MOCKINGBIRD
+            <span className="text-[14px] font-semibold tracking-[-0.01em] text-ink">
+              Mockingbird
             </span>
           </div>
-          <div className="flex min-w-0 items-baseline gap-2">
-            <span className="font-mono text-[11px] text-mute">
-              [SESSION]&nbsp;<span className="text-coral">LIVE</span>&nbsp;//
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex items-center gap-1.5 text-[12px] text-mute">
+              <span
+                className={`pf-status-dot ${
+                  session.endedAt ? "is-idle" : paused ? "is-paused" : "is-live"
+                }`}
+              />
+              <span
+                className={session.endedAt || paused ? "text-mute" : "text-coral"}
+              >
+                {session.endedAt ? "Ended" : paused ? "Paused" : "Live"}
+              </span>
             </span>
-            <span className="truncate font-mono text-[13px] font-semibold tracking-tight text-ink sm:text-[14px]">
+            <span className="truncate text-[14px] font-semibold tracking-[-0.01em] text-ink">
               {caseTitle}
             </span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5 font-mono text-[12px] text-mute">
+          <div className="flex items-center gap-1.5 text-[12px] text-mute">
             <span className="text-[10px] uppercase tracking-[0.14em]">
-              elapsed
+              Elapsed
             </span>
-            <span className="tabular-nums text-ink">
-              [ {formatTimer(elapsedMs)} ]
+            <span className="font-mono tabular-nums text-ink">
+              {formatTimer(elapsedMs)}
             </span>
           </div>
           <button
@@ -134,21 +143,22 @@ export function ThreePanel({
             data-testid="pause-toggle"
             data-paused={paused}
             aria-pressed={paused}
-            className="inline-flex items-center gap-1.5 rounded-[3px] border border-ink/20 bg-cream px-2.5 py-[6px] font-mono text-[12px] text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40 sm:px-3 sm:py-[7px]"
+            className="inline-flex items-center gap-1.5 rounded-[8px] border border-white/[0.10] bg-raised px-2.5 py-[6px] text-[13px] text-ink transition-colors duration-quick hover:border-white/25 disabled:cursor-not-allowed disabled:opacity-40 sm:px-3 sm:py-[7px]"
           >
-            {paused ? "▶ Resume" : "⏸ Pause"}
+            {paused ? "Resume" : "Pause"}
           </button>
           <button
             type="button"
             onClick={onEndSession}
-            className="inline-flex items-center gap-1.5 rounded-[3px] border border-red-900/30 bg-cream px-2.5 py-[6px] font-mono text-[12px] text-red-900 transition-colors hover:border-red-900 hover:bg-red-50 sm:px-3 sm:py-[7px]"
+            className="inline-flex items-center gap-1.5 rounded-[8px] border border-coral/40 bg-transparent px-2.5 py-[6px] text-[13px] text-coral transition-colors duration-quick hover:border-coral hover:bg-coral/10 sm:px-3 sm:py-[7px]"
           >
-            ▸ End session
+            End session
           </button>
         </div>
       </header>
 
-      {/* PANELS — mobile: flex column, voice first; desktop: 2- or 3-col grid. */}
+      {/* Panels. Mobile is a flex column with voice first. Desktop is a 2- or
+          3-column grid. */}
       <main
         data-testid="three-panel-grid"
         data-scratchpad-collapsed={session.scratchpadCollapsed}
@@ -161,7 +171,7 @@ export function ThreePanel({
         )}
       >
         {/* Voice stage is order-1 on mobile (the action surface), middle on desktop. */}
-        <section className="order-1 min-h-[26rem] overflow-hidden rounded-xl border border-ink/[0.08] bg-white md:order-2 md:min-h-0">
+        <section className="pf-panel order-1 min-h-[26rem] overflow-hidden md:order-2 md:min-h-0">
           <VoiceStage
             state={session.state.kind}
             currentQuestion={currentQuestion}
@@ -176,14 +186,14 @@ export function ThreePanel({
             onToggleInputMode={onToggleInputMode}
           />
         </section>
-        <section className="order-2 min-h-[18rem] overflow-hidden rounded-xl border border-ink/[0.08] bg-white md:order-1 md:min-h-0">
+        <section className="pf-panel order-2 min-h-[18rem] overflow-hidden md:order-1 md:min-h-0">
           <TranscriptPanel
             turns={session.turns}
             onStrikeTurn={(id) => dispatch({ type: "STRIKE_TURN", id })}
           />
         </section>
         {!session.scratchpadCollapsed && (
-          <section className="order-3 min-h-[16rem] overflow-hidden rounded-xl border border-ink/[0.08] bg-white md:min-h-0">
+          <section className="pf-panel order-3 min-h-[16rem] overflow-hidden md:min-h-0">
             <ScratchpadPanel
               value={session.scratchpad}
               onChange={(text) =>
@@ -198,23 +208,23 @@ export function ThreePanel({
         )}
       </main>
 
-      {/* COLLAPSED-STATE EXPAND BUTTON — appears when scratchpad is hidden.
-          Pinned lower-left on mobile so it doesn't fight the mascot for the
-          bottom-right; original right-side placement holds on desktop. */}
+      {/* Expand button for the collapsed scratchpad. Pinned lower-left on
+          mobile so it doesn't fight the mascot for the bottom-right corner.
+          The original right-side placement holds on desktop. */}
       {session.scratchpadCollapsed && (
         <button
           type="button"
           onClick={() => dispatch({ type: "SCRATCHPAD_COLLAPSE", collapsed: false })}
-          className="fixed bottom-4 left-4 z-10 rounded-full border border-ink/[0.1] bg-white px-3 py-2 text-xs font-medium text-mute shadow-lg hover:text-ink md:bottom-[12.5rem] md:left-auto md:right-6 md:px-4 md:py-2.5"
+          className="fixed bottom-4 left-4 z-10 rounded-[8px] border border-white/[0.10] bg-raised px-3 py-2 text-[12px] text-mute transition-colors duration-quick hover:border-coral hover:text-ink md:bottom-[12.5rem] md:left-auto md:right-6 md:px-4 md:py-2.5"
           aria-label="Show scratchpad"
         >
-          Show scratchpad ↗
+          Show scratchpad
         </button>
       )}
 
-      {/* Persistent branded mascot. Reacts to the voice state machine —
-          blinks while waiting for the candidate, switches to the post-
-          response reaction the moment they hand the turn back to Alex. */}
+      {/* Persistent branded mascot. Reacts to the voice state machine. It
+          blinks while waiting for the candidate, then switches to the
+          post-response reaction the moment they hand the turn back to Alex. */}
       <Mascot state={session.state.kind} />
     </div>
   );

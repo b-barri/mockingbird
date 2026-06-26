@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BriefView } from "@/components/screen/brief-view";
 import { ScreenCall } from "@/components/screen/screen-call";
+import { AppContainer } from "@/components/shell/app-container";
 import { loadBrief } from "@/lib/screen/brief-store";
 import type { Brief } from "@/lib/screen/brief";
 
@@ -30,21 +31,21 @@ export default function BriefPage() {
   }, [params?.id]);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-10 pb-section sm:px-6 sm:pt-14 lg:px-8 lg:pt-16">
+    <AppContainer>
       {state === "loading" && (
-        <p className="font-mono text-[13px] text-mute">// loading brief…</p>
+        <p className="flex items-center gap-2 text-[13px] text-ink-2">
+          <span className="pulse-dot" /> Loading brief…
+        </p>
       )}
 
       {state === "missing" && (
         <div className="space-y-4">
-          <p className="font-mono text-[13px] text-ink">
-            // no brief found for this link in this tab.
+          <p className="text-[14px] leading-relaxed text-ink-2">
+            No brief for this link in this tab. Briefs stay in the browser that
+            built them, so build a fresh one to continue.
           </p>
-          <Link
-            href="/screen"
-            className="inline-block rounded-[3px] bg-ink px-4 py-2 font-mono text-[12px] text-cream hover:bg-ink/85"
-          >
-            <span className="mr-2 text-coral">▸</span> Build a new brief
+          <Link href="/screen" className="pf-exec-btn">
+            Build a new brief
           </Link>
         </div>
       )}
@@ -55,6 +56,6 @@ export default function BriefPage() {
           <ScreenCall brief={brief} />
         </div>
       )}
-    </main>
+    </AppContainer>
   );
 }

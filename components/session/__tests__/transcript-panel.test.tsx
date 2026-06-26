@@ -19,7 +19,7 @@ function makeTurn(overrides: Partial<Turn> = {}): Turn {
 describe("TranscriptPanel", () => {
   it("renders empty-state copy when turns is empty", () => {
     render(<TranscriptPanel turns={[]} onStrikeTurn={() => {}} />);
-    expect(screen.getByText(/Conversation will appear here/i)).toBeInTheDocument();
+    expect(screen.getByText(/Your conversation shows up here/i)).toBeInTheDocument();
   });
 
   it("renders user and interviewer turns with correct labels", () => {

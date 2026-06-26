@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap");
+/* Fonts are loaded via next/font in app/layout.tsx (CSS vars --font-display,
+   --font-sans, --font-mono). No @import here — it would render-block. */
 
 @tailwind base;
 @tailwind components;
@@ -9,19 +10,22 @@
   body {
     @apply bg-cream text-ink antialiased;
     font-feature-settings: "ss01", "ss02", "cv11";
-    /* Very subtle warm wash — picks up the amber lamp light from the
-       branded character images so they read as native to the page
-       instead of a pasted-on rectangle. */
+    /* Near-black base with a faint cool lift toward the top and a whisper of
+       warm accent in the corners — keeps the surface from reading dead-flat,
+       Linear-style, while letting the warm character art feel intentional. */
     background-image:
-      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232, 93, 59, 0.06), transparent 60%),
-      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(232, 93, 59, 0.04), transparent 65%);
+      radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255, 255, 255, 0.035), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(232, 93, 59, 0.05), transparent 65%);
     background-attachment: fixed;
   }
 
+  /* Linear-direction headings: Inter, tight negative tracking, not serif. */
   h1,
   h2,
   h3 {
-    @apply font-display tracking-tight;
+    @apply font-sans;
+    font-weight: 600;
+    letter-spacing: -0.021em;
   }
 }
 
@@ -55,12 +59,13 @@
     50%      { transform: scale(1.25); opacity: 0.78; }
   }
 
-  /* ASCII section divider — the mono "── LABEL ──" rule used in panel
-     headers and section markers across the Pre-flight Console direction. */
+  /* Section label — Linear-direction eyebrow. Small, muted, medium-weight
+     sans in a quiet uppercase micro-label. (Was the mono "── LABEL ──" ASCII
+     rule; components still passing dashes get cleaned up in the sweep.) */
   .ascii-rule {
-    @apply font-mono text-[11px];
-    color: rgba(26, 22, 18, 0.45);
-    letter-spacing: 0.08em;
+    @apply font-sans text-[11px] font-medium uppercase;
+    color: theme("colors.mute");
+    letter-spacing: 0.04em;
     white-space: nowrap;
     overflow: hidden;
   }
@@ -84,18 +89,126 @@
   /* Pre-flight Console panel — tan-tinted chrome used in onboarding form
      groups, session sidebars, and summary spend breakdown. */
   .pf-panel {
-    @apply rounded-md border bg-tan;
-    border-color: rgba(26, 22, 18, 0.18);
+    @apply rounded-[12px] border bg-tan;
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
-  /* EXEC button — mono dark button used as primary CTA in the Pre-flight
-     Console direction. Inherits hover/focus from class composition. */
+  /* Primary button — Linear-direction filled accent. Solid coral with a soft
+     top highlight + drop shadow for that raised, tactile Linear feel. Sans,
+     sentence case (no mono, no terminal arrow). */
   .pf-exec-btn {
-    @apply rounded-[3px] bg-ink px-5 py-3 font-mono text-[13px] font-medium text-cream;
-    @apply transition-colors hover:bg-ink/85;
+    @apply rounded-[8px] bg-coral px-4 py-2.5 font-sans text-[14px] font-medium text-white;
+    @apply transition-colors hover:bg-coral/90;
     @apply inline-flex items-center gap-2 no-underline;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      0 1px 2px rgba(0, 0, 0, 0.4);
   }
   .pf-exec-btn .arrow {
-    @apply text-coral mr-1;
+    @apply text-white/80;
+  }
+  .pf-exec-btn:focus-visible {
+    outline: 2px solid rgba(232, 93, 59, 0.55);
+    outline-offset: 2px;
+  }
+
+  /* Secondary button — Linear-direction subtle. Faint fill + hairline that
+     lifts on hover. Pairs with .pf-exec-btn. */
+  .pf-btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-[8px] border px-4 py-2 font-sans text-[13px] font-medium text-ink no-underline;
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.02);
+    transition:
+      border-color 120ms cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .pf-btn-ghost:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .pf-btn-ghost:focus-visible {
+    outline: 2px solid rgba(232, 93, 59, 0.55);
+    outline-offset: 2px;
+  }
+
+  /* Field — standard input/textarea. Dark raised surface that reads against
+     the panel via its border; subtle accent focus ring (Linear-style). */
+  .pf-field {
+    @apply w-full rounded-[8px] border bg-raised px-3 py-2 font-sans text-[14px] text-ink;
+    border-color: rgba(255, 255, 255, 0.10);
+    transition:
+      border-color 120ms cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .pf-field::placeholder {
+    @apply text-ink-faint;
+  }
+  .pf-field:focus {
+    outline: none;
+    border-color: rgba(232, 93, 59, 0.55);
+    box-shadow: 0 0 0 3px rgba(232, 93, 59, 0.16);
+  }
+
+  /* Keyboard hint chip — subtle shortcut affordance on dark surfaces. */
+  .kbd {
+    @apply inline-flex items-center rounded-[6px] border px-1.5 py-px font-sans text-[10px] font-medium text-mute;
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .pf-exec-btn .kbd {
+    @apply text-white/85;
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  /* Warm verdict system — replaces raw green/amber/red app-wide. strong = ink,
+     developing = mute, missing = coral. Used as a chip (.pf-verdict) or as a
+     card surface (.pf-verdict-card). */
+  .pf-verdict {
+    @apply inline-block rounded-[6px] border px-2 py-0.5 text-center font-sans text-[10px] font-medium uppercase tracking-wide;
+  }
+  .pf-verdict.is-strong {
+    @apply text-ink;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .pf-verdict.is-developing {
+    @apply text-mute;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .pf-verdict.is-missing {
+    @apply border-coral/40 bg-coral/10 text-coral;
+  }
+
+  .pf-verdict-card {
+    @apply rounded-[12px] border p-3;
+  }
+  .pf-verdict-card.is-strong {
+    border-color: rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .pf-verdict-card.is-developing {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .pf-verdict-card.is-missing {
+    @apply border-coral/30 bg-coral/[0.06];
+  }
+
+  /* Status dot — coral = live, mute = paused, faint = idle. Replaces raw
+     green-500/amber-500 and inline-hex dots. */
+  .pf-status-dot {
+    @apply inline-block h-2 w-2 rounded-full;
+  }
+  .pf-status-dot.is-live {
+    @apply bg-coral;
+    box-shadow: 0 0 0 3px rgba(232, 93, 59, 0.15);
+    animation: status-pulse 3s ease-in-out infinite;
+  }
+  .pf-status-dot.is-paused {
+    @apply bg-mute;
+  }
+  .pf-status-dot.is-idle {
+    @apply bg-ink-faint;
   }
 }

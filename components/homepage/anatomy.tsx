@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { LoopMockupBody } from "./loop-mockup-body";
 
-// "Anatomy of a Session" — three phase cards (PREP / THE LOOP / REVIEW)
+// "Anatomy of a session" — three phase cards (prep, the loop, review),
 // each with an inline CSS-animated mini-mockup of the destination screen.
 // Cards 01 and 02 link to the actual onboarding routes; 03 is informational
 // (the review/summary page only exists post-session). Mini-mockups share
-// the page's design tokens so palette/font stays consistent.
+// the page's design tokens so palette and font stay consistent.
 
 interface PhaseCardProps {
   num: string;
@@ -18,18 +18,18 @@ interface PhaseCardProps {
 
 function PhaseCard({ num, tag, title, body, href, children }: PhaseCardProps) {
   const cardClass =
-    "group flex flex-col rounded-lg border border-ink/10 bg-cream p-6 transition-all hover:-translate-y-1 hover:border-ink hover:shadow-[0_24px_48px_-24px_rgba(26,22,18,0.30)]";
+    "group flex flex-col rounded-[12px] border border-white/10 bg-tan p-6 transition-all hover:-translate-y-1 hover:border-white/25 hover:shadow-[0_24px_48px_-24px_rgba(0,0,0,0.55)]";
 
   const content = (
     <>
-      <div className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-mute transition-colors group-hover:text-coral">
+      <div className="mb-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-mute transition-colors group-hover:text-coral">
         {num} &middot; {tag}
       </div>
-      <h3 className="mb-2.5 font-display text-2xl leading-[1.05] tracking-tight text-ink md:text-3xl">
+      <h3 className="mb-2.5 text-2xl font-semibold leading-[1.1] tracking-[-0.02em] text-ink md:text-3xl">
         {title}
       </h3>
-      <p className="mb-5 text-[13.5px] leading-relaxed text-mute">{body}</p>
-      <div className="flex flex-1 flex-col rounded-md border border-ink/10 bg-tan p-4 font-mono text-[10.5px] leading-[1.55] text-ink">
+      <p className="mb-5 text-[13.5px] leading-relaxed text-ink-2">{body}</p>
+      <div className="flex flex-1 flex-col rounded-[8px] border border-white/10 bg-raised p-4 text-[11px] leading-[1.6] text-ink">
         {children}
       </div>
     </>
@@ -55,88 +55,88 @@ export function Anatomy() {
       className="mx-auto w-full max-w-[1440px] px-4 py-section sm:px-6 lg:px-8"
     >
       <div className="ascii-rule mb-8 max-w-[680px] sm:mb-10">
-        ── ANATOMY OF A SESSION ─────────────────────────────────
+        How a session runs
       </div>
 
-      <h2 className="mb-3 max-w-2xl font-display text-2xl leading-tight tracking-tight text-ink sm:text-3xl md:text-4xl">
-        Three phases. One real loop.
+      <h2 className="mb-3 max-w-2xl text-2xl font-semibold leading-tight tracking-[-0.02em] text-ink sm:text-3xl md:text-4xl">
+        Three phases. No warm-up.
       </h2>
-      <p className="mb-10 max-w-2xl text-base leading-relaxed text-mute sm:mb-12">
-        Click any phase for the page itself. Same copy you'll see in the
-        product, same tokens, same voice.
+      <p className="mb-10 max-w-2xl text-base leading-relaxed text-ink-2 sm:mb-12">
+        Click any phase to open the real page. What you see here is exactly what
+        runs.
       </p>
 
       <div className="grid gap-5 md:grid-cols-3">
-        {/* Phase 01 — PREP */}
+        {/* Phase 01 — Prep */}
         <PhaseCard
           num="01"
-          tag="PREP"
-          title="Pre-flight setup."
-          body="Paste your LLM key, pick a voice provider (optional). Validated synchronously before you advance. 30 seconds, tops."
+          tag="Prep"
+          title="Set up in 30 seconds."
+          body="Paste an LLM key, add a voice if you want one. Both get checked before you start. No account, nothing saved on our end."
           href="/onboarding"
         >
-          <div className="mb-2 font-semibold tracking-[0.12em] text-coral">
-            [STEP 1/2] BYO_KEYS
+          <div className="mb-2 font-semibold tracking-[0.08em] text-coral">
+            Step 1 of 2 · Bring your own keys
           </div>
-          <div className="mb-1.5 text-ink/40">── LLM ──────────────────</div>
+          <div className="mb-1.5 text-ink-2">LLM</div>
           <div className="mb-2.5">
-            <span className="mr-1 inline-block rounded-[2px] bg-ink px-1.5 py-px text-cream">
+            <span className="mr-1 inline-block rounded-[6px] bg-coral px-1.5 py-px text-white">
               anthropic
             </span>
-            <span className="mr-1 inline-block rounded-[2px] border border-ink/20 px-1.5 py-px">
+            <span className="mr-1 inline-block rounded-[6px] border border-white/20 px-1.5 py-px">
               openai
             </span>
           </div>
           <div className="mb-3">
-            ANTHROPIC_API_KEY{" "}
-            <span className="text-coral">● READY</span>
+            Anthropic API key{" "}
+            <span className="text-coral">● ready</span>
           </div>
-          <div className="mb-1.5 text-ink/40">── VOICE ─── [OPTIONAL]</div>
+          <div className="mb-1.5 text-ink-2">Voice (optional)</div>
           <div>
-            <span className="mr-1 inline-block rounded-[2px] bg-ink px-1.5 py-px text-cream">
+            <span className="mr-1 inline-block rounded-[6px] bg-coral px-1.5 py-px text-white">
               cartesia
             </span>
-            <span className="mr-1 inline-block rounded-[2px] border border-ink/20 px-1.5 py-px">
+            <span className="mr-1 inline-block rounded-[6px] border border-white/20 px-1.5 py-px">
               sarvam
             </span>
           </div>
           <div className="flex-1" />
         </PhaseCard>
 
-        {/* Phase 02 — THE LOOP (animated state machine preview) */}
+        {/* Phase 02 — The loop (animated state machine preview) */}
         <PhaseCard
           num="02"
-          tag="THE LOOP"
-          title="30 minutes, out loud."
-          body="One random Product Design case. Alex asks, probes, calls out the framework you skipped. You answer with your voice."
+          tag="The loop"
+          title="One case, spoken."
+          body="A random Product Design prompt. The interviewer asks, probes, and names the framework you skipped. You answer out loud, not in a text box."
           href="/onboarding/case-select"
         >
           <LoopMockupBody />
         </PhaseCard>
 
-        {/* Phase 03 — REVIEW (informational, no link) */}
+        {/* Phase 03 — Review (informational, no link) */}
         <PhaseCard
           num="03"
-          tag="REVIEW"
-          title="Transcript & receipts."
-          body="Every 'um' captured. Framework gaps highlighted. Token spend named. The bill landed on your provider, not ours."
+          tag="Review"
+          title="Receipts, not vibes."
+          body="Every 'um' on record. Framework gaps flagged. Token spend itemized. The bill lands on your provider, never on us."
         >
-          <div className="mb-2 font-semibold tracking-[0.12em] text-coral">
-            [COMPLETE] 28:14
+          <div className="mb-2 font-semibold tracking-[0.08em] text-coral">
+            Complete · 28:14
           </div>
-          <div className="mb-1.5 text-ink/40">── FRAMEWORKS ──────────</div>
+          <div className="mb-1.5 text-ink-2">Frameworks</div>
           <div>
             CIRCLES&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-coral">✓ hit</span>
           </div>
           <div>
-            AARM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-mute">— skipped</span>
+            AARM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-mute">skipped</span>
           </div>
           <div>
             JTBD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-coral">✓ hit</span>
           </div>
-          <div className="mt-3 mb-1.5 text-ink/40">── SPEND ───────────────</div>
+          <div className="mt-3 mb-1.5 text-ink-2">Spend</div>
           <div>LLM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$0.24</div>
-          <div>VOICE&nbsp;&nbsp;&nbsp;&nbsp;$0.07</div>
+          <div>Voice&nbsp;&nbsp;&nbsp;&nbsp;$0.07</div>
           <div className="flex-1" />
         </PhaseCard>
       </div>

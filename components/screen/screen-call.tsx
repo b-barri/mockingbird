@@ -14,6 +14,9 @@ import type { StructuredFeedback, DimensionVerdict } from "@/lib/llm/summary";
 // status "ended", it captures the callId and polls /api/screen/result until the
 // transcript is processed and scored. No webhook: the callId arrives
 // client-side. Server half: lib/ringg/call-details.ts + lib/screen/score.ts.
+//
+// Design system (docs/design/mockingbird-design-system.md): three voices, surfaces
+// + hairlines (no shadows), rationed coral, "your interviewer" (no invented name).
 
 const CDN_VERSION = "1.0.22-alpha.1"; // from the Ringg dashboard embed snippet
 const AGENT_ID = process.env.NEXT_PUBLIC_RINGG_AGENT_ID;
@@ -81,6 +84,17 @@ function loadAgentsCdn(version: string): Promise<void> {
   });
 }
 
+/**
+ * Remove the Ringg launcher the SDK appends to <body>. The widget mounts a
+ * single root element (#ringg_ai_container, the id every one of its CSS rules is
+ * scoped to) directly on the body — outside React's tree — and never tears it
+ * down. Without this, the floating call button lingers on every page after the
+ * user navigates away from the screen. Safe to call when it isn't present.
+ */
+function teardownRinggWidget() {
+  document.getElementById("ringg_ai_container")?.remove();
+}
+
 type Phase =
   | "idle"
   | "starting"
@@ -91,9 +105,9 @@ type Phase =
   | "error";
 
 const VERDICT_STYLE: Record<DimensionVerdict, string> = {
-  strong: "border-ink/30 bg-ink/5 text-ink",
-  developing: "border-mute/40 bg-cream text-mute",
-  missing: "border-coral/40 bg-coral/5 text-coral",
+  strong: "border-white/20 bg-white/[0.06] text-ink",
+  developing: "border-white/12 text-mute",
+  missing: "border-coral/40 bg-coral/10 text-coral",
 };
 
 export function ScreenCall({ brief }: { brief: Brief }) {
@@ -111,7 +125,7 @@ export function ScreenCall({ brief }: { brief: Brief }) {
       const llmKey = getKey("llm");
       if (!llmKey) {
         setError(
-          "Your Anthropic key isn't in this tab — rebuild the brief to re-enter it."
+          "Your Anthropic key isn't in this tab. Rebuild the brief to re-enter it."
         );
         setPhase("error");
         return;
@@ -184,6 +198,10 @@ export function ScreenCall({ brief }: { brief: Brief }) {
       window.removeEventListener("ringg:conversation_status", onStatus);
   }, [scoreFromCall]);
 
+  // Tear down the body-level launcher when we leave the screen page, so it
+  // doesn't follow the user onto the homepage and other routes.
+  useEffect(() => teardownRinggWidget, []);
+
   async function handleStart() {
     if (!configured) return;
     setError(null);
@@ -213,10 +231,11 @@ export function ScreenCall({ brief }: { brief: Brief }) {
   if (!configured) {
     return (
       <section className="pf-panel space-y-2 p-4 sm:p-6">
-        <div className="ascii-rule mb-1">── MOCK_SCREEN ───────────────────────────────────</div>
-        <p className="font-mono text-[12px] text-mute">
-          // the live mock screen needs NEXT_PUBLIC_RINGG_WEBCALL_KEY and
-          NEXT_PUBLIC_RINGG_AGENT_ID set. Not configured in this environment.
+        <div className="ascii-rule mb-2">Mock screen</div>
+        <p className="text-[13px] leading-relaxed text-ink-2">
+          The live mock screen needs <code className="text-ink">NEXT_PUBLIC_RINGG_WEBCALL_KEY</code>{" "}
+          and <code className="text-ink">NEXT_PUBLIC_RINGG_AGENT_ID</code> set. They
+          aren&apos;t configured in this environment.
         </p>
       </section>
     );
@@ -224,71 +243,134 @@ export function ScreenCall({ brief }: { brief: Brief }) {
 
   return (
     <section className="pf-panel space-y-4 p-4 sm:p-6" data-testid="screen-call">
-      <div className="ascii-rule mb-1">── MOCK_SCREEN ───────────────────────────────────</div>
-      <p className="font-mono text-[12px] text-mute">
-        // a real voice screen with {brief.company}&apos;s interviewer, tailored
-        to this brief. you&apos;ll get scored feedback right after.
-      </p>
+      <div className="ascii-rule mb-3">Mock screen</div>
 
       {(phase === "idle" || phase === "starting") && (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <p className="text-[14px] leading-relaxed text-ink-2">
+            A live voice screen with {brief.company}&apos;s interviewer, tailored to
+            this brief. You&apos;ll get scored feedback the moment you hang up.
+          </p>
           <div>
             <label
               htmlFor="callee-name"
-              className="block font-mono text-[12px] text-ink"
+              className="block text-[13px] font-medium text-ink"
             >
-              Your name <span className="ml-2 text-mute">[optional]</span>
+              Your name <span className="ml-1 font-normal text-ink-faint">(optional)</span>
             </label>
             <input
               id="callee-name"
               type="text"
               value={name}
-              placeholder="so Riya can greet you"
+              placeholder="so your interviewer can greet you"
               onChange={(e) => setName(e.target.value)}
               disabled={phase === "starting"}
-              className="mt-1 w-full rounded-[3px] border border-ink/20 bg-cream px-3 py-2 font-mono text-[13px] text-ink placeholder:text-mute focus:border-ink focus:outline-none disabled:opacity-50"
+              className="pf-field mt-1.5 disabled:opacity-50"
             />
           </div>
-          <button
-            type="button"
-            onClick={handleStart}
-            disabled={phase === "starting"}
-            className="w-full rounded-[3px] bg-ink px-5 py-3.5 text-left font-mono text-[13px] font-medium text-cream transition-colors hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <span className="mr-2 text-coral">▸</span>
-            {phase === "starting"
-              ? "Loading the interviewer…"
-              : "Start my mock screen"}
-          </button>
-          {phase === "starting" && (
-            <p
-              role="status"
-              className="font-mono text-[11px] text-mute"
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleStart}
+              disabled={phase === "starting"}
+              className="pf-exec-btn disabled:cursor-not-allowed disabled:opacity-40"
             >
-              // launcher loading — click the Riya button (bottom-right) to begin
-              the call.
-            </p>
+              {phase === "starting"
+                ? "Loading the interviewer…"
+                : "Start my screen"}
+              {phase === "idle" && <span className="kbd ml-1">↵</span>}
+            </button>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-mute">
+              Live voice by <span className="text-coral">Ringg AI</span>
+            </span>
+          </div>
+          {phase === "starting" && (
+            <div
+              role="status"
+              className="flex items-start gap-3 rounded-[8px] border border-coral/30 bg-coral/[0.08] px-3 py-3"
+            >
+              <span className="mt-0.5 shrink-0 text-coral" aria-hidden>
+                ↘
+              </span>
+              <div className="space-y-1">
+                <p className="text-[13px] font-semibold text-ink">
+                  One more step
+                </p>
+                <p className="text-[14px] leading-relaxed text-ink-2">
+                  Your interviewer is ready. Click the round phone button in the
+                  bottom-right corner to start talking.
+                </p>
+              </div>
+            </div>
           )}
         </div>
       )}
 
+      {/* Coaching pointer anchored at the Ringg launcher (fixed bottom-right).
+          Bridges the spatial gap between this panel and the widget's own call
+          button — the step users otherwise miss. Shown only while we wait for
+          them to click it; pointer-events-none so it never blocks the launcher. */}
+      {phase === "starting" && (
+        <div
+          className="pointer-events-none fixed bottom-24 right-4 z-[60] flex flex-col items-end gap-1.5 sm:right-6"
+          aria-hidden
+        >
+          <span className="inline-flex items-center gap-1.5 rounded-[8px] border border-coral/40 bg-coral px-3 py-2 text-[12px] font-semibold text-white shadow-lg">
+            Click to start
+          </span>
+          <span className="mr-4 animate-bounce text-2xl leading-none text-coral">
+            ↓
+          </span>
+        </div>
+      )}
+
       {phase === "live" && (
-        <p role="status" className="font-mono text-[13px] text-ink">
-          <span className="mr-2 text-coral">●</span> call in progress… answer
-          Riya out loud. feedback comes right after you hang up.
-        </p>
+        <div className="py-4 text-center" role="status">
+          <div className="relative mx-auto h-28 w-28">
+            <span className="absolute inset-0 rounded-full border border-coral/50 animate-ring-expand" />
+            <span
+              className="absolute inset-0 rounded-full animate-orb-pulse"
+              style={{
+                background:
+                  "radial-gradient(circle at 50% 40%, #f0815f, #E85D3B 55%, #c43e22)",
+                boxShadow: "0 0 44px rgba(232,93,59,.4)",
+              }}
+            />
+          </div>
+          <p className="mt-5 inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.06em] text-coral">
+            <span className="pulse-dot align-middle" /> Screen live
+          </p>
+          <p className="mt-3 text-[14px] text-ink">
+            Answer your interviewer out loud.
+          </p>
+          <p className="mt-1 text-[13px] text-mute">
+            Feedback comes the moment you hang up.
+          </p>
+          <p className="mt-4 inline-block rounded-[8px] border border-white/12 bg-white/[0.02] px-3 py-2 text-[12px] text-mute">
+            Mic and end-call live in Ringg&apos;s panel ↘
+          </p>
+        </div>
       )}
 
       {phase === "scoring" && (
-        <p role="status" className="font-mono text-[13px] text-mute">
-          // scoring your screen against the brief… this can take a few seconds.
-        </p>
+        <div role="status" className="space-y-2">
+          <p className="flex items-center gap-1.5 text-[14px] font-medium text-ink">
+            <span className="text-coral">✓</span> Transcript captured
+          </p>
+          <p className="text-[14px] text-ink-2">
+            Scoring against your brief&apos;s dimensions
+            <span className="animate-caret-blink">…</span>
+          </p>
+          <p className="text-[13px] text-mute">
+            The transcript lags the hang-up by a few seconds. Hang tight.
+          </p>
+        </div>
       )}
 
       {phase === "unscorable" && (
-        <p role="status" className="font-mono text-[13px] text-ink">
-          // no candidate speech was captured, so there&apos;s nothing to score.
-          check your mic and try the screen again.
+        <p role="status" className="text-[14px] leading-relaxed text-ink">
+          No candidate speech was captured, so there&apos;s nothing to score. Check
+          your mic and try the screen again.
         </p>
       )}
 
@@ -296,7 +378,7 @@ export function ScreenCall({ brief }: { brief: Brief }) {
         <div className="space-y-3">
           <p
             role="alert"
-            className="rounded-[3px] border border-coral/40 bg-coral/5 px-3 py-2 font-mono text-[12px] text-coral"
+            className="rounded-[8px] border border-coral/40 bg-coral/10 px-3 py-2 text-[13px] text-coral"
           >
             {error}
           </p>
@@ -306,9 +388,9 @@ export function ScreenCall({ brief }: { brief: Brief }) {
               setPhase("idle");
               setError(null);
             }}
-            className="rounded-[3px] border border-ink/20 px-4 py-2 font-mono text-[12px] text-ink hover:bg-ink/5"
+            className="pf-btn-ghost"
           >
-            <span className="mr-2 text-coral">▸</span> Try again
+            Try again
           </button>
         </div>
       )}
@@ -321,40 +403,37 @@ export function ScreenCall({ brief }: { brief: Brief }) {
 function FeedbackView({ feedback }: { feedback: StructuredFeedback }) {
   return (
     <div className="space-y-5" data-testid="screen-feedback">
-      <div className="ascii-rule">── HOW_IT_WENT ───────────────────────────────────</div>
+      <div className="ascii-rule">How it went</div>
 
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {feedback.dimensions.map((d) => (
           <li
             key={d.name}
-            className="flex items-start gap-3 font-mono text-[13px]"
+            className="grid grid-cols-[88px_1fr] items-start gap-3"
           >
             <span
-              className={`mt-0.5 shrink-0 rounded-[3px] border px-2 py-0.5 text-[10px] uppercase tracking-wide ${
+              className={`shrink-0 rounded-[6px] border px-2 py-0.5 text-center text-[10px] font-medium uppercase tracking-wide ${
                 VERDICT_STYLE[d.verdict]
               }`}
             >
               {d.verdict}
             </span>
-            <span className="text-ink">
-              <span className="font-medium">{d.name}</span> — {d.observation}
+            <span className="text-[14px] leading-relaxed text-ink-2">
+              <span className="font-medium text-ink">{d.name}.</span>{" "}
+              {d.observation}
             </span>
           </li>
         ))}
       </ul>
 
       <div className="space-y-2">
-        <div className="ascii-rule">── WHAT_WORKED ───────────────────────────────────</div>
-        <p className="font-mono text-[13px] leading-relaxed text-ink">
-          {feedback.whatWorked}
-        </p>
+        <div className="ascii-rule">What worked</div>
+        <p className="text-[14px] leading-relaxed text-ink-2">{feedback.whatWorked}</p>
       </div>
 
       <div className="space-y-2">
-        <div className="ascii-rule">── WHAT_TO_FIX ───────────────────────────────────</div>
-        <p className="font-mono text-[13px] leading-relaxed text-ink">
-          {feedback.whatMissed}
-        </p>
+        <div className="ascii-rule">What to fix</div>
+        <p className="text-[14px] leading-relaxed text-ink-2">{feedback.whatMissed}</p>
       </div>
     </div>
   );

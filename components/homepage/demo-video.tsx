@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-// R3 optional embedded video of operator running a real case. Renders a
+// Optional embedded video of an operator running a real case. Renders a
 // graceful skeleton when no video is available so the homepage still works
 // while the demo is being recorded pre-launch.
 
@@ -22,13 +22,13 @@ export function DemoVideo({ src, poster }: DemoVideoProps) {
         data-testid="demo-video-skeleton"
         className="mx-auto mb-section max-w-2xl px-8"
       >
-        <div className="flex aspect-video items-center justify-center rounded-xl border border-dashed border-ink/[0.2] bg-white/40">
+        <div className="flex aspect-video items-center justify-center rounded-[12px] border border-dashed border-white/[0.2] bg-tan">
           <div className="text-center">
-            <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-mute">
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-mute">
               Demo
             </div>
-            <p className="font-display text-xl italic text-mute">
-              Demo recording in the oven. Back in a tick.
+            <p className="text-xl text-ink-2">
+              The demo recording is on its way. Back in a tick.
             </p>
           </div>
         </div>
@@ -43,7 +43,7 @@ export function DemoVideo({ src, poster }: DemoVideoProps) {
     >
       <video
         controls
-        className="aspect-video w-full rounded-xl border border-ink/[0.08] bg-black"
+        className="aspect-video w-full rounded-[12px] border border-white/[0.08] bg-black"
         poster={poster}
         onPlay={() => setPlaying(true)}
       >
@@ -51,8 +51,8 @@ export function DemoVideo({ src, poster }: DemoVideoProps) {
         Your browser does not support embedded video. Watch it at {src}.
       </video>
       {!playing && (
-        <p className="mt-3 text-center text-xs italic text-mute">
-          ~3 min · one real Product Design case, end to end, no edits
+        <p className="mt-3 text-center text-xs text-mute">
+          About 3 min. One real Product Design case, end to end, no edits.
         </p>
       )}
     </section>

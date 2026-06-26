@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-// Animated mini-mockup of the "02 · THE LOOP" phase card on the homepage.
-// Cycles through LISTENING → THINKING → SPEAKING to preview what the live
+// Animated mini-mockup of the "02 · The loop" phase card on the homepage.
+// Cycles through listening, thinking, and speaking to preview what the live
 // session screen actually does, rotating probes during the speaking beat
-// so the visitor sees variety. Pure CSS animations + a small state machine —
-// no audio, no real LLM calls.
+// so the visitor sees variety. Pure CSS animations plus a small state machine.
+// No audio, no real LLM calls.
 
 type LoopState = "listening" | "thinking" | "speaking";
 
@@ -40,7 +40,7 @@ export function LoopMockupBody() {
     const timeout = window.setTimeout(() => {
       const next = NEXT_STATE[state];
       setState(next);
-      // Rotate probe each time we leave 'speaking'.
+      // Rotate the probe each time we leave the speaking state.
       if (state === "speaking") {
         setProbeIdx((i) => (i + 1) % PROBES.length);
       }
@@ -52,10 +52,9 @@ export function LoopMockupBody() {
 
   return (
     <>
-      <div className="mb-2 font-semibold tracking-[0.12em] text-coral">
-        [CASE] design a friending feature
+      <div className="mb-2 font-semibold tracking-[0.08em] text-coral">
+        Case · design a friending feature
       </div>
-      <div className="mb-3 text-ink/40">────────────────────────</div>
 
       {/* Orb stage — coral when listening/speaking, dimmer while thinking */}
       <div className="relative my-3 flex h-20 items-center justify-center">
@@ -84,11 +83,10 @@ export function LoopMockupBody() {
         />
       </div>
 
-      {/* Quote line — only shown when Alex is "speaking" the probe */}
+      {/* Quote line — only shown when Alex is speaking the probe */}
       <div
-        className="min-h-[36px] text-center text-[12px] italic text-ink transition-opacity duration-300"
+        className="min-h-[36px] text-center text-[12px] text-ink transition-opacity duration-300"
         style={{
-          fontFamily: "'Instrument Serif', serif",
           opacity: state === "speaking" ? 1 : 0,
         }}
       >
@@ -96,25 +94,12 @@ export function LoopMockupBody() {
       </div>
 
       {/* Status line — swaps per state */}
-      <div className="mt-3 text-center text-ink/55">
-        {state === "listening" && (
-          <span>
-            [mic] LISTENING
-            <span className="animate-caret-blink text-coral">_</span>
-          </span>
-        )}
+      <div className="mt-3 text-center text-ink-2">
+        {state === "listening" && <span>Listening</span>}
         {state === "thinking" && (
-          <span className="text-mute">
-            // alex is thinking
-            <span className="animate-caret-blink text-coral">_</span>
-          </span>
+          <span className="text-mute">Alex is thinking</span>
         )}
-        {state === "speaking" && (
-          <span>
-            [audio] SPEAKING
-            <span className="animate-caret-blink text-coral">_</span>
-          </span>
-        )}
+        {state === "speaking" && <span>Speaking</span>}
       </div>
 
       <div className="flex-1" />

@@ -1,8 +1,8 @@
-// R2 reading order — fixed, with the rationale documented in
+// Reading order is fixed, with the rationale documented in
 // docs/plans/2026-05-11-001-feat-pm-interview-voice-agent-plan.md U8.
-// Body copy ≤ 60 words per block. No generic SaaS verbs ("streamline,"
-// "supercharge," "unlock"). Pre-flight Console direction: 2x2 mono grid
-// with [01]·LABEL eyebrows, serif titles, mute body, coral hover accent.
+// Body copy stays under 60 words per block. No generic SaaS verbs
+// ("streamline," "supercharge," "unlock"). A 2x2 grid with numbered
+// eyebrows, tight Inter titles, secondary body, coral hover accent.
 
 interface FeatureBlock {
   title: string;
@@ -12,24 +12,24 @@ interface FeatureBlock {
 
 export const FEATURE_BLOCKS: ReadonlyArray<FeatureBlock> = [
   {
-    title: "Voice-native, like the real loop",
-    body: "30 minutes. Spoken aloud. Alex asks, probes, and politely calls out the framework you skipped. You answer with your voice — no typing, no autocomplete to lean on. The transcript catches every “um” so you can review later. If you're brave.",
-    tag: "VOICE",
+    title: "Spoken, like the real thing",
+    body: "30 minutes, out loud. The interviewer cuts in, probes, and calls the framework you skipped. No typing, no autocomplete to hide behind. The transcript catches every “um” for later, if you're brave.",
+    tag: "Voice",
   },
   {
-    title: "Bring your own keys. No accounts.",
-    body: "Paste your Anthropic or OpenAI key on the onboarding screen — plus a voice key if you've got one. Keys live in your browser, not on our servers. No signup, no Stripe, no “talk to sales.” Your spend goes to your provider, not us.",
-    tag: "KEYS",
+    title: "Your keys. Your spend. No account.",
+    body: "Paste an Anthropic or OpenAI key, plus a voice key if you have one. They stay in your browser, never our servers. No signup, no Stripe, no “talk to sales.” The bill goes to your provider, not us.",
+    tag: "Keys",
   },
   {
-    title: "Framework-aware probes",
-    body: "CIRCLES, AARM, JTBD, the goal-to-metric ladder — Alex knows them all. Skip the user segment? It'll ask. Jump straight to solutions? It'll walk you back. No “great answer, here's some feedback” — just the in-character follow-up you got at your last Meta loop.",
-    tag: "PROBES",
+    title: "It knows your frameworks",
+    body: "CIRCLES, AARM, JTBD, the goal-to-metric ladder. Skip the user segment and it asks. Jump straight to solutions and it walks you back. Not “great answer, here's some feedback,” the in-character follow-up from your last Meta loop.",
+    tag: "Probes",
   },
   {
-    title: "Multi-provider voice bakeoff",
-    body: "Cartesia and Sarvam — two voice providers, one abstraction, one practice surface. V1 ships the bakeoff winner; V1.1 lets you flip mid-session. Results post publicly so you can hear the difference, not just read the latency table.",
-    tag: "BAKEOFF",
+    title: "Two voices. Pick yours.",
+    body: "Cartesia and Sarvam behind one surface. Hear the difference yourself instead of reading a latency table.",
+    tag: "Voices",
   },
 ];
 
@@ -40,9 +40,9 @@ export function FeatureBlocks() {
       className="mx-auto w-full max-w-[1440px] px-4 py-section sm:px-6 lg:px-8"
     >
       <div className="ascii-rule mb-8 max-w-[680px]">
-        ── WHY MOCKINGBIRD ──────────────────────────────────────
+        Why Mockingbird
       </div>
-      <h2 className="mb-10 max-w-2xl font-display text-2xl leading-tight tracking-tight text-ink sm:text-3xl md:mb-12 md:text-4xl">
+      <h2 className="mb-10 max-w-2xl text-2xl font-semibold leading-tight tracking-[-0.02em] text-ink sm:text-3xl md:mb-12 md:text-4xl">
         What you actually get.
       </h2>
 
@@ -52,15 +52,15 @@ export function FeatureBlocks() {
             key={block.title}
             data-testid={`feature-block-${idx + 1}`}
             data-order={idx + 1}
-            className="border-l-2 border-ink/[0.12] py-1 pl-6 transition-colors hover:border-coral"
+            className="border-l-2 border-white/[0.12] py-1 pl-6 transition-colors hover:border-coral"
           >
-            <div className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-coral">
-              [{String(idx + 1).padStart(2, "0")}] · {block.tag}
+            <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-coral">
+              {String(idx + 1).padStart(2, "0")} · {block.tag}
             </div>
-            <h3 className="mb-3 font-display text-2xl leading-tight tracking-tight text-ink md:text-3xl">
+            <h3 className="mb-3 text-2xl font-semibold leading-tight tracking-[-0.02em] text-ink md:text-3xl">
               {block.title}
             </h3>
-            <p className="text-base leading-relaxed text-mute">{block.body}</p>
+            <p className="text-base leading-relaxed text-ink-2">{block.body}</p>
           </article>
         ))}
       </div>

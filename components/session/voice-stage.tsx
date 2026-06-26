@@ -6,40 +6,40 @@ import { Orb } from "./orb";
 import { useMicCapture, type MicErrorKind } from "@/lib/voice/mic-capture";
 import type { VoiceStateKind } from "@/lib/voice/types";
 
-// Five R9a error states each get explicit copy + recovery affordance.
-// Refer to lib/voice/state-machine.ts for the source-of-truth state values.
+// Each of the five error states gets explicit copy and a recovery affordance.
+// See lib/voice/state-machine.ts for the source-of-truth state values.
 const ERROR_COPY: Record<
   string,
   { label: string; text: string; cta?: string; dotColor: string }
 > = {
   "mic-permission-denied": {
     label: "Microphone needed",
-    text: "Microphone access needed — Alex can't hear you yet.",
-    cta: "Grant microphone access",
-    dotColor: "bg-red-500",
+    text: "Alex can't hear you. Allow microphone access to keep going.",
+    cta: "Allow microphone access",
+    dotColor: "bg-coral",
   },
   "network-drop": {
     label: "Reconnecting",
-    text: "Connection lost — reconnecting… (real interviews don't get to do this)",
-    dotColor: "bg-amber-500",
+    text: "Connection dropped. Reconnecting now.",
+    dotColor: "bg-mute",
   },
   "asr-no-result": {
     label: "Didn't catch that",
-    text: "Static won that round. Say it again?",
+    text: "Didn't catch that. Say it again.",
     cta: "Try again",
-    dotColor: "bg-amber-500",
+    dotColor: "bg-mute",
   },
   "key-invalid": {
-    label: "API key invalid",
-    text: "Your provider just rejected the key. Two clicks back to fix it.",
-    cta: "Return to onboarding",
-    dotColor: "bg-red-500",
+    label: "API key rejected",
+    text: "Your provider rejected the key. Fix it in onboarding and come back.",
+    cta: "Back to onboarding",
+    dotColor: "bg-coral",
   },
   "provider-timeout": {
-    label: "Taking longer than usual",
-    text: "Alex is thinking longer than usual. (Honestly, very on-brand.)",
+    label: "Taking a while",
+    text: "Alex is taking longer than usual. Hang on.",
     cta: "Retry",
-    dotColor: "bg-amber-500",
+    dotColor: "bg-mute",
   },
 };
 
@@ -55,7 +55,7 @@ const NORMAL_COPY: Record<
   { label: string; text: string }
 > = {
   idle: { label: "Idle", text: "Ready when you are." },
-  listening: { label: "Listening", text: "Take your time. (But you're on the clock.)" },
+  listening: { label: "Listening", text: "Your turn. The clock is running." },
   thinking: { label: "Thinking", text: "" },
   speaking: { label: "Speaking", text: "" },
 };
@@ -65,7 +65,7 @@ interface VoiceStageProps {
   /** Current AI question shown in the question card. */
   currentQuestion?: string;
   /** Timer-only pause flag. Swaps the listening copy and hides the
-   *  input affordance — in-flight LLM/TTS continue uninterrupted. */
+   *  input affordance. In-flight LLM and TTS continue uninterrupted. */
   paused?: boolean;
   /** Recovery CTA handler when the state has one. */
   onErrorAction?: () => void;
@@ -91,14 +91,14 @@ interface VoiceStageProps {
   /** User-controlled input mode. When provided, the toggle link renders below
    *  the input affordance so the candidate can switch mid-session. */
   inputMode?: "voice" | "text";
-  /** Toggle handler. Undefined when voice isn't available (text-only user) —
-   *  the toggle is hidden in that case. */
+  /** Toggle handler. Undefined when voice isn't available (text-only user),
+   *  in which case the toggle is hidden. */
   onToggleInputMode?: () => void;
 }
 
-// Provider → (STT model name, TTS model name) attribution. Used as
-// fine-print under the mic button. Falls back to "your provider" when
-// the key is unrecognized, so the line never lies about what's running.
+// Maps a provider to its STT and TTS attribution, shown as fine print under
+// the mic button. Falls back to a generic line when the key is unrecognized,
+// so the attribution never claims something that isn't running.
 function providerAttribution(voiceProvider?: string): string {
   switch (voiceProvider) {
     case "sarvam":
@@ -136,34 +136,35 @@ export function VoiceStage({
       >
         <Orb state="idle" />
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-mute">
+          <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-mute">
             <span className="h-1.5 w-1.5 rounded-full bg-mute" />
-            Pre-flight
+            Ready to begin
           </div>
-          <h2 className="font-display text-2xl tracking-tight text-ink">
+          <h2 className="font-sans text-2xl font-semibold tracking-[-0.02em] text-ink">
             Alex is on the line.
           </h2>
-          <p className="mt-2 max-w-sm text-sm text-mute">
-            Hit start, Alex says hi and reads your case. Then you're on —
-            clarify, segment, or start sketching out loud. Real interviewers
-            don't wait. Alex will, briefly.
+          <p className="mt-2 max-w-sm text-sm text-ink-2">
+            Press start. Alex greets you and reads your case. Then it's your
+            turn. Clarify, segment, or sketch a solution out loud. Real
+            interviewers don't wait long, and neither will Alex.
           </p>
         </div>
         <button
           type="button"
           onClick={onStartInterview}
           data-testid="start-interview"
-          className="rounded-lg bg-ink px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-ink/85"
+          className="pf-exec-btn"
         >
-          Start the mock →
+          Start the mock
+          <span aria-hidden>→</span>
         </button>
 
         {/*
-          Sleeping Ember lives on the persistent <Mascot> component (see
-          three-panel.tsx) — Mascot.frameFor returns "sleeping" while the
-          session is in idle state, then transitions to "blinking" once
-          the candidate starts. Keeping the mascot in one place ensures
-          smooth state transitions in the same viewport corner.
+          Sleeping Ember lives on the persistent Mascot component (see
+          three-panel.tsx). Mascot.frameFor returns "sleeping" while the
+          session is idle, then transitions to "blinking" once the candidate
+          starts. Keeping the mascot in one place keeps state transitions
+          smooth in the same viewport corner.
         */}
       </div>
     );
@@ -181,19 +182,18 @@ export function VoiceStage({
         <div>
           <div
             className={clsx(
-              "mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-mute"
+              "mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-mute"
             )}
           >
             <span className={clsx("h-1.5 w-1.5 rounded-full", copy.dotColor)} />
             {copy.label}
           </div>
-          <div className="font-display text-2xl italic text-ink">{copy.text}</div>
+          <div className="font-sans text-2xl font-semibold tracking-[-0.02em] text-ink">
+            {copy.text}
+          </div>
         </div>
         {copy.cta && (
-          <button
-            onClick={onErrorAction}
-            className="rounded-lg border border-ink/15 bg-white px-4 py-2 text-sm font-medium text-ink hover:border-ink/30"
-          >
+          <button onClick={onErrorAction} className="pf-btn-ghost">
             {copy.cta}
           </button>
         )}
@@ -223,8 +223,8 @@ export function VoiceStage({
       data-state={state}
       className="flex h-full flex-col gap-4 overflow-hidden p-6"
     >
-      {/* Input-mode toggle — segmented pill at the top of the stage.
-          Always visible when the parent provides a handler; the session
+      {/* Input-mode toggle, a segmented pill at the top of the stage.
+          Always visible when the parent provides a handler. The session
           page wraps the handler so clicking "Voice" without a configured
           voice key opens a mid-session key prompt instead of silently
           dropping the click. Switching takes effect on the next listening
@@ -232,7 +232,7 @@ export function VoiceStage({
       {onToggleInputMode && (
         <div
           data-testid="toggle-input-mode"
-          className="shrink-0 self-center inline-flex rounded-full border border-ink/[0.12] bg-cream/70 p-0.5 gap-0.5"
+          className="shrink-0 self-center inline-flex rounded-full border border-white/[0.08] bg-raised p-0.5 gap-0.5"
         >
           <button
             type="button"
@@ -242,13 +242,13 @@ export function VoiceStage({
               if (inputMode !== "voice") onToggleInputMode();
             }}
             className={clsx(
-              "rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors",
+              "rounded-full px-3 py-1 text-[12px] font-medium transition-colors duration-quick",
               inputMode === "voice"
-                ? "bg-ink text-cream"
+                ? "bg-coral text-white"
                 : "text-mute hover:text-ink"
             )}
           >
-            🎤 Voice
+            Voice
           </button>
           <button
             type="button"
@@ -258,28 +258,28 @@ export function VoiceStage({
               if (inputMode !== "text") onToggleInputMode();
             }}
             className={clsx(
-              "rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors",
+              "rounded-full px-3 py-1 text-[12px] font-medium transition-colors duration-quick",
               inputMode === "text"
-                ? "bg-ink text-cream"
+                ? "bg-coral text-white"
                 : "text-mute hover:text-ink"
             )}
           >
-            ⌨ Text
+            Text
           </button>
         </div>
       )}
 
-      {/* Top section scrolls when the AI's current question is long. The
-          mic/text input below stays anchored — the candidate should never
-          have to scroll to find the input affordance. */}
+      {/* The top section scrolls when the current question is long. The
+          mic and text input below stay anchored, so the candidate never
+          has to scroll to find the input affordance. */}
       <div className="flex flex-1 flex-col items-center gap-5 overflow-y-auto">
         {currentQuestion && (
-          <div className="w-full shrink-0 rounded-xl border border-ink/[0.07] bg-cream/60 p-4">
-            <div className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-mute">
+          <div className="w-full shrink-0 rounded-[8px] border border-white/[0.08] bg-raised p-4">
+            <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-mute">
               <span className="h-1.5 w-1.5 rounded-full bg-coral" />
               Currently asking
             </div>
-            <p className="font-display text-xl leading-snug tracking-tight text-ink">
+            <p className="font-sans text-xl font-semibold leading-snug tracking-[-0.02em] text-ink">
               {currentQuestion}
             </p>
           </div>
@@ -288,26 +288,19 @@ export function VoiceStage({
           <Orb state={state} />
         </div>
         <div className="shrink-0 text-center">
-          <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-mute">
+          <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-mute">
             <span
-              className={clsx(
-                "h-1.5 w-1.5 rounded-full",
-                paused
-                  ? "bg-amber-500"
-                  : "animate-pulse bg-green-500 shadow-[0_0_0_3px_rgba(76,175,80,0.2)]"
-              )}
+              className={clsx("pf-status-dot", paused ? "is-paused" : "is-live")}
             />
             {paused ? "Paused" : copy.label}
           </div>
           {paused && (
-            <div className="font-display text-lg italic text-ink/80">
-              “Take a breath. The clock is frozen.”
+            <div className="font-sans text-lg text-ink-2">
+              Paused. The clock is frozen. Resume when you're ready.
             </div>
           )}
           {!paused && copy.text && !voiceModeActive && !textModeActive && (
-            <div className="font-display text-lg italic text-ink/80">
-              “{copy.text}”
-            </div>
+            <div className="font-sans text-lg text-ink-2">{copy.text}</div>
           )}
         </div>
       </div>
@@ -361,28 +354,28 @@ function MicButton({
         data-recording={isRecording}
         aria-label={isRecording ? "Stop recording" : "Start recording"}
         className={clsx(
-          "flex h-16 w-16 items-center justify-center rounded-full text-cream shadow-lg transition-all",
+          "flex h-16 w-16 items-center justify-center rounded-full text-white transition-all duration-quick",
           isRecording
-            ? "scale-110 bg-red-500 shadow-red-500/40 hover:bg-red-600"
-            : "bg-ink hover:bg-ink/85"
+            ? "scale-110 bg-coral hover:bg-coral/90"
+            : "bg-raised hover:bg-white/[0.08]"
         )}
       >
         {isRecording ? (
-          <span className="block h-5 w-5 rounded-sm bg-cream" />
+          <span className="block h-5 w-5 rounded-[3px] bg-white" />
         ) : (
           <MicIcon />
         )}
       </button>
       <div className="text-center">
         <div className="text-xs font-semibold uppercase tracking-[0.14em] text-mute">
-          {isRecording ? "Recording — tap to stop" : "Tap to talk"}
+          {isRecording ? "Recording. Tap to stop" : "Tap to talk"}
         </div>
         {error && (
-          <div className="mt-1 text-xs text-red-700">{error}</div>
+          <div className="mt-1 text-[11px] text-coral">{error}</div>
         )}
         {!error && (
           <p className="mt-1 text-[11px] text-mute">
-            Up to 30s a turn · {providerAttribution(voiceProvider)}
+            Up to 30s per turn · {providerAttribution(voiceProvider)}
           </p>
         )}
       </div>
@@ -449,28 +442,29 @@ function TurnInput({ onSubmit }: { onSubmit: (text: string) => void }) {
       }}
       className="w-full"
     >
-      <div className="flex w-full items-end gap-2 rounded-xl border border-ink/[0.12] bg-white p-2 focus-within:border-ink/40">
+      <div className="flex w-full items-end gap-2 rounded-[8px] border border-white/[0.08] bg-raised p-2 focus-within:border-white/[0.18]">
         <textarea
           ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           rows={2}
-          placeholder="Type your answer… (Enter to send · Shift+Enter for a new line)"
+          placeholder="Type your answer. Enter to send, Shift+Enter for a new line."
           aria-label="Type your response"
-          className="flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-ink placeholder:text-mute/70 focus:outline-none"
+          className="flex-1 resize-none bg-transparent px-2 py-1.5 text-[14px] text-ink placeholder:text-ink-faint focus:outline-none"
         />
         <button
           type="submit"
           disabled={!text.trim()}
           aria-label="Send response"
-          className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-cream transition-colors hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-[6px] bg-coral px-3 py-2 text-[13px] font-medium text-white transition-colors duration-quick hover:bg-coral/90 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Send ↵
+          Send
+          <kbd className="rounded-[4px] bg-white/20 px-1 text-[11px] leading-none">↵</kbd>
         </button>
       </div>
       <p className="mt-2 text-center text-[11px] text-mute">
-        Text mode. Add a Sarvam key in onboarding if you'd rather say it out loud.
+        Text mode. Add a Sarvam key in onboarding to answer out loud instead.
       </p>
     </form>
   );

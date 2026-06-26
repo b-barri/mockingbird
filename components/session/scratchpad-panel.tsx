@@ -7,20 +7,15 @@ interface ScratchpadPanelProps {
   onToggleCollapsed: (collapsed: boolean) => void;
 }
 
-const PLACEHOLDER = `# clarifying questions
-- ...
+const PLACEHOLDER = `Clarifying questions
 
-# user segment
-- ...
+User segment
 
-# jobs-to-be-done
-- ...
+Jobs to be done
 
-# solution sketch
-- ...
+Solution sketch
 
-# metric / success
-- ...`;
+Metric and success`;
 
 export function ScratchpadPanel({
   value,
@@ -34,24 +29,22 @@ export function ScratchpadPanel({
       data-testid="scratchpad-panel"
       data-collapsed={collapsed}
     >
-      <div className="border-b border-ink/[0.06] px-5 py-3.5">
-        <div className="ascii-rule mb-2">
-          ── SCRATCHPAD ──────────────────────────────────
-        </div>
+      <div className="border-b border-white/[0.06] px-5 py-3.5">
+        <div className="ascii-rule mb-2">Scratchpad</div>
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-mute">
-            your notes
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-mute">
+            Your notes
           </span>
           <button
             type="button"
             onClick={() => onToggleCollapsed(!collapsed)}
-            className="font-mono text-[11px] text-mute hover:text-ink"
+            className="text-[12px] text-mute transition-colors hover:text-ink"
             aria-pressed={collapsed}
             aria-label={
               collapsed ? "Expand scratchpad" : "Collapse scratchpad"
             }
           >
-            {collapsed ? "expand ↗" : "collapse →"}
+            {collapsed ? "Expand" : "Collapse"}
           </button>
         </div>
       </div>
@@ -60,7 +53,7 @@ export function ScratchpadPanel({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={PLACEHOLDER}
-          className="flex-1 resize-none border-0 bg-transparent px-5 py-4 font-mono text-[12.5px] leading-[1.7] text-ink placeholder:text-mute focus:outline-none"
+          className="flex-1 resize-none border-0 bg-transparent px-5 py-4 text-[13.5px] leading-[1.7] text-ink placeholder:text-mute focus:outline-none"
           data-testid="scratchpad-textarea"
         />
       )}

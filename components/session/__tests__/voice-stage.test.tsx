@@ -45,8 +45,8 @@ describe("VoiceStage — R9a error states (AE6)", () => {
       "data-state",
       "key-invalid"
     );
-    expect(screen.getByText(/API key invalid/i)).toBeInTheDocument();
-    const cta = screen.getByRole("button", { name: /Return to onboarding/i });
+    expect(screen.getByText(/API key rejected/i)).toBeInTheDocument();
+    const cta = screen.getByRole("button", { name: /Back to onboarding/i });
     expect(cta).toBeInTheDocument();
     await userEvent.click(cta);
     expect(onErrorAction).toHaveBeenCalledOnce();
@@ -54,15 +54,15 @@ describe("VoiceStage — R9a error states (AE6)", () => {
 
   it("mic-permission-denied surfaces the grant-access affordance", () => {
     render(<VoiceStage state="mic-permission-denied" />);
-    expect(screen.getByText(/Microphone access needed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Microphone needed/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Grant microphone access/i })
+      screen.getByRole("button", { name: /Allow microphone access/i })
     ).toBeInTheDocument();
   });
 
   it("network-drop shows the reconnecting status", () => {
     render(<VoiceStage state="network-drop" />);
-    expect(screen.getByText(/Connection lost — reconnecting/i)).toBeInTheDocument();
+    expect(screen.getByText(/Connection dropped\. Reconnecting/i)).toBeInTheDocument();
     // "Reconnecting" appears in both the body and the label; allOf is fine.
     expect(screen.getAllByText(/Reconnecting/i).length).toBeGreaterThanOrEqual(1);
   });

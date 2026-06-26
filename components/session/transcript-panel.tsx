@@ -23,20 +23,18 @@ export function TranscriptPanel({ turns, onStrikeTurn }: TranscriptPanelProps) {
       className="flex h-full flex-col overflow-hidden"
       data-testid="transcript-panel"
     >
-      {/* Pre-flight Console panel header: ASCII rule + mono meta row */}
-      <div className="border-b border-ink/[0.06] px-5 py-3.5">
-        <div className="ascii-rule mb-2">
-          ── TRANSCRIPT ──────────────────────────────────
-        </div>
+      {/* Panel header: section eyebrow and a meta row. */}
+      <div className="border-b border-white/[0.06] px-5 py-3.5">
+        <div className="ascii-rule mb-2">Transcript</div>
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-mute">
-            turns &middot; {turns.length}
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-mute">
+            {turns.length} turns
           </span>
           <button
-            className="font-mono text-[11px] text-mute hover:text-ink"
+            className="text-[12px] text-mute transition-colors hover:text-ink"
             aria-label="Copy transcript"
           >
-            copy ↗
+            Copy
           </button>
         </div>
       </div>
@@ -47,9 +45,9 @@ export function TranscriptPanel({ turns, onStrikeTurn }: TranscriptPanelProps) {
         data-testid="transcript-body"
       >
         {turns.length === 0 && (
-          <p className="py-4 font-mono text-[12px] italic text-mute">
-            // conversation will appear here. tap a turn to strike it out —
-            alex won&apos;t notice.
+          <p className="py-4 text-[13px] text-mute">
+            Your conversation shows up here as you go. Strike out any turn you
+            want the score to ignore.
           </p>
         )}
         {turns.map((turn) => (
@@ -58,31 +56,29 @@ export function TranscriptPanel({ turns, onStrikeTurn }: TranscriptPanelProps) {
             data-testid={`turn-${turn.id}`}
             data-stricken={turn.stricken}
             data-partial={turn.partial}
-            className="group border-b border-dashed border-ink/[0.10] py-2.5 last:border-b-0"
+            className="group border-b border-white/[0.06] py-2.5 last:border-b-0"
           >
             <header className="mb-1 flex items-center gap-2">
               <span
                 className={clsx(
-                  "font-mono text-[11px] font-semibold uppercase tracking-[0.14em]",
+                  "text-[11px] font-semibold uppercase tracking-[0.14em]",
                   turn.speaker === "user" ? "text-ink" : "text-coral"
                 )}
               >
                 {turn.speaker === "user" ? "You" : "Interviewer"}
               </span>
               {turn.partial && (
-                <span className="font-mono text-[10px] italic text-mute">
-                  typing…
-                </span>
+                <span className="text-[11px] text-mute">typing…</span>
               )}
               <button
                 type="button"
                 onClick={() => onStrikeTurn(turn.id)}
-                className="ml-auto rounded font-mono text-[10px] text-mute opacity-0 transition-opacity hover:text-coral group-hover:opacity-100"
+                className="ml-auto rounded text-[11px] text-mute opacity-0 transition-opacity hover:text-coral group-hover:opacity-100"
                 aria-label={
                   turn.stricken ? "Restore turn" : "Strike out this turn"
                 }
               >
-                {turn.stricken ? "↺ restore" : "✕ strike"}
+                {turn.stricken ? "Restore" : "Strike"}
               </button>
             </header>
             <p

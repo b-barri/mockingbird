@@ -64,7 +64,7 @@ describe("SummaryCard (R16a — required elements)", () => {
     );
     expect(screen.getByTestId("summary-error")).toBeInTheDocument();
     expect(
-      screen.getByText(/Summary unavailable — your transcript is still saved/i)
+      screen.getByText(/Summary unavailable\. Your transcript is still saved/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/LLM 502/i)).toBeInTheDocument();
   });
